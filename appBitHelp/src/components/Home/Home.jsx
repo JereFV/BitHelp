@@ -11,10 +11,10 @@ export function Home() {
         color="text.primary" 
         gutterBottom 
       > 
-        Alquiler de Peliculas 
+        BitHelp 
         </Typography> 
       <Typography variant="h5" align="center" color="text.secondary"> 
-        Descubre y alquila tus películas favoritas por días. 
+        Soluciones desde el origen. 
       </Typography> 
     </Container> 
   ); 

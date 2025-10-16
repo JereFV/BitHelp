@@ -13,7 +13,6 @@ import { Typography } from '@mui/material';
 import Header from './Header';
 import { GlobalStyles } from '@mui/material'; 
 
-
 Layout.propTypes = { children: PropTypes.node.isRequired }; 
  
 export function Layout({ children }) { 
@@ -33,7 +32,11 @@ export function Layout({ children }) {
       navigation ={NAVIGATION}
       router ={router}
       theme={demoTheme}
-      logo={<Typography variant="h6" color="inherit">BitHelp</Typography>}
+      branding={{
+      logo: <img src="\src\assets\BitHelpSinFondo.png" alt="BitHelpLogo"/>,
+      title: '',
+      
+      }}
     >
       <GlobalStyles 
             styles={{
