@@ -5,13 +5,12 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import DescriptionIcon from '@mui/icons-material/Description';
-import LayersIcon from '@mui/icons-material/Layers';
 import { AppProvider, DashboardLayout, PageContainer } from '@toolpad/core'; 
 import { useLocation, useNavigate } from 'react-router-dom';
 import { extendTheme } from '@mui/material/styles';
-import { Typography } from '@mui/material';
 import Header from './Header';
-import { GlobalStyles } from '@mui/material'; 
+import { useColorScheme } from '@mui/material/styles';
+
 
 Layout.propTypes = { children: PropTypes.node.isRequired }; 
  
@@ -33,18 +32,10 @@ export function Layout({ children }) {
       router ={router}
       theme={demoTheme}
       branding={{
-      logo: <img src="\src\assets\BitHelpSinFondo.png" alt="BitHelpLogo"/>,
-      title: '',
-      
+      logo :<LogoSwitcher/>,
+      title: '',      
       }}
-    >
-      <GlobalStyles 
-            styles={{
-                '.MuiToolpadBranding-root': { display: 'none !important' },
-            }}
-        />
-
-      <DashboardLayout  header={<Header/>}>
+    >      <DashboardLayout  header={<Header/>}>
         <PageContainer>
             {children}
         </PageContainer>         
@@ -52,6 +43,26 @@ export function Layout({ children }) {
     </AppProvider>
   ); 
 } 
+
+/**
+ * 
+ * @returns Funcioón que permite evaluar si está en modo claro u oscuro y base a eso cambar el logo de app
+ */
+function LogoSwitcher() {
+  const { mode } = useColorScheme(); // Detecta si está en 'light' o 'dark'
+
+  const logoSrc = mode === 'dark'
+    ? '/src/assets/BitHelpSinFondoDarkmode2.png'   //  versión oscura del logo
+    : '/src/assets/BitHelpSinFondo.png'; // versión clara del logo
+
+  return (
+    <img
+      src={logoSrc}
+      alt="BitHelp Logo"
+    />
+  );
+}
+
 
 const NAVIGATION = [
   {
@@ -63,7 +74,7 @@ const NAVIGATION = [
     segment: 'inicio', // Segmento interno de Toolpad (puede ser cualquiera)
     title: 'Inicio',
     icon: <DashboardIcon />,
-    href: '/', 
+    href: '/inicio', 
   },
   {
     // Ejemplo de otra ruta
@@ -97,13 +108,29 @@ const NAVIGATION = [
 ];
 
 const demoTheme = extendTheme({
-  colorSchemes: { light: true, dark: true },
+  colorSchemes: {
+    light: {
+      palette: {
+        background: {
+          default: '#f9f9f9',
+        },
+      },
+    },
+    dark: {
+      palette: {
+        background: {
+          default: '#121212',
+          paper: '#1c1c1c',
+        },
+      },
+    },
+  },
   colorSchemeSelector: 'class',
   breakpoints: {
     values: {
       xs: 0,
       sm: 600,
-      md: 600,
+      md: 900, // 👈 corregido, antes md = sm
       lg: 1200,
       xl: 1536,
     },

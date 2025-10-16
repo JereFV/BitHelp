@@ -9,12 +9,13 @@ export function Home() {
         variant="h2" 
         align="center" 
         color="text.primary" 
-        gutterBottom 
+        gutterBottom  
+        fontFamily={'-apple-system'}
       > 
         BitHelp 
         </Typography> 
-      <Typography variant="h5" align="center" color="text.secondary"> 
-        Soluciones desde el origen. 
+      <Typography variant="h5" align="center" color="text.secondary" fontFamily={'-apple-system'}> 
+        <font> Soluciones desde el origen.</font>  
       </Typography> 
     </Container> 
   ); 
