@@ -11,6 +11,7 @@ export function Home() {
         color="text.primary" 
         gutterBottom  
         fontFamily={'-apple-system'}
+        marginBottom={1}
       > 
         BitHelp 
         </Typography> 
