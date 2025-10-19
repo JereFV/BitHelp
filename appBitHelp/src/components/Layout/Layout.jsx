@@ -6,7 +6,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { AppProvider, DashboardLayout, PageContainer } from '@toolpad/core'; 
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useHref, useLocation, useNavigate } from 'react-router-dom';
 import { extendTheme } from '@mui/material/styles';
 import Header from './Header';
 import { useColorScheme } from '@mui/material/styles';
@@ -36,7 +36,7 @@ export function Layout({ children }) {
       title: '',      
       }}
     >      <DashboardLayout  header={<Header/>}>
-        <PageContainer>
+        <PageContainer title='' breadcrumbs=''>
             {children}
         </PageContainer>         
       </DashboardLayout>
@@ -71,17 +71,15 @@ const NAVIGATION = [
   },
   {
     // IMPORTANTE: El 'href' dirige la navegación. Usa '/' para tu ruta raíz.
-    segment: 'inicio', // Segmento interno de Toolpad (puede ser cualquiera)
+    segment: 'Home', // Segmento interno de Toolpad (puede ser cualquiera)
     title: 'Inicio',
-    icon: <DashboardIcon />,
-    href: '/inicio', 
+    icon: <DashboardIcon />
   },
   {
     // Ejemplo de otra ruta
-    segment: 'pedidos', 
-    title: 'Pedidos',
-    icon: <ShoppingCartIcon />,
-    href: '/pedidos', 
+    segment: 'Asignations', 
+    title: 'Asignaciones',
+    icon: <ShoppingCartIcon />
   },
   {
     kind: 'divider',
