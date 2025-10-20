@@ -76,10 +76,17 @@ const NAVIGATION = [
     icon: <DashboardIcon />
   },
   {
-    // Ejemplo de otra ruta
-    segment: 'Asignations', 
-    title: 'Asignaciones',
-    icon: <ShoppingCartIcon />
+    segment: 'tickets',
+    title: 'Tiquetes',
+    icon: <BarChartIcon />,
+    children: [
+      {
+        segment: 'Asignations',
+        title: 'Asignaciones',
+        icon: <ShoppingCartIcon />
+      },
+      // ...
+    ],
   },
   {
     kind: 'divider',
