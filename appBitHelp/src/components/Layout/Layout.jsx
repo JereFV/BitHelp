@@ -81,6 +81,11 @@ const NAVIGATION = [
     icon: <BarChartIcon />,
     children: [
       {
+        segment: 'ticketsList',      // Identificador único (en minúsculas es buena práctica)
+        title: 'Lista de Tiquetes',     // El texto visible en el menú
+        icon: <LayersIcon />,           // ¡Busca un ícono más adecuado! (ej. PeopleIcon, GroupIcon)
+      },
+      {
         segment: 'Asignations',
         title: 'Asignaciones',
         icon: <ShoppingCartIcon />
@@ -94,18 +99,23 @@ const NAVIGATION = [
   // Adapta el resto de tu NAVIGATION a tus rutas...
   {
     kind: 'header',
-    title: 'Analytics',
+    title: 'Técnicos',
   },
   {
-    segment: 'reports',
-    title: 'Reports',
+    segment: 'technicians',
+    title: 'Técnicos',
     icon: <BarChartIcon />,
     children: [
+
       {
-        segment: 'sales',
-        title: 'Sales',
-        icon: <DescriptionIcon />,
-        href: '/reports/sales'
+        segment: 'techniciansList',      // Identificador único (en minúsculas es buena práctica)
+        title: 'Lista de Técnicos',     // El texto visible en el menú
+        icon: <LayersIcon />,           // ¡Busca un ícono más adecuado! (ej. PeopleIcon, GroupIcon)
+      },
+      {
+        segment: 'techniciansDetails',      // Identificador único (en minúsculas es buena práctica)
+        title: 'Detalle de Técnicos',     // El texto visible en el menú
+        icon: <LayersIcon />,           // ¡Busca un ícono más adecuado! (ej. PeopleIcon, GroupIcon)
       },
       // ...
     ],

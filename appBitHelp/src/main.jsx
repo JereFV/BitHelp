@@ -7,6 +7,9 @@ import { Home } from "./components/Home/Home";
 import { RouterProvider } from "react-router";
 import { Assignments } from "./components/Tickets/Assignments";
 import { CategoriesDataGridWithModal } from "./components/Categories/Categories";
+import TechnicianList from "./components/Technician/TechnicianList";
+import TechnicianDetail from "./components/Technician/TechnicianDetail"; 
+import TicketsList from "./components/Tickets/TicketsList";
 
 const rutas=createBrowserRouter(
   [
@@ -28,7 +31,19 @@ const rutas=createBrowserRouter(
         {
           path:'/categories',
           element: <CategoriesDataGridWithModal/>
-        },    
+        },
+        {
+          path:'/techniciansList',
+          element: <TechnicianList/>
+        },
+        {
+          path:'/techniciansDetails',
+          element: <TechnicianDetail/>
+        },
+        {
+          path:'/ticketsList',
+          element: <TicketsList/>
+        }, 
       ]
     }
   ]
