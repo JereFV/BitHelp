@@ -103,6 +103,14 @@ const NAVIGATION = [
       // ...
     ],
   },
+  {
+    kind: 'divider',
+  },
+  {
+    // Ejemplo de otra ruta
+    segment: 'categories', 
+    title: 'Categorias',
+  },
 ];
 
 const demoTheme = extendTheme({
