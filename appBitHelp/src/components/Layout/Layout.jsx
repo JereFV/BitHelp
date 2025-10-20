@@ -83,7 +83,6 @@ const NAVIGATION = [
       {
         segment: 'ticketsList',      // Identificador único (en minúsculas es buena práctica)
         title: 'Lista de Tiquetes',     // El texto visible en el menú
-        icon: <LayersIcon />,           // ¡Busca un ícono más adecuado! (ej. PeopleIcon, GroupIcon)
       },
       {
         segment: 'Asignations',
@@ -110,12 +109,10 @@ const NAVIGATION = [
       {
         segment: 'techniciansList',      // Identificador único (en minúsculas es buena práctica)
         title: 'Lista de Técnicos',     // El texto visible en el menú
-        icon: <LayersIcon />,           // ¡Busca un ícono más adecuado! (ej. PeopleIcon, GroupIcon)
       },
       {
         segment: 'techniciansDetails',      // Identificador único (en minúsculas es buena práctica)
         title: 'Detalle de Técnicos',     // El texto visible en el menú
-        icon: <LayersIcon />,           // ¡Busca un ícono más adecuado! (ej. PeopleIcon, GroupIcon)
       },
       // ...
     ],

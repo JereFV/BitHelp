@@ -3,7 +3,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material'; 
 
 // El componente de tu nueva pantalla
-function ListaTecnicos() {
+function TechnicianList() {
   return (
     // Usa Box para contenedores y sx para estilos de Material UI
     <Box sx={{ padding: 4, textAlign: 'center' }}>
@@ -19,4 +19,4 @@ function ListaTecnicos() {
   );
 }
 
-export default ListaTecnicos;
+export default TechnicianList;

@@ -33,11 +33,11 @@ const rutas=createBrowserRouter(
           element: <CategoriesDataGridWithModal/>
         },
         {
-          path:'/techniciansList',
+          path:'/technicianList',
           element: <TechnicianList/>
         },
         {
-          path:'/techniciansDetails',
+          path:'/technicianDetail',
           element: <TechnicianDetail/>
         },
         {
