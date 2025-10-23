@@ -85,7 +85,7 @@ const NAVIGATION = [
         title: 'Lista de Tiquetes',     // El texto visible en el menú
       },
       {
-        segment: 'Asignations',
+        segment: 'asignations',
         title: 'Asignaciones',
         icon: <ShoppingCartIcon />
       },
