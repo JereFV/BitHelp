@@ -25,24 +25,46 @@ const rutas=createBrowserRouter(
           element: <Home />
         },
         {
-          path:'/assignments',
-          element: <Assignments/>
+          path: 'tickets', // path es 'tickets' como padre
+          children: [
+            {
+              // CLAVE: ticketsList ahora es relativo a 'tickets', resultando en '/tickets/ticketsList'
+              path:'ticketsList', 
+              element: <TicketsList/>
+            }, 
+            {
+              // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
+              path:'assignments',
+              element: <Assignments/>
+            },
+            {
+              // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
+              path:'tickets',
+              element: ""
+            },
+
+          ]
         },   
         {
-          path:'/categories',
+          path:'categories',
           element: <CategoriesDataGridWithModal/>
         },
         {
-          path:'/technicianList',
+          path:'technicianList',
           element: <TechnicianList/>
         },
         {
-          path:'/technicianDetail',
-          element: <TechnicianDetail/>
-        },
-        {
-          path:'/ticketsList',
-          element: <TicketsList/>
+          path:'technician',
+          children: [
+              {
+                path:'technicianList',
+                element: <TechnicianList/>
+              },
+              {
+                path:'technicianDetail',
+                element: <TechnicianDetail/>
+              }
+          ]
         }, 
       ]
     }
