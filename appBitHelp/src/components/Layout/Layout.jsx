@@ -10,6 +10,8 @@ import { useHref, useLocation, useNavigate } from 'react-router-dom';
 import { extendTheme } from '@mui/material/styles';
 import Header from './Header';
 import { useColorScheme } from '@mui/material/styles';
+import { ReactRouterAppProvider } from '@toolpad/core/react-router';
+
 
 
 Layout.propTypes = { children: PropTypes.node.isRequired }; 
@@ -36,7 +38,7 @@ export function Layout({ children }) {
       title: '',      
       }}
     >      <DashboardLayout  header={<Header/>}>
-        <PageContainer title='' breadcrumbs=''>
+        <PageContainer title='' breadcrumbs={[]}>
             {children}
         </PageContainer>         
       </DashboardLayout>
@@ -85,11 +87,10 @@ const NAVIGATION = [
         title: 'Lista de Tiquetes',     // El texto visible en el menú
       },
       {
-        segment: 'asignations',
+        segment: 'assignments',
         title: 'Asignaciones',
         icon: <ShoppingCartIcon />
       },
-      // ...
     ],
   },
   {
@@ -101,17 +102,17 @@ const NAVIGATION = [
     title: 'Técnicos',
   },
   {
-    segment: 'technicians',
+    segment: 'technician',
     title: 'Técnicos',
     icon: <BarChartIcon />,
     children: [
 
       {
-        segment: 'techniciansList',      // Identificador único (en minúsculas es buena práctica)
+        segment: 'technicianList',      // Identificador único (en minúsculas es buena práctica)
         title: 'Lista de Técnicos',     // El texto visible en el menú
       },
       {
-        segment: 'techniciansDetails',      // Identificador único (en minúsculas es buena práctica)
+        segment: 'technicianDetail',      // Identificador único (en minúsculas es buena práctica)
         title: 'Detalle de Técnicos',     // El texto visible en el menú
       },
       // ...
