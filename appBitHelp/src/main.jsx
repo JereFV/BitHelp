@@ -25,8 +25,8 @@ const rutas=createBrowserRouter(
           element: <Home />
         },
         {
-          path:'/asignations',
-          element: <Assignments />
+          path:'/assignments',
+          element: <Assignments/>
         },   
         {
           path:'/categories',
