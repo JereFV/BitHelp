@@ -14,7 +14,7 @@ import ListSubheader from '@mui/material/ListSubheader';
 const itemData = [
   {
     img: '/src/images/hardwareSupport.png',
-    title: 'Hardware ',
+    title: 'Hardware',
     rows: 2,
     cols: 2,
     featured: true,
