@@ -1,127 +1,128 @@
-import { jwtDecode } from 'jwt-decode';
-import { useEffect, useState } from 'react';
+
+
 import PropTypes from 'prop-types';
-import { UserContext }  from '../../context/UserContext';
-import UserService from '../../services/userService'; 
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
+const UserContext = createContext(null);
 
-export default function UserProvider({ children }) {
- const [user, setUser] = useState(null);
- const [isAuthenticated, setIsAuthenticated] = useState(false);
- const [isLoading, setIsLoading] = useState(true); // Nuevo estado para manejo de carga
+export const useUser = () => {
+    // 💡 IMPORTANTE: Si el contexto es null, lanzamos un error claro, 
+    // pero el error que ves es de tu Home.jsx.
+    const context = useContext(UserContext);
+    if (context === null) {
+        throw new Error('useUser debe ser usado dentro de un UserProvider');
+    }
+    return context;
+};
+
+const LOCAL_STORAGE_KEY = 'bithelpUser';
+
+// 💡 DATOS DE USUARIO QUEMADOS BASADOS EN TU DB
+const FAKE_USER_DATA = {
+    idUsuario: 1,
+    usuario: 'jfuentes',
+    nombre: 'Jeremy', // <-- Clave para mostrar el nombre
+    primerApellido: 'Fuentes',
+    segundoApellido: 'Venegas',
+    idRol: 2
+};
+
+export const UserProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     
-    useEffect(() => {
-        const storedUser = localStorage.getItem('Usuario');
-        const TEST_USER_ID = 1;
-            if (storedUser) 
-            {
-                setUser(JSON.parse(storedUser));
-                setIsAuthenticated(true);
-                setIsLoading(false);
-            } else {
-            // NO HAY LOGIN, CARGAMOS USUARIO DE PRUEBA
-            // Define el ID del usuario que quieres forzar a cargar
-            console.log(`Cargando usuario de prueba (ID: ${TEST_USER_ID}) desde la DB...`);
-
-            UserService.getUserById(TEST_USER_ID)
-                .then(response => {
-                    const testUser = response.data;
-                    
-                    if (testUser) {
-                        // 💡 Almacenar el objeto de usuario de la DB directamente en el estado
-                        setUser(testUser); 
-                        setIsAuthenticated(true);
-                        console.log("Usuario de prueba cargado:", testUser.nombre);
-                    } else {
-                        console.error("Usuario de prueba no encontrado.");
-                    }
-                })
-                .catch(error => {
-                    console.error("Error al cargar usuario de prueba:", error);                
-                })
-                .finally(() => {
-                    setIsLoading(false);
-                });
-        }
- }, []);
-    
- const saveUser = (user) => {
-  setUser(user);
-  localStorage.setItem('user', JSON.stringify(user));
-  setIsAuthenticated(true);
- };
-
- const clearUser = () => {
-  setUser({});
-  localStorage.removeItem('user');
-  setIsAuthenticated(false);
- };
-    
+    // Función de Decodificación de Token (Mantenida por si acaso)
     const decodeToken = () => {
-        // Esta función ahora solo decodifica si el 'user' en el estado es una cadena (JWT)
-        if (typeof user === 'string' && Object.keys(user).length > 0) {
-            try {
-                const decodedToken = jwtDecode(user);
-                return decodedToken;
-            } catch (e) {
-                console.error("Token inválido:", e);
-                return {};
-            }
-        }
-        return {};
+        // Lógica de decodificación de JWT, si aplica.
+        // Como estamos usando datos quemados, esta función podría simplificarse o omitirse si no la usas.
+        return { nombre: 'Usuario Token Simulado' }; 
     };
-    
-    //Esta función ahora maneja ambos casos: JWT y Objeto de Prueba
+
+    // ----------------------------------------------------
+    // LÓGICA DE SIMULACIÓN DE SESIÓN EN useEffect
+    // ----------------------------------------------------
+    useEffect(() => {
+        // 1. INTENTAR CARGAR DATOS DEL LOCAL STORAGE
+        const storedUser = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+        if (storedUser) {
+            // Si hay datos, los cargamos (sesión simulada ya establecida)
+            try {
+                const userData = JSON.parse(storedUser);
+                setUser(userData);
+                setIsAuthenticated(true);
+            } catch (error) {
+                console.error("Error al parsear el usuario de localStorage:", error);
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+            }
+        } else {
+            // 2. SI NO HAY DATOS (PRIMERA CARGA), QUEMAMOS EL USUARIO DE PRUEBA
+            
+            // Guardar en localStorage
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(FAKE_USER_DATA));
+
+            // Establecer el estado
+            setUser(FAKE_USER_DATA);
+            setIsAuthenticated(true);
+
+            console.log("✅ Usuario de prueba 'Jeremy' cargado y quemado en localStorage.");
+        }
+    }, []); 
+
+    // ----------------------------------------------------
+    // FUNCIONES DE MANEJO DE ESTADO (Adaptadas)
+    // ----------------------------------------------------
+    const saveUser = (userData) => {
+        // Esta función se usaría para un login real (guardaría el JWT o el objeto)
+        // Aquí solo la adaptamos para guardar el objeto si se llama.
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userData));
+        setUser(userData);
+        setIsAuthenticated(true);
+    };
+
+    const clearUser = () => {
+        setUser(null);
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        setIsAuthenticated(false);
+    };
+
+    // ----------------------------------------------------
+    // FUNCIÓN CRÍTICA PARA MOSTRAR EL NOMBRE
+    // ----------------------------------------------------
     const getUserName = () => {
         if (!user) {
+            // Esto solo debería ocurrir muy brevemente durante la inicialización
             return 'Invitado';
         }
         
-        if (typeof user === 'object' && user !== null && user.nombre) {
-            // Caso Objeto de Prueba (cargado desde la DB)
-            return user.nombre || 'Usuario (DB Encontrado)';
+        // 💡 Acceso seguro a la propiedad 'nombre' (minúsculas)
+        // Ya que el estado 'user' siempre es un objeto (o null) en esta implementación.
+        if (typeof user === 'object' && user !== null) {
+            return user.nombre || 'Usuario Desconocido'; 
         }
 
-        if (typeof user === 'string' && user.length > 0) {
-            // Caso JWT (sesión real)
+        // Caso alternativo si user fuera una cadena (JWT), aunque aquí se simula con objeto
+        if (typeof user === 'string') {
             const userData = decodeToken();
-            return userData.name || user.nombre || 'Usuario (Token)';
+            return userData.nombre || 'Usuario (Token)'; 
         }
+
         return 'Invitado';
     };
-    
- //requiredRoles=['Administrador','Cliente']
- const autorize = ({ requiredRoles }) => {
-  const userData = decodeToken();
-  if (userData && requiredRoles) {
-   console.log(
-    userData && userData.rol && requiredRoles.includes(userData.rol.name),
-   );
-   return (
-    userData && userData.rol && requiredRoles.includes(userData.rol.name)
-   );
-  }
-  return false;
- };
 
- UserProvider.propTypes = {
-  children: PropTypes.node.isRequired,
- };
-    
- return (
-  <UserContext.Provider
-   value={{
-    user,
-    isAuthenticated,
-    isLoading,
-    saveUser,
-    clearUser,
-    autorize,
-    decodeToken,        
-    getUserName, 
-   }}
-  >
-   {children}
-  </UserContext.Provider>
- );
-}
+    return (
+        <UserContext.Provider value={{
+            user,
+            isAuthenticated,
+            getUserName,
+            saveUser,
+            clearUser
+        }}>
+            {children}
+        </UserContext.Provider>
+    );
+};
+UserProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+};
+export default UserProvider;
