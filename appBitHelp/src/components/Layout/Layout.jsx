@@ -2,16 +2,14 @@
 import * as React from 'react';
 import PropTypes from 'prop-types'; 
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import DescriptionIcon from '@mui/icons-material/Description';
 import { AppProvider, DashboardLayout, PageContainer } from '@toolpad/core'; 
 import { useHref, useLocation, useNavigate } from 'react-router-dom';
 import { extendTheme } from '@mui/material/styles';
 import Header from './Header';
 import { useColorScheme } from '@mui/material/styles';
-
-
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import GroupIcon from '@mui/icons-material/Group';
+import ViewListIcon from '@mui/icons-material/ViewList';
 
 Layout.propTypes = { children: PropTypes.node.isRequired }; 
  
@@ -79,7 +77,7 @@ const NAVIGATION = [
   {
     segment: 'tickets',
     title: 'Tiquetes',
-    icon: <BarChartIcon />,
+    icon: <AssignmentIcon />,
     children: [
       {
         segment: 'ticketsList',      // Identificador único (en minúsculas es buena práctica)
@@ -87,8 +85,7 @@ const NAVIGATION = [
       },
       {
         segment: 'assignments',
-        title: 'Asignaciones',
-        icon: <ShoppingCartIcon />
+        title: 'Asignaciones',       
       },
     ],
   },
@@ -103,7 +100,7 @@ const NAVIGATION = [
   {
     segment: 'technician',
     title: 'Técnicos',
-    icon: <BarChartIcon />,
+    icon: <GroupIcon />,
     children: [
 
       {
@@ -124,6 +121,7 @@ const NAVIGATION = [
     // Ejemplo de otra ruta
     segment: 'categories', 
     title: 'Categorias',
+    icon: <ViewListIcon/>
   },
 ];
 
