@@ -10,6 +10,8 @@ import { CategoriesDataGridWithModal } from "./components/Categories/Categories"
 import TechnicianList from "./components/Technician/TechnicianList";
 import TechnicianDetail from "./components/Technician/TechnicianDetail"; 
 import TicketsList from "./components/Tickets/TicketsList";
+import UserProvider from './components/User/UserProvider';
+
 
 const rutas=createBrowserRouter(
   [
@@ -73,6 +75,9 @@ const rutas=createBrowserRouter(
 
 createRoot(document.getElementById("root")).render(
   <StrictMode> 
-  <RouterProvider router={rutas} /> 
+    <UserProvider >
+        <RouterProvider router={rutas} /> 
+    </UserProvider>
+  
 </StrictMode>, 
 );
