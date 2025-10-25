@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, useEffect, useState } from "react";
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
@@ -8,8 +8,11 @@ import es from 'date-fns/locale/es';
 //import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../../styles/AssignmentsCalendar.scss";
 import moment from 'moment';
-import { useTheme } from "@mui/material/styles";
+import TicketService from "../../services/TicketService";
+import { formToJSON } from "axios";
+//import { useTheme } from "@mui/material/styles";
 
+//Región cultural a utilizar.
 const locales = {
   'es': es,
 }
@@ -24,8 +27,25 @@ const localizer = dateFnsLocalizer({
 })
 
 export function Assignments() {
-
+  
   //const theme = useTheme();
+
+  //Constante auxiliar para manejar el arreglo de tickets.
+  const [tickets, setTickets] = useState([]);
+
+  //Configura el valor de las etiquetas mostradas en los botones del calendario.
+  const messages = {
+    week: "Semana",
+    work_week: "Semana de trabajo",
+    day: "Día",
+    month: "Mes",
+    previous: "Anterior",
+    next: "Siguiente",
+    today: "Hoy",
+    agenda: "Agenda",
+
+    showMore: (total) => `+${total} más`,
+  };
 
   const events = [
     {
@@ -57,19 +77,31 @@ export function Assignments() {
     },
   ];
 
-  //Configura el valor de las etiquetas mostradas en los botones del calendario.
-  const messages = {
-    week: "Semana",
-    work_week: "Semana de trabajo",
-    day: "Día",
-    month: "Mes",
-    previous: "Anterior",
-    next: "Siguiente",
-    today: "Hoy",
-    agenda: "Agenda",
+  useEffect(() => {
 
-    showMore: (total) => `+${total} más`,
-  };
+    TicketService.getTickets()
+      .then((response) => {
+        let eventsCalendar = [];
+
+        response.forEach(ticket => {
+          let event = {
+            start: ticket.Creacion,
+            end: ticket.Resolucion,
+            title: `Ticket #${ticket.idticket} - ${ticket.titulo}
+            \n Categoría: ${id}` 
+          }
+        });
+
+      })
+      .catch((error) => {
+        if (error instanceof SyntaxError) {
+          setError(error);
+          console.log(error);
+          setLoaded(false);
+          throw new Error('Respuesta no válida del servidor');
+        }
+      });
+  });
 
   return (
     <div
@@ -89,18 +121,6 @@ export function Assignments() {
       //   '--rbc-header-text': theme.palette.text.primary,
       // }}
     >
-      {/* <Typography
-          //component="h1"
-          variant="h4"
-          align="center"
-          color="text.primary"
-          gutterBottom
-          fontFamily={"sans-serif"}
-          marginBottom={5}
-        >   
-          Calendario Semanal de Asignaciones
-        </Typography> */}
-
       <Calendar
         localizer={localizer}
         defaultDate={new Date()}
@@ -108,7 +128,7 @@ export function Assignments() {
         events={events}
         style={{ height: "85vh" }}
         messages={messages}
-        culture={"es"}
+        //culture={"es"}
         min={new Date(1900, 1, 1, 6, 0, 0)}
         //views={["week"]}
       />

@@ -12,7 +12,8 @@ class TicketModel
     {
         try {
             //Consulta.
-            $query = "SELECT * FROM tiquete";
+            $query = "SELECT * FROM tiquete
+            INNER JOIN especialidad ON tiquete";
 
             //Ejecucción de la consulta.
             $tickets = this->$conexion->ExecuteSQL($query);
