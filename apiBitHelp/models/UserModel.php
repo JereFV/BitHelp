@@ -32,7 +32,7 @@ class UserModel
 			$rolM = new RolModel();
 
 			//Consulta sql
-			$vSql = "SELECT * FROM usuario where id=$id";
+			$vSql = "SELECT * FROM usuario where idUsuario=$id";
 			//Ejecutar la consulta
 			$vResultado = $this->enlace->ExecuteSQL($vSql);
 			if ($vResultado) {
@@ -53,7 +53,7 @@ class UserModel
 		try {
 			//Consulta sql
 			$vSql = "SELECT * FROM bithelp.usuario
-					where idRol=2;";
+					where idRol=1;";
 
 			//Ejecutar la consulta
 			$vResultado = $this->enlace->ExecuteSQL($vSql);
@@ -64,12 +64,13 @@ class UserModel
 			die($e->getMessage());
 		}
 	}
+	/*
 	public function customerbyShopRental($idShopRental)
 	{
 		try {
 			//Consulta sql
-			$vSql = "SELECT * FROM movie_rental.user
-					where rol_id=2 and shop_id=$idShopRental;";
+			$vSql = "SELECT * FROM bithelp.usuario
+					where idRolUsuario=1 and shop_id=$idShopRental;";
 
 			//Ejecutar la consulta
 			$vResultado = $this->enlace->ExecuteSQL($vSql);
@@ -79,12 +80,12 @@ class UserModel
 		} catch (Exception $e) {
 			die($e->getMessage());
 		}
-	}
+	} */
 	public function login($objeto)
 	{
 		try {
 
-			$vSql = "SELECT * from usuario where email='$objeto->email'";
+			$vSql = "SELECT * from usuario where correo='$objeto->email'";
 
 			//Ejecutar la consulta
 			$vResultado = $this->enlace->ExecuteSQL($vSql);
@@ -95,8 +96,8 @@ class UserModel
 					if (!empty($usuario)) {
 						// Datos para el token JWT
 						$data = [
-							'id' => $usuario->id,
-							'email' => $usuario->email,
+							'idUsuario' => $usuario->id,
+							'correo' => $usuario->email,
 							'rol' => $usuario->rol,
 							'iat' => time(),  // Hora de emisión
 							'exp' => time() + 3600 // Expiración en 1 hora
