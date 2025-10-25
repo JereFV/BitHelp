@@ -2,11 +2,10 @@
 //Cargar todos los paquetes
 require_once "vendor/autoload.php";
 
-use Firebase\JWT\JWT;
+
 
 class user
 {
-
     private $secret_key = 'e0d17975bc9bd57eee132eecb6da6f11048e8a88506cc3bffc7249078cf2a77a';
     //Listar en el API
     public function index()
@@ -35,6 +34,7 @@ class user
         //Dar respuesta
         $response->toJSON($result);
     }
+    /*
     public function customerbyShopRental($idShopRental)
     {
         $response = new Response();
@@ -44,6 +44,7 @@ class user
         //Dar respuesta
         $response->toJSON($result);
     }
+    */
     public function login()
     {
         $response = new Response();

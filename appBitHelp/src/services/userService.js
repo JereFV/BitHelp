@@ -1,5 +1,5 @@
 import axios from 'axios';
-const BASE_URL = import.meta.env.VITE_BASE_URL + 'user';
+const BASE_URL = `${import.meta.env.VITE_BASE_URL}user`;
 
 class UserService {
   getUsers() {
