@@ -1,18 +1,20 @@
 <?php
 class ticket
 {
-    public function index()
+    //Obtener los tiquetes según el rol del usuario en sesión.
+    public function getAllByRolUser($user)
     {
-        try { 
+        try 
+        { 
             $response = new Response();
             $ticketModel = new TicketModel();
 
             //Obtiene los tiquetes y los devuelve en una estructura JSON como respuesta.
-            $tickets = $ticketModel->getAll();
-            $response.toJson($tickets);           
+            $tickets = $ticketModel->getAllByRolUser($user);
+            
+            $response->toJson($tickets);           
         }
-        catch (Exception $ex)
-        {
+        catch (Exception $ex) {
             handleException($ex);
         }
     }
