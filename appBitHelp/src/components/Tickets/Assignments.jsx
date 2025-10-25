@@ -79,19 +79,22 @@ export function Assignments() {
 
   useEffect(() => {
 
-    TicketService.getTickets()
+    TicketService.getTicketsByRolUser(localStorage.getItem('Usuario'))
       .then((response) => {
         let eventsCalendar = [];
 
         response.forEach(ticket => {
+          
           let event = {
-            start: ticket.Creacion,
+            /*Asigna como fecha de inicio el momento en que el tiquete haya sido asignado al técnico, filtrando el historial del tiquete por el id
+            del técnico y el estado "Asignado".(2)*/  
+            start: ticket.historialTiquete.filter((movement) => movement.idUsuario == ticket.idTecnicoAsignado && movement.idEstado == 2)[0].fecha,
             end: ticket.Resolucion,
             title: `Ticket #${ticket.idticket} - ${ticket.titulo}
-            \n Categoría: ${id}` 
+            \n Categoría: ${ticket.categoria.nombre}
+            \n Estado Actual: ` 
           }
         });
-
       })
       .catch((error) => {
         if (error instanceof SyntaxError) {
