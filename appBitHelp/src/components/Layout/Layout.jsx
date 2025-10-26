@@ -3,6 +3,7 @@ import * as React from 'react';
 import PropTypes from 'prop-types'; 
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import { AppProvider, DashboardLayout, PageContainer } from '@toolpad/core'; 
+// eslint-disable-next-line no-unused-vars
 import { useHref, useLocation, useNavigate } from 'react-router-dom';
 import { extendTheme } from '@mui/material/styles';
 import Header from './Header';
@@ -105,18 +106,6 @@ const NAVIGATION = [
     segment: 'technician',
     title: 'Técnicos',
     icon: <GroupIcon />,
-    children: [
-
-      {
-        segment: 'technicianList',      // Identificador único (en minúsculas es buena práctica)
-        title: 'Lista de Técnicos',     // El texto visible en el menú
-      },
-      {
-        segment: 'technicianDetail',      // Identificador único (en minúsculas es buena práctica)
-        title: 'Detalle de Técnicos',     // El texto visible en el menú
-      },
-      // ...
-    ],
   },
   {
     kind: 'divider',

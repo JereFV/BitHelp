@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import TicketService from '../../services/TicketService';

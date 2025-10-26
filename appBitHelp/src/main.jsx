@@ -7,8 +7,7 @@ import { Home } from "./components/Home/Home";
 import { RouterProvider } from "react-router";
 import { Assignments } from "./components/Tickets/Assignments";
 import { CategoriesDataGridWithModal } from "./components/Categories/Categories";
-import TechnicianList from "./components/Technician/TechnicianList";
-import TechnicianDetail from "./components/Technician/TechnicianDetail"; 
+import { TechniciansDataGridWithModal } from "./components/Technicians/Technicians";
 import TicketsList from "./components/Tickets/TicketsList";
 import UserProvider from './components/User/UserProvider';
 import { TicketDetail } from "./components/Tickets/TicketDetail";
@@ -51,22 +50,9 @@ const rutas=createBrowserRouter(
           element: <CategoriesDataGridWithModal/>
         },
         {
-          path:'technicianList',
-          element: <TechnicianList/>
-        },
-        {
           path:'technician',
-          children: [
-              {
-                path:'technicianList',
-                element: <TechnicianList/>
-              },
-              {
-                path:'technicianDetail',
-                element: <TechnicianDetail/>
-              }
-          ]
-        }, 
+          element: <TechniciansDataGridWithModal/>
+        },
       ]
     }
   ]
