@@ -5,11 +5,11 @@ class categorie
     {
         try { 
             $response = new Response();
-            $ticketModel = new TicketModel();
+            $categorieModel = new categorieModel();
 
-            //Obtiene los tiquetes y los devuelve en una estructura JSON como respuesta.
-            $tickets = $ticketModel->getAll();
-            $response.toJson($tickets);           
+            //Obtiene las categorías y los devuelve en una estructura JSON como respuesta.
+            $categorie = $categorieModel->getAllCategories();
+            $response->toJson($categorie);           
         }
         catch (Exception $ex)
         {

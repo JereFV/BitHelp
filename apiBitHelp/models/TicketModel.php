@@ -5,7 +5,7 @@ class TicketModel
 
     public function __construct()
     {
-        $this->$connection = new MySqlConnect();
+        $this->connection = new MySqlConnect();
     }
 
     //Obtiene los tiquetes según el rol del usuario en sesión, donde:
@@ -30,7 +30,7 @@ class TicketModel
                 $query += "WHERE idTecnicoAsignado = $user->idUsuario";
 
             //Ejecucción de la consulta, obtiendo los tiquetes respectivos.
-            $tickets = $this->$connection->executeSQL($query);
+            $tickets = $this->connection->executeSQL($query);
 
             //Iteración de elementos para la obtención de valores y estructuras adicionales sobre cada uno de ellos.
             foreach ($tickets as $ticket)
