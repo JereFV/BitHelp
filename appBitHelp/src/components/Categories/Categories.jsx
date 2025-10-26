@@ -43,6 +43,8 @@ export const CategoriesDataGridWithModal = () => {
                     nombre: item.nombre,
                     estado: item.estado,
                     idSla: item.idSla,
+                    tiempoMaxRespuesta: item.tiempoMaxRespuesta,
+                    tiempoMaxResolucion: item.tiempoMaxResolucion,
                 }));
 
                 setRows(categoriesData);
@@ -146,7 +148,15 @@ export const CategoriesDataGridWithModal = () => {
                                 <Typography fontSize={16}>
                                     <Typography component="span" fontWeight="bold">Nombre:</Typography> {selectedRow.nombre}
                                 </Typography>
-                              
+
+                                <Typography fontSize={16}>
+                                  <Typography component="span" fontWeight="bold">Tiempo max de respuesta: </Typography>{selectedRow.tiempoMaxRespuesta}                                 
+                                </Typography>
+
+                                <Typography fontSize={16}>
+                                   <Typography component="span" fontWeight="bold">Tiempo max de resolución: </Typography>{selectedRow.tiempoMaxResolucion}                                     
+                                </Typography>
+
                                 <Typography fontSize={16}>
                                     <Typography component="span" fontWeight="bold">ID SLA:</Typography> {selectedRow.idSla}
                                 </Typography>

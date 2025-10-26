@@ -11,8 +11,20 @@ class CategorieModel
     public function getAllCategories()
     {
         try {
-            //Consulta.
-            $query = "SELECT * FROM categoria";
+            //Consulta SQL  con Join para obtener los datos el SLA en base a su ID.
+            $query = "
+            SELECT 
+                c.idCategoria,
+                c.nombre,
+                c.estado,
+                c.idSla,
+                s.tiempoMaxRespuesta,
+                s.tiempoMaxResolucion
+            FROM
+                categoria c
+            INNER JOIN 
+                sla s on c.idSla = s.idSla            
+            ";
 
             //Ejecucción de la consulta.
             $categorie = $this->connection->ExecuteSQL($query);
