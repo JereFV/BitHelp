@@ -1,7 +1,8 @@
 import React, { useState ,useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Button, Modal, Box, Typography } from '@mui/material';
+import { Button, Modal, Box, Typography,Stack } from '@mui/material';
 import CategorieService from '../../services/CategorieService';
+import { esES } from '@mui/x-data-grid/locales';
 
 export const CategoriesDataGridWithModal = () => {
   /*
@@ -41,7 +42,7 @@ export const CategoriesDataGridWithModal = () => {
                     id: item.idCategoria || item.id, 
                     nombre: item.nombre,
                     estado: item.estado,
-                    
+                    idSla: item.idSla,
                 }));
 
                 setRows(categoriesData);
@@ -67,21 +68,29 @@ export const CategoriesDataGridWithModal = () => {
   };
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 90 },
-    { field: 'nombre', headerName: 'Categoria', width: 150 },
+    { field: 'id', headerName: 'ID', maxWidth: 90, flex:0.3,headerAlign: 'center',align: 'center' },
+    { field: 'nombre', headerName: 'Categoria', minWidth: 300 ,flex:0.8 , maxWidth: 650, headerAlign: 'center',align: 'center'},
     { 
       field: 'estado', 
       headerName: 'Estado', 
-      width: 110,
+      minWidth:90,
+      flex:0.6,
+      maxWidth: 180,
+      headerAlign: 'center',
+      align: 'center',
       // Formatea el valor (1/0) a texto (Activo/Inactivo)
-      valueFormatter: (params) => params === "1" ? 'Activo' : 'Inactivo'
+      valueFormatter: (params) => params === "1" ? 'Activo' : 'Inactivo'      
     },
     {
       field: 'actions',
       headerName: 'Opciones',
-      width: 150,
+      maxWidth: 250,    
+      minWidth: 170,  
+      flex:1,
+      headerAlign: 'center',
+      align: 'center',      
       renderCell: (params) => (
-        <Button variant="outlined" size="small" onClick={() => handleOpenModal(params.row)}>
+        <Button  variant="outlined"  size="medium" onClick={() => handleOpenModal(params.row)}>
           Ver Detalles
         </Button>
       ),
@@ -91,14 +100,19 @@ export const CategoriesDataGridWithModal = () => {
   return (
         <div style={{ height: 400, width: '100%' }}>
             {loading ? (
-                <Typography variant="h6">Cargando categorías...</Typography>
+                <Typography variant="h6" fontFamily={'-apple-system'}>Cargando categorías...</Typography>
             ) : (
                 <DataGrid
-                    rows={rows}
+                    rows={rows}                    
                     columns={columns}
                     pageSize={5}
                     rowsPerPageOptions={[5]}
                     disableSelectionOnClick
+                    localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+                    sx={{
+                      borderRadius: 4,
+                      boxShadow: 4,                      
+                    }}
                 />
             )}
             
@@ -114,23 +128,47 @@ export const CategoriesDataGridWithModal = () => {
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
                     width: 400,
+                    maxWidth: '90%',
                     bgcolor: 'background.paper',
-                    border: '2px solid #000',
-                    boxShadow: 24,
+                    borderRadius: 3,
+                    boxShadow: 16,
                     p: 4,
                 }}>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
+                    <Typography id="modal-modal-title" variant="h6" component="h2" fontFamily={'-apple-system'}>
                         Detalles de la Categoría
                     </Typography>
                     {selectedRow && (
-                        <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                            ID: {selectedRow.id}<br />
-                            Nombre: {selectedRow.nombre}<br /> 
-                            ID SLA: {selectedRow.idSla}<br />
-                            Estado: {selectedRow.estado === 1 ? 'Activo' : 'Inactivo'}
-                        </Typography>
-                    )}
-                    <Button onClick={handleCloseModal} sx={{ mt: 2 }}>Cerrar</Button>
+                          <Stack spacing={1} sx={{ mt: 2 }}>
+                                <Typography fontSize={16}>
+                                  <Typography component="span" fontWeight="bold">ID:</Typography> {selectedRow.id}
+                                </Typography>
+                              
+                                <Typography fontSize={16}>
+                                    <Typography component="span" fontWeight="bold">Nombre:</Typography> {selectedRow.nombre}
+                                </Typography>
+                              
+                                <Typography fontSize={16}>
+                                    <Typography component="span" fontWeight="bold">ID SLA:</Typography> {selectedRow.idSla}
+                                </Typography>
+                              
+                                <Typography fontSize={16}>
+                                  <Typography component="span" fontWeight="bold">Estado:</Typography> 
+                                  <Typography 
+                                      component="span" 
+                                      fontWeight="bold"
+                                      color={selectedRow.estado === '1' ? 'success.main' : 'error.main'}
+                                  >
+                                      {selectedRow.estado === '1' ? 'Activo' : 'Inactivo'}
+                                  </Typography>
+                                </Typography>
+                          </Stack>
+                      )
+                    }
+                    <Button  variant="outlined" onClick={handleCloseModal} sx={{ mt: 3 }}> 
+                      <Typography  fontFamily={'-apple-system'} fontSize={15}>
+                        Cerrar
+                       </Typography>
+                    </Button>
                 </Box>
             </Modal>
         </div>
