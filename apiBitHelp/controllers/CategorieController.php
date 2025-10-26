@@ -9,7 +9,7 @@ class categorie
 
             //Obtiene los tiquetes y los devuelve en una estructura JSON como respuesta.
             $tickets = $ticketModel->getAll();
-            $response.toJson($tickets);           
+            $response->toJson($tickets);           
         }
         catch (Exception $ex)
         {

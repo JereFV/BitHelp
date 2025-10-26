@@ -1,20 +1,34 @@
-// eslint-disable-next-line no-unused-vars
-import React from 'react';
-import { Box, Typography } from '@mui/material'; 
+import React, { useEffect, useState } from 'react';
+import { Box, Typography } from '@mui/material';
+import TicketService from '../../services/TicketService';
+import { ListCardTickets } from './ListCardTickets.jsx';
 
-// El componente de tu nueva pantalla
 function TicketsList() {
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    TicketService.getTickets()
+      .then((res) => {
+        setTickets(res.data || []);
+      })
+      .catch((err) => {
+        console.error('Error cargando tickets:', err);
+        setError(err);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
-    // Usa Box para contenedores y sx para estilos de Material UI
-    <Box sx={{ padding: 4, textAlign: 'center' }}>
+    <Box sx={{ padding: 4 }}>
       <Typography variant="h3" component="h1" color="primary" gutterBottom>
-        Listado de [Tiquetes]
+        Listado de Tiquetes
       </Typography>
-      <Typography variant="body1">
-        Este contenido se muestra dentro del Layout (con Header y Footer) 
-        gracias al Router. ¡Ya puedes empezar a diseñar!
-      </Typography>
-      {/* ... Añade aquí el resto de tu diseño JSX ... */}
+
+      {loading && <Typography>Cargando...</Typography>}
+      {error && <Typography color="error">Error cargando tiquetes</Typography>}
+      {!loading && !error && <ListCardTickets data={tickets} />}
     </Box>
   );
 }

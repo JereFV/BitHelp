@@ -1,19 +1,20 @@
 <?php
-class ticket
+class Ticket
 {
     public function index()
     {
-        try { 
+        try {
             $response = new Response();
             $ticketModel = new TicketModel();
 
-            //Obtiene los tiquetes y los devuelve en una estructura JSON como respuesta.
+            // Llama al modelo para obtener todos los tickets
             $tickets = $ticketModel->getAll();
-            $response.toJson($tickets);           
-        }
-        catch (Exception $ex)
-        {
+
+            // Devuelve los resultados en formato JSON
+            $response->toJson($tickets);
+        } catch (Exception $ex) {
             handleException($ex);
         }
     }
 }
+?>
