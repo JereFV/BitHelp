@@ -156,11 +156,7 @@ export const CategoriesDataGridWithModal = () => {
                                 <Typography fontSize={16}>
                                    <Typography component="span" fontWeight="bold">Tiempo max de resolución: </Typography>{selectedRow.tiempoMaxResolucion}                                     
                                 </Typography>
-
-                                <Typography fontSize={16}>
-                                    <Typography component="span" fontWeight="bold">ID SLA:</Typography> {selectedRow.idSla}
-                                </Typography>
-                              
+                            
                                 <Typography fontSize={16}>
                                   <Typography component="span" fontWeight="bold">Estado:</Typography> 
                                   <Typography 
@@ -168,7 +164,7 @@ export const CategoriesDataGridWithModal = () => {
                                       fontWeight="bold"
                                       color={selectedRow.estado === '1' ? 'success.main' : 'error.main'}
                                   >
-                                      {selectedRow.estado === '1' ? 'Activo' : 'Inactivo'}
+                                      {selectedRow.estado === '1' ? ' Activo' : 'Inactivo'}
                                   </Typography>
                                 </Typography>
                           </Stack>
