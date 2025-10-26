@@ -29,13 +29,14 @@ require_once "models/RolModel.php";
 require_once "models/CategorieModel.php";
 require_once "models/TicketModel.php";
 require_once "models/UserModel.php";
-
+require_once "models/TechnicianModel.php";
 
 /***--- Agregar todos los controladores*/
 require_once "controllers/ActorController.php";
 require_once "controllers/CategorieController.php";
 require_once "controllers/TicketController.php";
 require_once "controllers/UserController.php";
+require_once "controllers/TechnicianController.php";
 
 //Enrutador
 require_once "routes/RoutesController.php";
