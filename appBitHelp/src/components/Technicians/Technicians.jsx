@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { Button, Modal, Box, Typography } from '@mui/material';
+import { esES } from '@mui/x-data-grid/locales';
 // Importa el nuevo servicio
 import TechnicianService from '../../services/TechnicianService'; 
 
@@ -67,20 +68,26 @@ export const TechniciansDataGridWithModal = () => {
     };
 
     const columns = [
-        { field: 'id', headerName: 'ID', width: 90 },
-        { field: 'nombreCompleto', headerName: 'Técnico', width: 200 },
-        { field: 'correo', headerName: 'Correo', width: 250 },
+        { field: 'id', headerName: 'ID', minWidth: 70,maxWidth:90 ,headerAlign: 'center',align: 'center',flex:0.6, },
+        { field: 'nombreCompleto', headerName: 'Técnico',  minWidth: 240 ,headerAlign: 'center',align: 'center',flex:0.7,},
+        { field: 'correo', headerName: 'Correo', minWidth: 240,headerAlign: 'center',align: 'center',flex:0.7,},
         {
             field: 'estado',
             headerName: 'Estado',
-            width: 110,
+            minWidth: 170 ,
+            headerAlign: 'center',
+            align: 'center',
+            flex:0.4,
             // Formatea 1/0 (tinyint) a texto (Activo/Inactivo)
-            valueFormatter: (params) => params.value === 1 ? 'Activo' : 'Inactivo' 
+            valueFormatter: (params) => params.value === '1' ? 'Activo' : 'Inactivo' 
         },
         {
             field: 'actions',
             headerName: 'Opciones',
-            width: 150,
+            minWidth: 170,
+            headerAlign: 'center',
+            align: 'center',
+            flex:0.7,
             renderCell: (params) => (
                 <Button variant="outlined" size="small" onClick={() => handleOpenModal(params.row)}>
                     Ver Detalles
@@ -100,6 +107,11 @@ export const TechniciansDataGridWithModal = () => {
                     pageSize={5}
                     rowsPerPageOptions={[5]}
                     disableSelectionOnClick
+                    localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+                     sx={{
+                      borderRadius: 4,
+                      boxShadow: 1,                      
+                    }}
                 />
             )}
 
@@ -131,7 +143,7 @@ export const TechniciansDataGridWithModal = () => {
                             Teléfono: {selectedRow.telefono}<br />
                             Disponibilidad (ID): {selectedRow.idDisponibilidad}<br />
                             Carga de Trabajo: {selectedRow.cargaTrabajo}<br />
-                            Estado: {selectedRow.estado === 1 ? 'Activo' : 'Inactivo'}
+                            Estado: {selectedRow.estado === '1' ? 'Activo' : 'Inactivo'}
                         </Typography>
                     )}
                     <Button onClick={handleCloseModal} sx={{ mt: 2 }}>Cerrar</Button>

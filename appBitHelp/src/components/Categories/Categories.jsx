@@ -111,7 +111,7 @@ export const CategoriesDataGridWithModal = () => {
                     localeText={esES.components.MuiDataGrid.defaultProps.localeText}
                     sx={{
                       borderRadius: 4,
-                      boxShadow: 4,                      
+                      boxShadow: 1,                      
                     }}
                 />
             )}
