@@ -11,7 +11,7 @@ import TechnicianList from "./components/Technician/TechnicianList";
 import TechnicianDetail from "./components/Technician/TechnicianDetail"; 
 import TicketsList from "./components/Tickets/TicketsList";
 import UserProvider from './components/User/UserProvider';
-
+import { TicketDetail } from "./components/Tickets/TicketDetail";
 
 const rutas=createBrowserRouter(
   [
@@ -41,10 +41,9 @@ const rutas=createBrowserRouter(
             },
             {
               // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
-              path:'tickets',
-              element: ""
+              path:'ticketDetail',
+              element: <TicketDetail/>
             },
-
           ]
         },   
         {

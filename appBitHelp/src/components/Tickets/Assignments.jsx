@@ -15,7 +15,8 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import { Chip, Box, Typography } from "@mui/material";
 //import { useTheme } from "@mui/material/styles";
 
-export function Assignments() {
+export function Assignments() 
+{
   //Región cultural a utilizar.
   const locales = {
     'es': es,

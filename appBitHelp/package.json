@@ -21,7 +21,7 @@
     "@mui/lab": "^7.0.1-beta.18",
     "@mui/material": "^7.3.4",
     "@mui/styled-engine-sc": "^6.4.2",
-    "@mui/x-data-grid": "^8.14.1",
+    "@mui/x-data-grid": "^8.15.0",
     "@toolpad/core": "^0.16.0",
     "axios": "^1.7.9",
     "bootstrap": "^5.3.8",
