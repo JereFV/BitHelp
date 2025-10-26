@@ -1,5 +1,3 @@
-
-
 import PropTypes from 'prop-types';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
@@ -95,7 +93,7 @@ export const UserProvider = ({ children }) => {
             return 'Invitado';
         }
         
-        // 💡 Acceso seguro a la propiedad 'nombre' (minúsculas)
+        // Acceso seguro a la propiedad 'nombre' (minúsculas)
         // Ya que el estado 'user' siempre es un objeto (o null) en esta implementación.
         if (typeof user === 'object' && user !== null) {
             return user.nombre || 'Usuario Desconocido'; 
