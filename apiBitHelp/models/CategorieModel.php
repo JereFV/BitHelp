@@ -42,7 +42,7 @@ class CategorieModel
             return $categorie;
         } 
         catch (Exception $ex) {
-            handleException(ex);
+            handleException($ex);
         }
     }
 } 

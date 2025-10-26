@@ -22,7 +22,7 @@ class TicketStatusModel
             return $statusTicket;
         }
         catch (Exception $ex){
-            handleException(ex);
+            handleException($ex);
         }    
     }
 }
