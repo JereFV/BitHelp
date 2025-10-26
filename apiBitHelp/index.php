@@ -1,12 +1,19 @@
 <?php
-// Composer autoloader
-require_once 'vendor/autoload.php';
-/*Encabezada de las solicitudes*/
-/*CORS*/
-header("Access-Control-Allow-Origin: * ");
+require_once __DIR__ . '/vendor/autoload.php';
+
+// index.php - front controller robusto
+
+// Intentar cargar Composer autoload si existe (no obligatorio)
+$vendorAutoload = __DIR__ . '/vendor/autoload.php';
+if (file_exists($vendorAutoload)) {
+    require_once $vendorAutoload;
+}
+
+// Encabezados / CORS
+header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: *");
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=UTF-8');
 
 /*--- Requerimientos Clases o librerías*/
 require_once "controllers/core/Config.php";
@@ -35,5 +42,3 @@ require_once "controllers/UserController.php";
 require_once "routes/RoutesController.php";
 $index = new RoutesController();
 $index->index();
-
-
