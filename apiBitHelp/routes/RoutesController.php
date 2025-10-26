@@ -1,47 +1,6 @@
 <?php
 class RoutesController
 {
-    private $authMiddleware;
-    private $protectedRoutes = [];
-
-    public function __construct() {
-        // $this->authMiddleware = new AuthMiddleware();
-        // $this->registerRoutes(); 
-        $this->routes();
-    }
-
-    private function registerRoutes() {
-        // Registrar rutas protegidas
-        //---------------------  Metodo,path (en minuscula),controlador, accion, array de nombres de roles
-        $this->addProtectedRoute('GET', '/apimovie/actor', 'actor', 'index', ['Administrador']);
-    }
-
-    public function routes() {
-        $method = $_SERVER['REQUEST_METHOD'];
-        $path = strtolower($_SERVER['REQUEST_URI']);
-
-        // Si la ruta es protegida, aplicar autenticación
-        if ($this->isProtectedRoute($method, $path)) {
-            $route = $this->protectedRoutes["$method:$path"];
-            //Verifica los roles autorizados con los del usuario del token
-            if(!$this->authMiddleware->handle($route['requiredRole'])){
-                return;
-            }
-           
-        } 
-    }
-
-    private function addProtectedRoute($method, $path, $controllerName, $action, $requiredRole) {
-        $this->protectedRoutes["$method:$path"] = [
-            'controller' => $controllerName,
-            'action' => $action,
-            'requiredRole' => $requiredRole
-        ];
-    }
-
-    private function isProtectedRoute($method, $path) {
-        return isset($this->protectedRoutes["$method:$path"]);
-    }
     public function index()
     {
         //include "routes/routes.php";
@@ -81,10 +40,10 @@ class RoutesController
             }
 
             if (isset($_SERVER['REQUEST_METHOD'])) {
-                $controller = $routesArray[2] ?? null;
-                $action = $routesArray[3] ?? null;
-                $param1 = $routesArray[4] ?? null;
-                $param2 = $routesArray[5] ?? null;
+                $controller = $routesArray[3] ?? null;
+                $action = $routesArray[4] ?? null;
+                $param1 = $routesArray[5] ?? null;
+                $param2 = $routesArray[6] ?? null;
                 if ($controller) {
                     try {
                         if (class_exists($controller)) {

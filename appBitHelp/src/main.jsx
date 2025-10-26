@@ -10,6 +10,8 @@ import { CategoriesDataGridWithModal } from "./components/Categories/Categories"
 import TechnicianList from "./components/Technician/TechnicianList";
 import TechnicianDetail from "./components/Technician/TechnicianDetail"; 
 import TicketsList from "./components/Tickets/TicketsList";
+import UserProvider from './components/User/UserProvider';
+
 
 const rutas=createBrowserRouter(
   [
@@ -25,24 +27,46 @@ const rutas=createBrowserRouter(
           element: <Home />
         },
         {
-          path:'/asignations',
-          element: <Assignments />
+          path: 'tickets', // path es 'tickets' como padre
+          children: [
+            {
+              // CLAVE: ticketsList ahora es relativo a 'tickets', resultando en '/tickets/ticketsList'
+              path:'ticketsList', 
+              element: <TicketsList/>
+            }, 
+            {
+              // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
+              path:'assignments',
+              element: <Assignments/>
+            },
+            {
+              // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
+              path:'tickets',
+              element: ""
+            },
+
+          ]
         },   
         {
-          path:'/categories',
+          path:'categories',
           element: <CategoriesDataGridWithModal/>
         },
         {
-          path:'/technicianList',
+          path:'technicianList',
           element: <TechnicianList/>
         },
         {
-          path:'/technicianDetail',
-          element: <TechnicianDetail/>
-        },
-        {
-          path:'/ticketsList',
-          element: <TicketsList/>
+          path:'technician',
+          children: [
+              {
+                path:'technicianList',
+                element: <TechnicianList/>
+              },
+              {
+                path:'technicianDetail',
+                element: <TechnicianDetail/>
+              }
+          ]
         }, 
       ]
     }
@@ -51,6 +75,9 @@ const rutas=createBrowserRouter(
 
 createRoot(document.getElementById("root")).render(
   <StrictMode> 
-  <RouterProvider router={rutas} /> 
+    <UserProvider >
+        <RouterProvider router={rutas} /> 
+    </UserProvider>
+  
 </StrictMode>, 
 );

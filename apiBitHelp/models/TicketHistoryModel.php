@@ -1,0 +1,27 @@
+<?php
+class TicketHistoryModel
+{
+    public $connection;
+
+    public function __construct()
+    {
+        $this->connection = new MySqlConnect();
+    }
+
+    //Obtiene el historial de movimientos para determinado tiquete segun el valor enviado como parámetro.
+    public function get($id)
+    {
+        try
+        {
+            $query = "SELECT * FROM historial_tiquete
+                      WHERE idTiquete = $id";
+
+            $ticketHistory = $this->connection->executeSQL($query);
+
+            return $ticketHistory;
+        }
+        catch(Exception $ex) {
+            handleException($ex);
+        }
+    }
+}
