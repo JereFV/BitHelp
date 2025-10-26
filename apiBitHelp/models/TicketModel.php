@@ -45,7 +45,7 @@ class TicketModel
     // Rol 1-Cliente: Tiquetes reportados por el usuario.
     // Rol 2-Técnico: Tiquetes que le han sido asignados.
     // Rol 3-Administrador: Todos los tiquetes existentes sin filtro alguno.
-    public function getAllByRolUser($user)
+    public function getAllByRolUser($idRole, $idUser)
     {
         try 
         {
@@ -54,13 +54,13 @@ class TicketModel
             $ticketHistoryModel = new TicketHistoryModel();
 
             //Construcción inicial de la consulta.
-            $query = "SELECT * FROM tiquete";
+            $query = "SELECT * FROM tiquete ";
 
             //Construye la consulta según el rol del usuario en sesión
-            if ($user->idRol == 1) //Cliente
-                $query += "WHERE idUsuarioSolicita = $user->idUsuario";
-            else if ($user->idRol == 2) //Técnico
-                $query += "WHERE idTecnicoAsignado = $user->idUsuario";
+            if ($idRole == 1) //Cliente
+                $query .= "WHERE idUsuarioSolicita = $idUser";
+            else if ($idRole == 2) //Técnico
+                $query .= "WHERE idTecnicoAsignado = $idUser";
 
             //Ejecucción de la consulta, obtiendo los tiquetes respectivos.
             $tickets = $this->connection->executeSQL($query);
@@ -72,13 +72,13 @@ class TicketModel
                 $ticket->categoria = $categorieModel->getBySpecialty($ticket->idEspecialidad)[0];
                 
                 //Obtiene la estructura completa del estado del tiquete desde el catálogo existente.
-                $ticket->estadoTiquete = $ticketStatusModel->get($ticket->idEstadoTiquete)[0];
+                $ticket->estadoTiquete = $ticketStatusModel->get($ticket->idEstado)[0];
 
                 //Elimina la propiedad del id estado tiquete, dado que ya se encuentra almacenado en una estructura.
-                unset($ticket->idEstadoTiquete);
+                unset($ticket->idEstado);
 
                 //Obtiene el historial de movimientos para cada tiquete.
-                $ticket->historial_tiquete = $ticketHistoryModel->get($ticket->idTiquete);
+                $ticket->historialTiquete = $ticketHistoryModel->get($ticket->idTiquete);
             }
 
             return $tickets;

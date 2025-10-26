@@ -150,6 +150,7 @@ class RoutesController
                             'result' => $th->getMessage()
                         );
                         echo json_encode($json, http_response_code($json["status"]));
+                        //handleException($th);
                     }
                 } else {
                     $json = array(

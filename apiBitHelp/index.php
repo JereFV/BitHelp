@@ -29,6 +29,8 @@ require_once "models/RolModel.php";
 require_once "models/CategorieModel.php";
 require_once "models/TicketModel.php";
 require_once "models/UserModel.php";
+require_once "models/TicketStatusModel.php";
+require_once "models/TicketHistoryModel.php";
 require_once "models/TechnicianModel.php";
 
 /***--- Agregar todos los controladores*/
