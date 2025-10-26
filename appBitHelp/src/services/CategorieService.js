@@ -1,9 +1,9 @@
-import axios from "axios";
-const BASE_URL = `${import.meta.env.BASE_URL}categorie`; //cadena interpolada
+import axios from 'axios';
+const BASE_URL = import.meta.env.VITE_BASE_URL +'categorie';
 
 class CategorieService 
 {
-    getTickets()
+    getAllCategories()
     {
         //Realiza la petición utilizando axios como cliente y retorna la respuesta.
         let categories = axios.get(BASE_URL);

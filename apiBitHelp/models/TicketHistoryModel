@@ -21,7 +21,7 @@ class TicketHistoryModel
             return $ticketHistory;
         }
         catch(Exception $ex) {
-            handleException(ex);
+            handleException($ex);
         }
     }
 }
