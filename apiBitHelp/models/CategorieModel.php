@@ -34,7 +34,7 @@ class CategorieModel
                       FROM  categoria a
                       INNER JOIN especialidad b 
                       ON a.idCategoria = b.IdCategoria
-                      WHERE b.idEspeciliad = $idSpecialty";
+                      WHERE b.idEspecialidad = $idSpecialty";
 
             $categorie = $this->connection->executeSQL($query);
 

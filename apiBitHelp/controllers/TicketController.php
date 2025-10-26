@@ -2,7 +2,7 @@
 class ticket
 {
     //Obtener los tiquetes según el rol del usuario en sesión.
-    public function getAllByRolUser($user)
+    public function getAllByRolUser($idRole, $idUser)
     {
         try 
         { 
@@ -10,7 +10,7 @@ class ticket
             $ticketModel = new TicketModel();
 
             //Obtiene los tiquetes y los devuelve en una estructura JSON como respuesta.
-            $tickets = $ticketModel->getAllByRolUser($user);
+            $tickets = $ticketModel->getAllByRolUser($idRole, $idUser);
             
             $response->toJson($tickets);           
         }

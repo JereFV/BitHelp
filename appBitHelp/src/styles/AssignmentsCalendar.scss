@@ -1,3 +1,4 @@
+@use "sass:color";
 @import "react-big-calendar/lib/sass/styles";
 
 /* Día actual (columna del día activo en vista semana o día) */
@@ -29,3 +30,113 @@
 //   background-color: var(--rbc-button-active-bg, var(--rbc-event-bg));
 //   color: var(--rbc-button-active-text, var(--rbc-event-text));
 // }
+
+.rbc-time-view {
+  background-color: var(--bs-body-bg);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+// Aumentar altura mínima de los eventos
+.rbc-event {
+  min-height: 40px !important;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  border-radius: 8px;
+  padding: 6px 8px;
+  white-space: normal;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+// Efecto al pasar el mouse
+.rbc-event:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+}
+
+// Mejora el espacio entre eventos apilados
+.rbc-event + .rbc-event {
+  margin-top: 3px;
+}
+
+// Texto interno del evento
+.rbc-event-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    font-weight: 600;
+    color: #fff;
+  }
+
+  span {
+    font-size: 0.8rem;
+    color: #f0f0f0;
+  }
+}
+
+// Título de día (semana)
+.rbc-header {
+  background-color: var(--bs-tertiary-bg);
+  color: var(--bs-body-color);
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+// Día actual resaltado
+.rbc-today {
+  background-color: rgba(0, 123, 255, 0.08);
+}
+
+// Altura generosa por hora (solo para vista semanal)
+.rbc-time-slot {
+  height: 80px !important;
+}
+
+// Mejora general de separación
+.rbc-time-content > * + * {
+  border-left: 1px solid var(--bs-border-color);
+}
+
+// Línea de hora actual más visible
+.rbc-current-time-indicator {
+  height: 2px;
+  background-color: #0d6efd;
+  box-shadow: 0 0 6px rgba(13,110,253,0.5);
+}
+
+// Hace que todos los eventos se ubiquen al mismo inicio y se superpongan con transparencia
+.rbc-day-slot .rbc-event {
+  left: 0 !important;
+  width: 95% !important;
+  opacity: 0.9;
+}
+
+// ==============================
+// Desplazamiento dinámico de eventos hacia la derecha, generando un evento de apilamiento.
+//Se aplica para eventos que conincidan en intervalos de tiempo.
+.rbc-day-slot .rbc-event:nth-child(1) {
+  left: 0 !important;
+}
+.rbc-day-slot .rbc-event:nth-child(2) {
+  left: 10px !important;
+}
+.rbc-day-slot .rbc-event:nth-child(3) {
+  left: 20px !important;
+}
+.rbc-day-slot .rbc-event:nth-child(4) {
+  left: 30px !important;
+}
+.rbc-day-slot .rbc-event:nth-child(5) {
+  left: 40px !important;
+}
+
+// Si hay más de 5 eventos apilados, estable un desplazamiento máximo
+.rbc-day-slot .rbc-event:nth-child(n + 6) {
+  left: 45px !important;
+}
+
+

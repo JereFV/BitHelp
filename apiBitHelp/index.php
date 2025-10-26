@@ -10,8 +10,8 @@ header('Content-Type: application/json');
 
 /*--- Requerimientos Clases o librerías*/
 require_once "controllers/core/Config.php";
-require_once "controllers/core/HandleException.php";
 require_once "controllers/core/Logger.php";
+require_once "controllers/core/HandleException.php";
 require_once "controllers/core/MySqlConnect.php";
 require_once "controllers/core/Request.php";
 require_once "controllers/core/Response.php";
@@ -22,7 +22,8 @@ require_once "models/RolModel.php";
 require_once "models/CategorieModel.php";
 require_once "models/TicketModel.php";
 require_once "models/UserModel.php";
-
+require_once "models/TicketStatusModel.php";
+require_once "models/TicketHistoryModel.php";
 
 /***--- Agregar todos los controladores*/
 require_once "controllers/ActorController.php";
