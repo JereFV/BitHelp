@@ -3,7 +3,7 @@ class TicketModel
 {
     public $connection;
 
-    public function _construct()
+    public function __construct()
     {
         $this->connection = new MySqlConnect();
     }

@@ -5,33 +5,27 @@ import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import es from 'date-fns/locale/es';
+import { differenceInHours, differenceInMinutes} from 'date-fns';
 //import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../../styles/AssignmentsCalendar.scss";
-import moment from 'moment';
 import TicketService from "../../services/TicketService";
-import { formToJSON } from "axios";
 //import { useTheme } from "@mui/material/styles";
 
-//Región cultural a utilizar.
-const locales = {
-  'es': es,
-}
-
-//Formateador de fecha según la cultura definida
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  locales,
-})
-
 export function Assignments() {
-  
-  //const theme = useTheme();
 
-  //Constante auxiliar para manejar el arreglo de tickets.
-  const [tickets, setTickets] = useState([]);
+  //Región cultural a utilizar.
+  const locales = {
+    'es': es,
+  }
+
+  //Formateador de fecha según la cultura definida
+  const localizer = dateFnsLocalizer({
+    format,
+    parse,
+    startOfWeek,
+    getDay,
+    locales,
+  })
 
   //Configura el valor de las etiquetas mostradas en los botones del calendario.
   const messages = {
@@ -47,64 +41,42 @@ export function Assignments() {
     showMore: (total) => `+${total} más`,
   };
 
-  const events = [
-    {
-      start: moment("2025-10-15T09:00:00").toDate(),
-      end: moment("2025-10-15T13:00:00").toDate(),
-      title:
-        "Ticket #1 - Error al iniciar sesión. \n" +
-        "Categoria: Inicio Sesion \n" +
-        "Estado Actual: Pendiente \n" +
-        "Tiempo Restante: 20 horas \n",
-    },
-    {
-      start: moment("2025-10-15T12:30:00").toDate(),
-      end: moment("2025-10-15T16:30:00").toDate(),
-      title:
-        "Ticket #2 - Error al iniciar sesión. \n" +
-        "Categoria: Inicio Sesion \n" +
-        "Estado Actual: Pendiente \n" +
-        "Tiempo Restante: 20 horas \n",
-    },
-    {
-      start: moment("2025-10-15T16:30:00").toDate(),
-      end: moment("2025-10-16T16:30:00").toDate(),
-      title:
-        "Ticket #3 - Error al iniciar sesión. \n" +
-        "Categoria: Inicio Sesion \n" +
-        "Estado Actual: Pendiente \n" +
-        "Tiempo Restante: 20 horas \n",
-    },
-  ];
+  //const theme = useTheme();
+
+  //Controla el renderizado del calendario al cambiar el estado de los tiquetes a mostrar.
+  const [tickets, setTickets] = useState([]);
 
   useEffect(() => {
-
+    //Agregar eventos al calendario a partir de la obtención de tiquetes para el técnico en sesión.
     TicketService.getTicketsByRolUser(localStorage.getItem('Usuario'))
       .then((response) => {
-        let eventsCalendar = [];
+        //Arreglo auxiliar para almacenar los eventos a mostrar en el calendar.
+        const eventsCalendar = response.map(ticket => 
+        {
+          /*Asigna como fecha de inicio el momento en que el tiquete haya sido asignado al técnico, filtrando el historial del tiquete por el id
+          del técnico y el estado "Asignado".(2)*/ 
+          const fechaInicio = ticket.historialTiquete.filter((movement) => movement.idUsuario == ticket.idTecnicoAsignado && movement.idEstado == 2)[0].fecha;
+          //Calcula las horas restantes para la resolución del tiquete.
+          const horasRestantes = differenceInHours(new Date(), fechaInicio)
 
-        response.forEach(ticket => {
-          
-          let event = {
-            /*Asigna como fecha de inicio el momento en que el tiquete haya sido asignado al técnico, filtrando el historial del tiquete por el id
-            del técnico y el estado "Asignado".(2)*/  
-            start: ticket.historialTiquete.filter((movement) => movement.idUsuario == ticket.idTecnicoAsignado && movement.idEstado == 2)[0].fecha,
-            end: ticket.Resolucion,
+          //Crea la estructura de evento esperada por el calendar para el tiquete en iteración.
+          return {           
+            start: fechaInicio,
+            end: ticket.slaResolucion,
             title: `Ticket #${ticket.idticket} - ${ticket.titulo}
-            \n Categoría: ${ticket.categoria.nombre}
-            \n Estado Actual: ` 
-          }
+            \nCategoría: ${ticket.categoria.nombre}
+            \nEstado Actual: ${ticket.estadoTiquete.nombre}
+            \nTiempo Restante: ${horasRestantes} horas` 
+          };       
         });
+
+        //Finalmente, vuelve a renderizar el calendario a partir del arreglo auxiliar de eventos.
+        setTickets(eventsCalendar);
       })
-      .catch((error) => {
-        if (error instanceof SyntaxError) {
-          setError(error);
-          console.log(error);
-          setLoaded(false);
-          throw new Error('Respuesta no válida del servidor');
-        }
+      .catch((error) => {      
+        console.log(error);      
       });
-  });
+  }, []);
 
   return (
     <div
@@ -128,7 +100,7 @@ export function Assignments() {
         localizer={localizer}
         defaultDate={new Date()}
         defaultView="week"
-        events={events}
+        events={tickets}
         style={{ height: "85vh" }}
         messages={messages}
         //culture={"es"}
