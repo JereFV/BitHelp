@@ -79,7 +79,7 @@ export const TechniciansDataGridWithModal = () => {
             align: 'center',
             flex:0.4,
             // Formatea 1/0 (tinyint) a texto (Activo/Inactivo)
-            valueFormatter: (params) => params.value === '1' ? 'Activo' : 'Inactivo' 
+            valueFormatter: (params) => params === '1' ? 'Activo' : 'Inactivo' 
         },
         {
             field: 'actions',
