@@ -31,15 +31,15 @@ export const TechniciansDataGridWithModal = () => {
                 }
 
                 // Mapear los datos de técnicos
-                // Asumimos que la API devuelve los campos combinados del técnico y el usuario.
                 const techniciansData = apiData.map(item => ({
                     // Propiedades del técnico:
                     id: item.idTecnico || item.id, // Necesario para DataGrid
                     idUsuario: item.idUsuario,
-                    idDisponibilidad: item.idDisponibilidad,
+                    // *** CAMBIO CLAVE 1: Ahora usamos 'disponibilidad' (el nombre) ***
+                    disponibilidad: item.disponibilidad, 
                     cargaTrabajo: item.cargaTrabajo,
-                    // Propiedades combinadas del usuario asociado (asumiendo que vienen en la respuesta):
-                    nombreCompleto: `${item.nombre} ${item.primerApellido}`,
+                    // Propiedades combinadas del usuario asociado:
+                    nombreCompleto: `${item.nombre} ${item.primerApellido} ${item.segundoApellido}`, 
                     correo: item.correo,
                     telefono: item.telefono,
                     // Estado se usa para DataGrid
@@ -71,6 +71,8 @@ export const TechniciansDataGridWithModal = () => {
         { field: 'id', headerName: 'ID', minWidth: 70,maxWidth:90 ,headerAlign: 'center',align: 'center',flex:0.6, },
         { field: 'nombreCompleto', headerName: 'Técnico',  minWidth: 240 ,headerAlign: 'center',align: 'center',flex:0.7,},
         { field: 'correo', headerName: 'Correo', minWidth: 240,headerAlign: 'center',align: 'center',flex:0.7,},
+        // *** CAMBIO CLAVE 2: Columna para mostrar la Disponibilidad por nombre ***
+        { field: 'disponibilidad', headerName: 'Disponibilidad', minWidth: 150, headerAlign: 'center', align: 'center', flex: 0.5, },
         {
             field: 'estado',
             headerName: 'Estado',
@@ -141,7 +143,8 @@ export const TechniciansDataGridWithModal = () => {
                             Nombre: {selectedRow.nombreCompleto}<br />
                             Correo: {selectedRow.correo}<br />
                             Teléfono: {selectedRow.telefono}<br />
-                            Disponibilidad (ID): {selectedRow.idDisponibilidad}<br />
+                            {/* *** CAMBIO CLAVE 3: Mostrar la disponibilidad por nombre *** */}
+                            Disponibilidad: {selectedRow.disponibilidad}<br />
                             Carga de Trabajo: {selectedRow.cargaTrabajo}<br />
                             Estado: {selectedRow.estado === '1' ? 'Activo' : 'Inactivo'}
                         </Typography>

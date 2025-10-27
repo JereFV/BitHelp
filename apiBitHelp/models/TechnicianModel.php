@@ -17,10 +17,11 @@ class TechnicianModel
     {
         try {
             // Consulta SQL para obtener los técnicos y combinar con la tabla 'usuario'.
-            $query = "SELECT 
+            $query = "SELECT
                         t.idTecnico,
                         t.idUsuario,
-                        t.idDisponibilidad,
+                        -- Aquí se trae el nombre de la disponibilidad en lugar del ID
+                        dt.nombre AS disponibilidad, 
                         t.cargaTrabajo,
                         t.estado,
                         u.nombre,
@@ -28,21 +29,22 @@ class TechnicianModel
                         u.segundoApellido,
                         u.correo,
                         u.telefono
-                      FROM 
+                    FROM
                         tecnico t
-                      INNER JOIN 
-                        usuario u ON t.idUsuario = u.idUsuario";
+                    INNER JOIN
+                        usuario u ON t.idUsuario = u.idUsuario
+                    -- Nuevo JOIN a la tabla de disponibilidad
+                    INNER JOIN
+                        disponibilidad_tecnico dt ON t.idDisponibilidad = dt.idDisponibilidad;";
 
             // Ejecución de la consulta.
             $technicians = $this->connection->ExecuteSQL($query);
 
             return $technicians;
-        } 
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             handleException($ex);
         }
     }
-    
+
     // Aquí puedes añadir otros métodos como getById, create, update, etc.
 }
