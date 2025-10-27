@@ -4,7 +4,8 @@ const BASE_URL = `${import.meta.env.VITE_BASE_URL}ticket`; //cadena interpolada
 class TicketService 
 {
     getTickets() {
-    return axios.get(`${BASE_URL}ticket`);
+    // CAMBIO APLICADO: Solo llama a la BASE_URL
+    return axios.get(BASE_URL); 
   }
 
   // Si más adelante querés /ticket/5 -> getTicketById
