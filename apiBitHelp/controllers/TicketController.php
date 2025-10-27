@@ -17,7 +17,6 @@ class Ticket
         }
     }
 
-
     //Obtener los tiquetes según el rol del usuario en sesión.
     public function getAllByRolUser($idRole, $idUser)
     {
@@ -35,5 +34,22 @@ class Ticket
             handleException($ex);
         }
     }
+
+    //Obtener el tiquete especifico a partir del parámetro enviado.
+    public function get($id)
+    {
+        try 
+        { 
+            $response = new Response();
+            $ticketModel = new TicketModel();
+
+            //Obtiene el tiquete y lo devuelve en una estructura JSON como respuesta.
+            $ticket = $ticketModel->get($id);
+            
+            $response->toJson($ticket);           
+        }
+        catch (Exception $ex) {
+            handleException($ex);
+        }
+    }
 }
-?>

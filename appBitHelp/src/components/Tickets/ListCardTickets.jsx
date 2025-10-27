@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import { Info } from '@mui/icons-material';
 import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
 
 ListCardTickets.propTypes = {
   data: PropTypes.array,
@@ -59,7 +60,8 @@ export function ListCardTickets({ data = [] }) {
               <IconButton
                 aria-label="Detalle"
                 sx={{ ml: 'auto' }}
-                // si usás rutas, podés reemplazar por Link a: /ticket/{id}
+                to={`/ticket/${item.id}`}
+                component={Link}                
               >
                 <Info />
               </IconButton>
