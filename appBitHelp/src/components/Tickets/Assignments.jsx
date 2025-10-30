@@ -63,7 +63,7 @@ export function Assignments()
         {
           /*Asigna como fecha de inicio el momento en que el tiquete haya sido asignado al técnico, filtrando el historial del tiquete por el id
           del técnico y el estado "Asignado".(2)*/ 
-          const fechaInicio = new Date(ticket.historialTiquete.find((movement) => movement.idUsuario == ticket.idTecnicoAsignado && movement.idEstado == 2).fecha);
+          const fechaInicio = new Date(ticket.historialTiquete.find((movement) => movement.usuario.idUsuario == ticket.idTecnicoAsignado && movement.idEstado == 2).fecha);
           //Calcula las horas restantes para la resolución del tiquete.
           const horasRestantes = differenceInHours(new Date(ticket.slaResolucion), new Date())
 

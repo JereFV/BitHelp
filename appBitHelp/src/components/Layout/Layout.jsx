@@ -87,11 +87,7 @@ const NAVIGATION = [
       {
         segment: 'assignments',
         title: 'Asignaciones',       
-      },
-      {
-        segment: 'ticketDetail',
-        title: 'Detalle',       
-      },
+      }
     ],
   },
   {

@@ -38,7 +38,7 @@ class RolModel{
         try {
             //Consulta sql
 			$vSql = "SELECT r.id,r.name
-            FROM rol r,user u 
+            FROM rol_usuario r,usuario u 
             where r.id=u.rol_id and u.id=$idUser";
 			
             //Ejecutar la consulta

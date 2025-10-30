@@ -37,12 +37,7 @@ const rutas=createBrowserRouter(
               // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
               path:'assignments',
               element: <Assignments/>
-            },
-            {
-              // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
-              path:'ticketDetail',
-              element: <TicketDetail/>
-            },
+            }            
           ]
         },   
         {
@@ -52,6 +47,11 @@ const rutas=createBrowserRouter(
         {
           path:'technician',
           element: <TechniciansDataGridWithModal/>
+        },
+        {
+          // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
+          path:'ticket/:id',
+          element: <TicketDetail/>
         },
       ]
     }

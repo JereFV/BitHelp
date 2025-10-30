@@ -87,5 +87,56 @@ class TicketModel
             handleException($ex);
         }
     }
+
+    public function get( $id )
+    {
+        try
+        {
+            $userModel = new UserModel();
+            $ticketStatusModel = new TicketStatusModel();
+            $ticketPriorityModel = new TicketPriorityModel();
+            $specialtyModel = new SpecialtyModel();
+            $ticketHistoryModel = new TicketHistoryModel();
+            $log = new Logger();
+
+            $query = "SELECT * FROM tiquete
+                      WHERE idTiquete = $id";
+
+            $ticket = $this->connection->executeSQL($query);
+
+            //Sobreescribe su valor sacando el resultado del arreglo.
+            $ticket = $ticket[0];
+           
+            //Usuario que ingresó el tiquete.
+            $ticket->usuarioSolicita = $userModel->get($ticket->idUsuarioSolicita);
+
+            //Estado del tiquete a partir del catálogo.
+            $ticket->estadoTiquete = $ticketStatusModel->get($ticket->idEstado)[0];  
+
+            //Estado del tiquete a partir del catálogo.
+            $ticket->prioridad = $ticketPriorityModel->get($ticket->idPrioridad)[0];
+
+            //Técnico asignado al tiquete.
+            $ticket->tecnicoAsignado = $userModel->get($ticket->idTecnicoAsignado);
+
+            //Especilidad del tiquete a partir del catálogo.
+            $ticket->especialidad = $specialtyModel->get($ticket->idEspecialidad)[0];
+
+            //Historial o movimientos del tiquete.
+            $ticket->historialTiquete = $ticketHistoryModel->get($ticket->idTiquete);
+
+            //Elimina las propiedades que ya están contenidas en otras estructuras.
+            unset($ticket->idUsuarioSolicita);
+            unset($ticket->idEstado);
+            unset($ticket->idPrioridad);
+            unset($ticket->idTecnicoAsignado);
+            unset($ticket->idEspecialidad);
+
+            return $ticket;
+        }
+        catch (Exception $ex) {
+            handleException($ex);
+        }
+    }
 }
 ?>

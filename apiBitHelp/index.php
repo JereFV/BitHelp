@@ -32,6 +32,8 @@ require_once "models/UserModel.php";
 require_once "models/TicketStatusModel.php";
 require_once "models/TicketHistoryModel.php";
 require_once "models/TechnicianModel.php";
+require_once "models/SpecialtyModel.php";
+require_once "models/TicketPriorityModel.php";
 
 /***--- Agregar todos los controladores*/
 require_once "controllers/ActorController.php";

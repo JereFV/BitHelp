@@ -37,8 +37,8 @@ class UserModel
 			$vResultado = $this->enlace->ExecuteSQL($vSql);
 			if ($vResultado) {
 				$vResultado = $vResultado[0];
-				$rol = $rolM->getRolUser($id);
-				$vResultado->rol = $rol;
+				// $rol = $rolM->getRolUser($id);
+				// $vResultado->rol = $rol;
 				// Retornar el objeto
 				return $vResultado;
 			} else {
