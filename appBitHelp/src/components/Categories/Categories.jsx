@@ -1,6 +1,6 @@
 import React, { useState ,useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Button, Modal, Box, Typography,Stack } from '@mui/material';
+import { Button, Modal, Box, Typography,Stack, Chip} from '@mui/material';
 import CategorieService from '../../services/CategorieService';
 import { esES } from '@mui/x-data-grid/locales';
 
@@ -37,15 +37,27 @@ export const CategoriesDataGridWithModal = () => {
                     console.error("La respuesta de la API no es un array:", apiData);
                     apiData = []; 
                 }
+
                 // Mapear los datos si es necesario para asegurar la propiedad 'id'
-                const categoriesData = apiData.map(item => ({
-                    id: item.idCategoria || item.id, 
-                    nombre: item.nombre,
-                    estado: item.estado,
-                    idSla: item.idSla,
-                    tiempoMaxRespuesta: item.tiempoMaxRespuesta,
-                    tiempoMaxResolucion: item.tiempoMaxResolucion,
-                }));
+                const categoriesData = apiData.map(item => {                    
+                    // Función para convertir la cadena concatenada a un arreglo de strings
+                    const parseConcatenatedData = (dataString) => {
+                        if (!dataString) return [];
+                        // Se usa '|||' como delimitador, y se filtran cadenas vacías
+                        return dataString.split('|||').filter(s => s.trim() !== '');
+                    };
+
+                    return {
+                        id: item.idCategoria || item.id, 
+                        nombre: item.nombreCategoria,
+                        estado: item.estadoCategoria,
+                        idSla: item.idSla,
+                        tiempoMaxRespuesta: item.tiempoMaxRespuesta,
+                        tiempoMaxResolucion: item.tiempoMaxResolucion,                        
+                        especialidades: parseConcatenatedData(item.especialidades_concatenadas),
+                        etiquetas: parseConcatenatedData(item.etiquetas_concatenadas),
+                    };
+                });
 
                 setRows(categoriesData);
             } catch (error) {
@@ -155,8 +167,49 @@ export const CategoriesDataGridWithModal = () => {
 
                                 <Typography fontSize={16}>
                                    <Typography component="span" fontWeight="bold">Tiempo max de resolución: </Typography>{selectedRow.tiempoMaxResolucion}                                     
-                                </Typography>
-                            
+                                </Typography>                            
+                                                              
+                                <div /* Contenedor para poder mostrar las especialidades*/>                                  
+                                    <Typography component="span" fontWeight="bold" fontSize={16}>Especialidades:</Typography>
+                                    <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
+                                        {selectedRow.especialidades && selectedRow.especialidades.length > 0 ? (
+                                            selectedRow.especialidades.map((esp, index) => (
+                                                <Chip 
+                                                    key={index} 
+                                                    label={esp} 
+                                                    size="small" 
+                                                    color="primary" 
+                                                    variant="outlined" 
+                                                />
+                                            ))
+                                        ) : (
+                                            <Typography fontSize={14} color="text.secondary">
+                                                No tiene especialidades asignadas.
+                                            </Typography>
+                                        )}
+                                    </Stack>
+                                </div>
+
+                                <div /* Contenedor para mostrar las etiquetas*/>
+                                    <Typography component="span" fontWeight="bold" fontSize={16}>Etiquetas:</Typography>
+                                    <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
+                                        {selectedRow.etiquetas && selectedRow.etiquetas.length > 0 ? (
+                                            selectedRow.etiquetas.map((eti, index) => (
+                                                <Chip 
+                                                    key={index} 
+                                                    label={eti} 
+                                                    size="small" 
+                                                    color="secondary" 
+                                                    variant="outlined" 
+                                                />
+                                            ))
+                                        ) : (
+                                            <Typography fontSize={14} color="text.secondary">
+                                                No tiene etiquetas asignadas.
+                                            </Typography>
+                                        )}
+                                    </Stack>
+                                </div>
                                 <Typography fontSize={16}>
                                   <Typography component="span" fontWeight="bold">Estado:</Typography> 
                                   <Typography 

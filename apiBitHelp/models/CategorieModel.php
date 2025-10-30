@@ -15,15 +15,27 @@ class CategorieModel
             $query = "
             SELECT 
                 c.idCategoria,
-                c.nombre,
-                c.estado,
+                c.nombre as nombreCategoria,
+                c.estado as estadoCategoria,
                 c.idSla,
                 s.tiempoMaxRespuesta,
-                s.tiempoMaxResolucion
+                s.tiempoMaxResolucion,
+                GROUP_CONCAT(DISTINCT e.nombre ORDER BY e.nombre SEPARATOR '|||') AS especialidades_concatenadas,
+                GROUP_CONCAT(DISTINCT et.nombre ORDER BY et.nombre SEPARATOR '|||') AS etiquetas_concatenadas
             FROM
                 categoria c
             INNER JOIN 
-                sla s on c.idSla = s.idSla            
+                sla s on c.idSla = s.idSla   
+            LEFT JOIN
+                especialidad e ON c.idCategoria = e.idCategoria
+            LEFT JOIN
+                etiqueta_categoria ec ON c.idCategoria = ec.idCategoria
+            LEFT JOIN
+                etiqueta et ON ec.idEtiqueta = et.idEtiqueta
+            GROUP BY
+                c.idCategoria, c.nombre, c.estado, c.idSla, s.tiempoMaxRespuesta, s.tiempoMaxResolucion
+            ORDER BY
+                c.idCategoria;             
             ";
 
             //Ejecucción de la consulta.
