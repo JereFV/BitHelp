@@ -143,7 +143,6 @@ export const TechniciansDataGridWithModal = () => {
                             Nombre: {selectedRow.nombreCompleto}<br />
                             Correo: {selectedRow.correo}<br />
                             Teléfono: {selectedRow.telefono}<br />
-                            {/* *** CAMBIO CLAVE 3: Mostrar la disponibilidad por nombre *** */}
                             Disponibilidad: {selectedRow.disponibilidad}<br />
                             Carga de Trabajo: {selectedRow.cargaTrabajo}<br />
                             Estado: {selectedRow.estado === '1' ? 'Activo' : 'Inactivo'}

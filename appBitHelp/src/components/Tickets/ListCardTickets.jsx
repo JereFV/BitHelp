@@ -18,7 +18,7 @@ export function ListCardTickets({ data = [] }) {
   return (
     <Grid container sx={{ p: 2 }} spacing={3}>
       {data.map((item) => (
-        <Grid size={4} key={item.id}>
+        <Grid item xs={12} sm={4} key={item.id}>
           <Card>
             <CardHeader
               sx={{
