@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import TicketService from '../../services/TicketService';
-import { ListCardTickets } from './ListCardTickets.jsx';
+import { ListCardTickets } from './ListCardTickets.jsx'; // Ojo con esta ruta
 
 function TicketsList() {
   const [tickets, setTickets] = useState([]);
@@ -10,6 +10,7 @@ function TicketsList() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Carga inicial de tiquetes
     TicketService.getTickets()
       .then((res) => {
         setTickets(res.data || []);
@@ -22,11 +23,26 @@ function TicketsList() {
   }, []);
 
   return (
-    <Box sx={{ padding: 4 }}>
-      <Typography variant="h3" component="h1" color="primary" gutterBottom>
+    // Contenedor principal de la página
+    <Box sx={{ padding: { xs: 2, sm: 3, md: 4 } }}>
+      
+      {/* Título de la página */}
+      <Typography
+        variant="h4" 
+        component="h1"
+        gutterBottom
+        sx={{
+          fontWeight: 600, 
+          color: 'text.primary', // Usar color de texto estándar
+          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+          pb: 1.5,
+          mb: 3, 
+        }}
+      >
         Listado de Tiquetes
       </Typography>
 
+      {/* Control de estados de carga */}
       {loading && <Typography>Cargando...</Typography>}
       {error && <Typography color="error">Error cargando tiquetes</Typography>}
       {!loading && !error && <ListCardTickets data={tickets} />}

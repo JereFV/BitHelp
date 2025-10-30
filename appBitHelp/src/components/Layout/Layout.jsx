@@ -46,7 +46,7 @@ export function Layout({ children }) {
 
 /**
  * 
- * @returns Funcioón que permite evaluar si está en modo claro u oscuro y base a eso cambar el logo de app
+ * @returns Función que permite evaluar si está en modo claro u oscuro y base a eso cambar el logo de app
  */
 function LogoSwitcher() {
   const { mode } = useColorScheme(); // Detecta si está en 'light' o 'dark'
