@@ -36,7 +36,7 @@ export function Layout({ children }) {
       title: '',      
       }}
     >      <DashboardLayout  header={<Header/>}>
-        <PageContainer title='' breadcrumbs={[]}>
+        <PageContainer title='' breadcrumbs={[]} maxWidth={false}>
             {children}
         </PageContainer>         
       </DashboardLayout>
