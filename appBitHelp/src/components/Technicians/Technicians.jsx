@@ -1,10 +1,38 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Button, Modal, Box, Typography } from '@mui/material';
+import { Button, Modal, Box, Typography, Chip, Divider, Paper } from '@mui/material'; // Importar Chip y componentes de diseño
 import { esES } from '@mui/x-data-grid/locales';
-// Importa el nuevo servicio
-import TechnicianService from '../../services/TechnicianService'; 
+import TechnicianService from '../../services/TechnicianService';
+import { AccountCircle, Mail, Phone, Work } from '@mui/icons-material'; // Iconos para el modal
+
+// Estilo del modal para centrarlo
+const modalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 450, // Ancho moderado para detalle
+    bgcolor: 'background.paper',
+    borderRadius: 2, // Bordes redondeados
+    boxShadow: 12, // Sombra sutil
+    p: 4,
+};
+
+// Helper para renderizar el Chip de estado
+const getStatusChip = (estado) => {
+    // El estado viene como '1' o '0'
+    const isActive = estado === '1' || estado === 1;
+    return (
+        <Chip
+            label={isActive ? 'Activo' : 'Inactivo'}
+            color={isActive ? 'success' : 'error'} // Verde para activo, rojo para inactivo
+            variant="outlined"
+            size="small"
+        />
+    );
+};
+
 
 export const TechniciansDataGridWithModal = () => {
     const [rows, setRows] = useState([]);
@@ -12,11 +40,12 @@ export const TechniciansDataGridWithModal = () => {
     const [openModal, setOpenModal] = useState(false);
     const [selectedRow, setSelectedRow] = useState(null);
 
+    // Carga inicial de técnicos
     useEffect(() => {
         const fetchTechnicians = async () => {
             setLoading(true);
             try {
-                // Llama al servicio de técnicos
+                // Usamos el nombre de función de tu servicio
                 const response = await TechnicianService.getAllTechnicians();
 
                 let apiData = response.data;
@@ -26,24 +55,23 @@ export const TechniciansDataGridWithModal = () => {
                 }
 
                 if (!Array.isArray(apiData)) {
-                    console.error("La respuesta de la API no es un array:", apiData);
+                    console.error("Respuesta de la API no es un array:", apiData);
                     apiData = [];
                 }
 
-                // Mapear los datos de técnicos
+                // Mapeo de datos
                 const techniciansData = apiData.map(item => ({
                     // Propiedades del técnico:
-                    id: item.idTecnico || item.id, // Necesario para DataGrid
+                    id: item.idTecnico || item.id, // ID para DataGrid
                     idUsuario: item.idUsuario,
-                    // *** CAMBIO CLAVE 1: Ahora usamos 'disponibilidad' (el nombre) ***
-                    disponibilidad: item.disponibilidad, 
+                    disponibilidad: item.disponibilidad,
                     cargaTrabajo: item.cargaTrabajo,
                     // Propiedades combinadas del usuario asociado:
-                    nombreCompleto: `${item.nombre} ${item.primerApellido} ${item.segundoApellido}`, 
+                    nombreCompleto: `${item.nombre} ${item.primerApellido} ${item.segundoApellido}`,
                     correo: item.correo,
                     telefono: item.telefono,
-                    // Estado se usa para DataGrid
-                    estado: item.estado, 
+                    // Convertir a string para el DataGrid
+                    estado: String(item.estado), 
                 }));
 
                 setRows(techniciansData);
@@ -68,20 +96,19 @@ export const TechniciansDataGridWithModal = () => {
     };
 
     const columns = [
-        { field: 'id', headerName: 'ID', minWidth: 70,maxWidth:90 ,headerAlign: 'center',align: 'center',flex:0.6, },
-        { field: 'nombreCompleto', headerName: 'Técnico',  minWidth: 240 ,headerAlign: 'center',align: 'center',flex:0.7,},
-        { field: 'correo', headerName: 'Correo', minWidth: 240,headerAlign: 'center',align: 'center',flex:0.7,},
-        // *** CAMBIO CLAVE 2: Columna para mostrar la Disponibilidad por nombre ***
+        { field: 'id', headerName: 'ID', minWidth: 70, maxWidth: 90, headerAlign: 'center', align: 'center', flex: 0.6, },
+        { field: 'nombreCompleto', headerName: 'Técnico', minWidth: 240, headerAlign: 'center', align: 'left', flex: 0.7, },
+        { field: 'correo', headerName: 'Correo', minWidth: 240, headerAlign: 'center', align: 'left', flex: 0.7, },
         { field: 'disponibilidad', headerName: 'Disponibilidad', minWidth: 150, headerAlign: 'center', align: 'center', flex: 0.5, },
         {
             field: 'estado',
             headerName: 'Estado',
-            minWidth: 170 ,
+            minWidth: 170,
             headerAlign: 'center',
             align: 'center',
-            flex:0.4,
-            // Formatea 1/0 (tinyint) a texto (Activo/Inactivo)
-            valueFormatter: (params) => params === '1' ? 'Activo' : 'Inactivo' 
+            flex: 0.4,
+            // Aplicar el Chip de color al estado
+            renderCell: (params) => getStatusChip(params.value),
         },
         {
             field: 'actions',
@@ -89,7 +116,7 @@ export const TechniciansDataGridWithModal = () => {
             minWidth: 170,
             headerAlign: 'center',
             align: 'center',
-            flex:0.7,
+            flex: 0.7,
             renderCell: (params) => (
                 <Button variant="outlined" size="small" onClick={() => handleOpenModal(params.row)}>
                     Ver Detalles
@@ -106,49 +133,82 @@ export const TechniciansDataGridWithModal = () => {
                 <DataGrid
                     rows={rows}
                     columns={columns}
-                    pageSize={5}
-                    rowsPerPageOptions={[5]}
-                    disableSelectionOnClick
+                    getRowId={(row) => row.id} // ID único
+                    pageSizeOptions={[5, 10, 20]}
+                    initialState={{
+                        pagination: { paginationModel: { pageSize: 5 } }
+                    }}
+                    disableRowSelectionOnClick
                     localeText={esES.components.MuiDataGrid.defaultProps.localeText}
-                     sx={{
-                      borderRadius: 4,
-                      boxShadow: 1,                      
+                    sx={{
+                        borderRadius: 2,
+                        boxShadow: 2,
                     }}
                 />
             )}
 
+            {/* Modal de Detalles del Técnico */}
             <Modal
                 open={openModal}
                 onClose={handleCloseModal}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
+                aria-labelledby="technician-modal-title"
             >
-                <Box sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: 400,
-                    bgcolor: 'background.paper',
-                    border: '2px solid #000',
-                    boxShadow: 24,
-                    p: 4,
-                }}>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
+                <Box sx={modalStyle}>
+                    <Typography id="technician-modal-title" variant="h5" component="h2" mb={1} color="text.primary" fontWeight={600}>
                         Detalles del Técnico
                     </Typography>
+                    
+                    <Divider sx={{ mb: 2 }} />
+                    
                     {selectedRow && (
-                        <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                            ID Técnico: {selectedRow.id}<br />
-                            Nombre: {selectedRow.nombreCompleto}<br />
-                            Correo: {selectedRow.correo}<br />
-                            Teléfono: {selectedRow.telefono}<br />
-                            Disponibilidad: {selectedRow.disponibilidad}<br />
-                            Carga de Trabajo: {selectedRow.cargaTrabajo}<br />
-                            Estado: {selectedRow.estado === '1' ? 'Activo' : 'Inactivo'}
-                        </Typography>
+                        <Box id="modal-modal-description">
+                            {/* Fila de Nombre y ID */}
+                            <Box display="flex" alignItems="center" mb={1}>
+                                <AccountCircle color="primary" sx={{ mr: 1 }} />
+                                <Typography variant="subtitle1" fontWeight="bold" mr={1}>
+                                    {selectedRow.nombreCompleto}
+                                </Typography>
+                                {/* Estado (con color) */}
+                                {getStatusChip(selectedRow.estado)}
+                            </Box>
+
+                            {/* Detalle Contacto */}
+                            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                                <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
+                                    CONTACTO
+                                </Typography>
+                                <Box display="flex" alignItems="center" mb={1}>
+                                    <Mail color="action" sx={{ mr: 1, fontSize: 18 }} />
+                                    <Typography variant="body2">{selectedRow.correo}</Typography>
+                                </Box>
+                                <Box display="flex" alignItems="center">
+                                    <Phone color="action" sx={{ mr: 1, fontSize: 18 }} />
+                                    <Typography variant="body2">{selectedRow.telefono || 'N/A'}</Typography>
+                                </Box>
+                            </Paper>
+                            
+                            {/* Detalle Carga/Disponibilidad */}
+                            <Paper variant="outlined" sx={{ p: 2 }}>
+                                <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
+                                    MÉTRICAS DE TRABAJO
+                                </Typography>
+                                <Box display="flex" alignItems="center" mb={1}>
+                                    <Work color="action" sx={{ mr: 1, fontSize: 18 }} />
+                                    <Typography variant="body2">Carga de Trabajo: {selectedRow.cargaTrabajo}</Typography>
+                                </Box>
+                                <Box display="flex" alignItems="center">
+                                    <Chip 
+                                        label={`Disponibilidad: ${selectedRow.disponibilidad}`} 
+                                        color="primary"
+                                        size="small"
+                                        sx={{ mt: 1 }}
+                                    />
+                                </Box>
+                            </Paper>
+                            
+                        </Box>
                     )}
-                    <Button onClick={handleCloseModal} sx={{ mt: 2 }}>Cerrar</Button>
+                    <Button onClick={handleCloseModal} variant="contained" sx={{ mt: 3, float: 'right' }}>Cerrar</Button>
                 </Box>
             </Modal>
         </div>
