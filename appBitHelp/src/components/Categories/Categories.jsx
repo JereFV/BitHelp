@@ -3,7 +3,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Button, Modal, Box, Typography,Stack, Chip,Divider, Paper} from '@mui/material';
 import CategorieService from '../../services/CategorieService';
 import { esES } from '@mui/x-data-grid/locales';
-
+import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 
 
 
@@ -159,7 +159,7 @@ export const CategoriesDataGridWithModal = () => {
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    width: 400,
+                    width: 450,
                     maxWidth: '90%',
                     bgcolor: 'background.paper',
                     borderRadius: 3,
@@ -174,50 +174,30 @@ export const CategoriesDataGridWithModal = () => {
 
                     {selectedRow && (
                         <Box id="modal-modal-description">
-                            
-                            {/* ID y Nombre */}
-                            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-                                <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
-                                    INFORMACIÓN BÁSICA
-                                </Typography>
-                                
-                                {/* Fila: ID */}
-                                <Box display="flex" mb={1}>
-                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>ID:</Typography> 
-                                    <Typography fontSize={16}>{selectedRow.id}</Typography>
-                                </Box>
-
-                                {/* Fila: Nombre */}
-                                <Box display="flex" mb={1}>
-                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>Nombre:</Typography> 
-                                    <Typography fontSize={16}>{selectedRow.nombre}</Typography>
-                                </Box>
-                                
-                                {/* Fila: Estado */}
-                                <Box display="flex" alignItems="center">
-                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>Estado:</Typography> 
-                                    <Typography>
-                                        {getStatusChip(selectedRow.estado)}
-                                    </Typography>
-                                </Box>
-                            </Paper>
-
+                            {/* Información general (nombre y estado) */}
+                            <Box display="flex" mb={1}>
+                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>{selectedRow.nombre}   {getStatusChip(selectedRow.estado)}</Typography> 
+                                    
+                            </Box>                           
+                        
                             {/* Tiempos de Respuesta/Resolución */}
                             <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                                 <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
-                                    MÉTRICAS DE SERVICIO
+                                      MÉTRICAS DE SERVICIO
                                 </Typography>
                                 
                                 {/* Fila: Tiempo Max de Respuesta */}
                                 <Box display="flex" mb={1}>
-                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>T. Max. Respuesta:</Typography>
-                                    <Typography fontSize={16}>{selectedRow.tiempoMaxRespuesta}</Typography>
+                                    <WorkHistoryIcon color="action" sx={{ mr: 1, fontSize: 18}} />
+                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>Tiempo Máximo de Respuesta:</Typography>
+                                    <Typography fontSize={16}>{selectedRow.tiempoMaxRespuesta} h</Typography>
                                 </Box>
                                 
                                 {/* Fila: Tiempo Max de Resolución */}
                                 <Box display="flex">
-                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>T. Max. Resolución:</Typography>
-                                    <Typography fontSize={16}>{selectedRow.tiempoMaxResolucion}</Typography>
+                                    <WorkHistoryIcon color="action" sx={{ mr: 1, fontSize: 18 }} />
+                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>Tiempo Máximo de Resolución:</Typography>
+                                    <Typography fontSize={16}>{selectedRow.tiempoMaxResolucion} h </Typography>
                                 </Box>
                             </Paper>
                             
@@ -259,7 +239,7 @@ export const CategoriesDataGridWithModal = () => {
                                                     key={index} 
                                                     label={eti} 
                                                     size="small" 
-                                                    color="secondary" 
+                                                    color="primary" 
                                                     variant="outlined" 
                                                 />
                                             ))

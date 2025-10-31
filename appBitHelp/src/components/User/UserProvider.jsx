@@ -13,7 +13,7 @@ export const useUser = () => {
     return context;
 };
 
-const LOCAL_STORAGE_KEY = 'bithelpUser';
+const LOCAL_STORAGE_KEY = 'userSesion';
 
 // 💡 DATOS DE USUARIO QUEMADOS BASADOS EN TU DB
 const FAKE_USER_DATA = {
