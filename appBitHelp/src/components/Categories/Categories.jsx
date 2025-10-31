@@ -4,8 +4,8 @@ import { Button, Modal, Box, Typography,Stack, Chip,Divider, Paper} from '@mui/m
 import CategorieService from '../../services/CategorieService';
 import { esES } from '@mui/x-data-grid/locales';
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
-
-
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import VerifiedIcon from '@mui/icons-material/Verified';
 
 // Renderizar el Chip de estado para las categorías
 const getStatusChip = (estado) => {
@@ -176,8 +176,7 @@ export const CategoriesDataGridWithModal = () => {
                         <Box id="modal-modal-description">
                             {/* Información general (nombre y estado) */}
                             <Box display="flex" mb={1}>
-                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>{selectedRow.nombre}   {getStatusChip(selectedRow.estado)}</Typography> 
-                                    
+                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>{selectedRow.nombre}   {getStatusChip(selectedRow.estado)}</Typography>                                     
                             </Box>                           
                         
                             {/* Tiempos de Respuesta/Resolución */}
@@ -208,7 +207,8 @@ export const CategoriesDataGridWithModal = () => {
                                 </Typography>
                                 
                                 {/* Especialidades */}
-                                <Box mb={2}>
+                                <Box mb={2}>            
+                                    <VerifiedIcon color="action" sx={{ mr: 1, fontSize: 18}}/>                         
                                     <Typography component="span" fontWeight="bold" fontSize={16}>Especialidades:</Typography>
                                     <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
                                         {selectedRow.especialidades && selectedRow.especialidades.length > 0 ? (
@@ -231,6 +231,7 @@ export const CategoriesDataGridWithModal = () => {
 
                                 {/* Etiquetas */}
                                 <Box>
+                                    <LocalOfferIcon color="action" sx={{ mr: 1, fontSize: 18}}/>
                                     <Typography component="span" fontWeight="bold" fontSize={16}>Etiquetas:</Typography>
                                     <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
                                         {selectedRow.etiquetas && selectedRow.etiquetas.length > 0 ? (
