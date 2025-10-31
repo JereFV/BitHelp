@@ -1,8 +1,25 @@
 import React, { useState ,useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Button, Modal, Box, Typography,Stack, Chip} from '@mui/material';
+import { Button, Modal, Box, Typography,Stack, Chip,Divider, Paper} from '@mui/material';
 import CategorieService from '../../services/CategorieService';
 import { esES } from '@mui/x-data-grid/locales';
+
+
+
+
+// Renderizar el Chip de estado para las categorías
+const getStatusChip = (estado) => {
+    // El estado viene como '1' o '0'
+    const isActive = estado === '1' || estado === 1;
+    return (
+        <Chip
+            label={isActive ? 'Activo' : 'Inactivo'}
+            color={isActive ? 'success' : 'error'} // Verde para activo, rojo para inactivo
+            variant="outlined"
+            size="small"
+        />
+    );
+};
 
 export const CategoriesDataGridWithModal = () => {
   /*
@@ -92,8 +109,8 @@ export const CategoriesDataGridWithModal = () => {
       maxWidth: 180,
       headerAlign: 'center',
       align: 'center',
-      // Formatea el valor (1/0) a texto (Activo/Inactivo)
-      valueFormatter: (params) => params === "1" ? 'Activo' : 'Inactivo'      
+      // Muestra el estado con un elemento "Chip" para que sea más estético
+      renderCell: (params) => getStatusChip(params.value),        
     },
     {
       field: 'actions',
@@ -130,11 +147,12 @@ export const CategoriesDataGridWithModal = () => {
                 />
             )}
             
+            {/* Modal de Detalles de la Categoría (Adaptado del Técnico) */}
             <Modal
                 open={openModal}
                 onClose={handleCloseModal}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
+                aria-labelledby="category-modal-title" // Cambiado el ID a Category
+                aria-describedby="category-modal-description"
             >
                 <Box sx={{
                     position: 'absolute',
@@ -148,28 +166,69 @@ export const CategoriesDataGridWithModal = () => {
                     boxShadow: 16,
                     p: 4,
                 }}>
-                    <Typography id="modal-modal-title" variant="h6" component="h2" fontFamily={'-apple-system'}>
+                    <Typography id="category-modal-title" variant="h5" component="h2" mb={1} color="text.primary" fontWeight={600}>
                         Detalles de la Categoría
                     </Typography>
+
+                    <Divider sx={{ mb: 2 }} />
+
                     {selectedRow && (
-                          <Stack spacing={1} sx={{ mt: 2 }}>
-                                <Typography fontSize={16}>
-                                  <Typography component="span" fontWeight="bold">ID:</Typography> {selectedRow.id}
+                        <Box id="modal-modal-description">
+                            
+                            {/* ID y Nombre */}
+                            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                                <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
+                                    INFORMACIÓN BÁSICA
                                 </Typography>
-                              
-                                <Typography fontSize={16}>
-                                    <Typography component="span" fontWeight="bold">Nombre:</Typography> {selectedRow.nombre}
-                                </Typography>
+                                
+                                {/* Fila: ID */}
+                                <Box display="flex" mb={1}>
+                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>ID:</Typography> 
+                                    <Typography fontSize={16}>{selectedRow.id}</Typography>
+                                </Box>
 
-                                <Typography fontSize={16}>
-                                  <Typography component="span" fontWeight="bold">Tiempo max de respuesta: </Typography>{selectedRow.tiempoMaxRespuesta}                                 
-                                </Typography>
+                                {/* Fila: Nombre */}
+                                <Box display="flex" mb={1}>
+                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>Nombre:</Typography> 
+                                    <Typography fontSize={16}>{selectedRow.nombre}</Typography>
+                                </Box>
+                                
+                                {/* Fila: Estado */}
+                                <Box display="flex" alignItems="center">
+                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>Estado:</Typography> 
+                                    <Typography>
+                                        {getStatusChip(selectedRow.estado)}
+                                    </Typography>
+                                </Box>
+                            </Paper>
 
-                                <Typography fontSize={16}>
-                                   <Typography component="span" fontWeight="bold">Tiempo max de resolución: </Typography>{selectedRow.tiempoMaxResolucion}                                     
-                                </Typography>                            
-                                                              
-                                <div /* Contenedor para poder mostrar las especialidades*/>                                  
+                            {/* Tiempos de Respuesta/Resolución */}
+                            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                                <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
+                                    MÉTRICAS DE SERVICIO
+                                </Typography>
+                                
+                                {/* Fila: Tiempo Max de Respuesta */}
+                                <Box display="flex" mb={1}>
+                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>T. Max. Respuesta:</Typography>
+                                    <Typography fontSize={16}>{selectedRow.tiempoMaxRespuesta}</Typography>
+                                </Box>
+                                
+                                {/* Fila: Tiempo Max de Resolución */}
+                                <Box display="flex">
+                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>T. Max. Resolución:</Typography>
+                                    <Typography fontSize={16}>{selectedRow.tiempoMaxResolucion}</Typography>
+                                </Box>
+                            </Paper>
+                            
+                            {/* Especialidades y Etiquetas (Usando la estructura Stack/Chip) */}
+                            <Paper variant="outlined" sx={{ p: 2 }}>
+                                <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
+                                    ASIGNACIONES
+                                </Typography>
+                                
+                                {/* Especialidades */}
+                                <Box mb={2}>
                                     <Typography component="span" fontWeight="bold" fontSize={16}>Especialidades:</Typography>
                                     <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
                                         {selectedRow.especialidades && selectedRow.especialidades.length > 0 ? (
@@ -188,9 +247,10 @@ export const CategoriesDataGridWithModal = () => {
                                             </Typography>
                                         )}
                                     </Stack>
-                                </div>
+                                </Box>
 
-                                <div /* Contenedor para mostrar las etiquetas*/>
+                                {/* Etiquetas */}
+                                <Box>
                                     <Typography component="span" fontWeight="bold" fontSize={16}>Etiquetas:</Typography>
                                     <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
                                         {selectedRow.etiquetas && selectedRow.etiquetas.length > 0 ? (
@@ -209,24 +269,19 @@ export const CategoriesDataGridWithModal = () => {
                                             </Typography>
                                         )}
                                     </Stack>
-                                </div>
-                                <Typography fontSize={16}>
-                                  <Typography component="span" fontWeight="bold">Estado:</Typography> 
-                                  <Typography 
-                                      component="span" 
-                                      fontWeight="bold"
-                                      color={selectedRow.estado === '1' ? 'success.main' : 'error.main'}
-                                  >
-                                      {selectedRow.estado === '1' ? ' Activo' : 'Inactivo'}
-                                  </Typography>
-                                </Typography>
-                          </Stack>
-                      )
-                    }
-                    <Button  variant="outlined" onClick={handleCloseModal} sx={{ mt: 3 }}> 
-                      <Typography  fontFamily={'-apple-system'} fontSize={15}>
+                                </Box>
+
+                            </Paper>
+                        </Box>
+                    )}
+                    
+                    {/* Botón de Cerrar */}
+                    <Button 
+                        onClick={handleCloseModal} 
+                        variant="contained" 
+                        sx={{ mt: 3, float: 'right' }}
+                    >
                         Cerrar
-                       </Typography>
                     </Button>
                 </Box>
             </Modal>
