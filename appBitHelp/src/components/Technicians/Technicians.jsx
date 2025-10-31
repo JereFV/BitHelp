@@ -33,6 +33,18 @@ const getStatusChip = (estado) => {
     );
 };
 
+// Helper 2: Disponibilidad (Disponible/Ocupado)
+const getAvailabilityChip = (disponibilidad) => {
+    const isAvailable = disponibilidad === 'Disponible';
+    return (
+        <Chip
+            label={disponibilidad}
+            color={isAvailable ? 'info' : 'warning'} // Celeste para Disponible, Amarillo/Naranja para Ocupado
+            variant="filled"
+            size="small"
+        />
+    );
+};
 
 export const TechniciansDataGridWithModal = () => {
     const [rows, setRows] = useState([]);
@@ -96,10 +108,19 @@ export const TechniciansDataGridWithModal = () => {
     };
 
     const columns = [
-        { field: 'id', headerName: 'ID', minWidth: 70, maxWidth: 90, headerAlign: 'center', align: 'center', flex: 0.6, },
-        { field: 'nombreCompleto', headerName: 'Técnico', minWidth: 240, headerAlign: 'center', align: 'left', flex: 0.7, },
-        { field: 'correo', headerName: 'Correo', minWidth: 240, headerAlign: 'center', align: 'left', flex: 0.7, },
-        { field: 'disponibilidad', headerName: 'Disponibilidad', minWidth: 150, headerAlign: 'center', align: 'center', flex: 0.5, },
+        { field: 'nombreCompleto', headerName: 'Técnico', minWidth: 240, headerAlign: 'center', align: 'center', flex: 0.7, },
+        
+        { 
+            field: 'disponibilidad', 
+            headerName: 'Disponibilidad', 
+            minWidth: 150, 
+            headerAlign: 'center', 
+            align: 'center', 
+            flex: 1,
+            // Aplicar el Chip de color de disponibilidad
+            renderCell: (params) => getAvailabilityChip(params.value),
+        },
+
         {
             field: 'estado',
             headerName: 'Estado',
@@ -196,13 +217,8 @@ export const TechniciansDataGridWithModal = () => {
                                     <Work color="action" sx={{ mr: 1, fontSize: 18 }} />
                                     <Typography variant="body2">Carga de Trabajo: {selectedRow.cargaTrabajo}</Typography>
                                 </Box>
-                                <Box display="flex" alignItems="center">
-                                    <Chip 
-                                        label={`Disponibilidad: ${selectedRow.disponibilidad}`} 
-                                        color="primary"
-                                        size="small"
-                                        sx={{ mt: 1 }}
-                                    />
+                                <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
+                                    {getAvailabilityChip(selectedRow.disponibilidad)}
                                 </Box>
                             </Paper>
                             

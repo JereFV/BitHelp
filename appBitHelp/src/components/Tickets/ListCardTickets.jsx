@@ -81,7 +81,7 @@ export function ListCardTickets({ data = [] }) {
               p: 2,
               borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
             }}
-            title={`#${item.numero ?? item.id} — ${item.titulo ?? ''}`}
+            title={`#${item.numero ?? item.id} - ${item.titulo ?? ''}`}
             titleTypographyProps={{ variant: 'h6', fontWeight: 300 }}
           />
           
