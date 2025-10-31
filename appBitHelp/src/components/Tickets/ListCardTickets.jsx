@@ -82,8 +82,7 @@ export function ListCardTickets({ data = [] }) {
               borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
             }}
             title={`#${item.numero ?? item.id} — ${item.titulo ?? ''}`}
-            titleTypographyProps={{ variant: 'h6', fontWeight: 500 }}
-            subheader={`Técnico: ${item.tecnico ?? 'Sin asignar'}`}
+            titleTypographyProps={{ variant: 'h6', fontWeight: 300 }}
           />
           
           <CardContent sx={{ flexGrow: 1 }}>
@@ -103,15 +102,6 @@ export function ListCardTickets({ data = [] }) {
               />
             </Box>
 
-            {item.descripcion && (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {/* Limitar la descripción para que no rompa el layout */}
-                {item.descripcion.length > 120
-                  ? `${item.descripcion.substring(0, 120)}...`
-                  : item.descripcion}
-              </Typography>
-            )}
-
             <Typography variant="body2" color="text.secondary">
               <strong>Tiempo restante:</strong>{' '}
               {item.tiempoRestante ?? '—'} {item.tiempoRestante ? 'horas' : ''}
@@ -122,7 +112,8 @@ export function ListCardTickets({ data = [] }) {
             disableSpacing
             sx={{
               borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-              backgroundColor: (theme) => theme.palette.grey[50],
+              p: 0,
+              maxHeight: '30px',
             }}
           >
             <IconButton
