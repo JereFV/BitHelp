@@ -42,6 +42,7 @@ CREATE TABLE `categoria` (
 
 LOCK TABLES `categoria` WRITE;
 /*!40000 ALTER TABLE `categoria` DISABLE KEYS */;
+INSERT INTO `categoria` VALUES (1,'\"Hardware\" y dispositivos',4,1),(2,'\"Software\" y aplicaciones',3,1),(3,'Cuentas y Acceso',1,1),(4,'Redes y conectividad',2,1);
 /*!40000 ALTER TABLE `categoria` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -66,6 +67,7 @@ CREATE TABLE `disponibilidad_tecnico` (
 
 LOCK TABLES `disponibilidad_tecnico` WRITE;
 /*!40000 ALTER TABLE `disponibilidad_tecnico` DISABLE KEYS */;
+INSERT INTO `disponibilidad_tecnico` VALUES (1,'Disponible',1),(2,'Ocupado',1);
 /*!40000 ALTER TABLE `disponibilidad_tecnico` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -96,6 +98,7 @@ CREATE TABLE `especialidad` (
 
 LOCK TABLES `especialidad` WRITE;
 /*!40000 ALTER TABLE `especialidad` DISABLE KEYS */;
+INSERT INTO `especialidad` VALUES (1,1,'Incidente con computadora','1',2),(2,1,'Incidente con impresa','1',1),(3,1,'Incidente con periféricos','1',2),(4,1,'Solicitud o préstamo de equipo','1',2),(5,2,'Incidente con aplicación','1',2),(6,2,'Incidente con archivo','1',1),(7,2,'Solicitud de instalación de aplicación','1',2),(8,3,'Restablecimiento de contraseña','1',2),(9,3,'Solicitude de desbloqueo','1',2),(10,3,'Gestión de permisos','1',1),(11,4,'Incidente con conexión a internet','1',2),(12,4,'Incidente con VPN','1',2),(13,4,'Incidente con acceso a servidores','1',2),(14,4,'Incidente con acceso a recursos compartidos','1',1);
 /*!40000 ALTER TABLE `especialidad` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -143,6 +146,7 @@ CREATE TABLE `estado_tiquete` (
 
 LOCK TABLES `estado_tiquete` WRITE;
 /*!40000 ALTER TABLE `estado_tiquete` DISABLE KEYS */;
+INSERT INTO `estado_tiquete` VALUES (1,'Pendiente',1),(2,'Asignado',1),(3,'En Proceso',1),(4,'Resuelto',1),(5,'Cerrado',1);
 /*!40000 ALTER TABLE `estado_tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -261,6 +265,7 @@ CREATE TABLE `historial_tiquete` (
 
 LOCK TABLES `historial_tiquete` WRITE;
 /*!40000 ALTER TABLE `historial_tiquete` DISABLE KEYS */;
+INSERT INTO `historial_tiquete` VALUES (1,1,'2025-10-28 09:00:00',1,'Asignación Automática',2),(1,2,'2025-10-28 12:00:00',1,'',2),(1,3,'2025-10-28 15:00:00',1,'',2),(1,4,'2025-10-30 08:30:00',2,'',2),(2,1,'2025-10-28 10:00:00',1,'Empieza atención del ticket.',3);
 /*!40000 ALTER TABLE `historial_tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -275,7 +280,7 @@ CREATE TABLE `imagen_historial_tiquete` (
   `idImagen` int(11) NOT NULL,
   `idHistorialTiquete` int(11) NOT NULL,
   `idTiquete` int(11) NOT NULL,
-  `imagen` blob NOT NULL,
+  `imagen` varchar(200) DEFAULT NULL,
   PRIMARY KEY (`idImagen`,`idHistorialTiquete`,`idTiquete`),
   KEY `fk_HistorialTiquete_ImagenTiquete_idx` (`idHistorialTiquete`,`idTiquete`),
   CONSTRAINT `fk_HistorialTiquete_ImagenTiquete` FOREIGN KEY (`idHistorialTiquete`, `idTiquete`) REFERENCES `historial_tiquete` (`idHistorialTiquete`, `idTiquete`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -288,6 +293,7 @@ CREATE TABLE `imagen_historial_tiquete` (
 
 LOCK TABLES `imagen_historial_tiquete` WRITE;
 /*!40000 ALTER TABLE `imagen_historial_tiquete` DISABLE KEYS */;
+INSERT INTO `imagen_historial_tiquete` VALUES (1,1,1,'/src/images/Problema Inicio Sesión.png'),(1,1,2,'/src/images/Error acceso nube_1.jpg'),(1,1,3,'/src/images/Error impresión.png'),(2,1,2,'/src/images/Error nube_2.png');
 /*!40000 ALTER TABLE `imagen_historial_tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -312,6 +318,7 @@ CREATE TABLE `metodo_asignacion` (
 
 LOCK TABLES `metodo_asignacion` WRITE;
 /*!40000 ALTER TABLE `metodo_asignacion` DISABLE KEYS */;
+INSERT INTO `metodo_asignacion` VALUES (1,'Manual',1),(2,'Automático',1);
 /*!40000 ALTER TABLE `metodo_asignacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -372,6 +379,7 @@ CREATE TABLE `prioridad_tiquete` (
 
 LOCK TABLES `prioridad_tiquete` WRITE;
 /*!40000 ALTER TABLE `prioridad_tiquete` DISABLE KEYS */;
+INSERT INTO `prioridad_tiquete` VALUES (1,'Crítica',1,100),(2,'Alta',1,50),(3,'Media',1,10),(4,'Baja',1,1);
 /*!40000 ALTER TABLE `prioridad_tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -396,6 +404,7 @@ CREATE TABLE `rol_usuario` (
 
 LOCK TABLES `rol_usuario` WRITE;
 /*!40000 ALTER TABLE `rol_usuario` DISABLE KEYS */;
+INSERT INTO `rol_usuario` VALUES (1,'Cliente'),(2,'Técnico'),(3,'Administrador');
 /*!40000 ALTER TABLE `rol_usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -422,6 +431,7 @@ CREATE TABLE `sla` (
 
 LOCK TABLES `sla` WRITE;
 /*!40000 ALTER TABLE `sla` DISABLE KEYS */;
+INSERT INTO `sla` VALUES (1,'00:30:00','04:00:00',1),(2,'00:30:00','08:00:00',1),(3,'01:00:00','16:00:00',1),(4,'00:30:00','24:00:00',1);
 /*!40000 ALTER TABLE `sla` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -452,6 +462,7 @@ CREATE TABLE `tecnico` (
 
 LOCK TABLES `tecnico` WRITE;
 /*!40000 ALTER TABLE `tecnico` DISABLE KEYS */;
+INSERT INTO `tecnico` VALUES (1,1,1,'00:00:00',1),(2,2,1,'36:00:00',1),(3,3,1,'03:00:00',1),(4,4,1,'10:30:00',1);
 /*!40000 ALTER TABLE `tecnico` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -555,6 +566,7 @@ CREATE TABLE `tiquete` (
 
 LOCK TABLES `tiquete` WRITE;
 /*!40000 ALTER TABLE `tiquete` DISABLE KEYS */;
+INSERT INTO `tiquete` VALUES (1,1,NULL,'Problemas al iniciar sesión','No me deja iniciar sesión a pesar de haber digitado las credenciales.',1,2,8,'2025-10-28 09:00:00',NULL,NULL,'2025-10-28 09:30:00','2025-10-28 13:00:00',NULL,NULL,1,2,NULL,NULL),(2,1,NULL,'Permisos al servidor de la nube','Buenas tardes, necesito permsisos para acceder al servidor xxxxxxxx desde mi máquina local.',1,3,10,'2025-10-28 12:00:00',NULL,NULL,'2025-10-28 12:30:00','2025-10-28 16:00:00',NULL,NULL,1,1,NULL,NULL),(3,1,NULL,'Error al imprimir documentos','Buenas tardes, estoy intentando imprimir documentos pero me sale un error inesperado.',1,3,2,'2025-10-28 15:00:00',NULL,NULL,'2025-10-28 15:30:00','2025-10-29 15:00:00',NULL,NULL,1,2,NULL,NULL),(4,2,NULL,'Lentitud en el sistema de inventario','El sistema está muy lento, no puedo ingresar datos de nuevos productos rápidamente.',1,2,5,'2025-10-30 08:30:00',NULL,NULL,'2025-10-30 09:00:00','2025-10-30 12:30:00',NULL,NULL,2,1,NULL,NULL);
 /*!40000 ALTER TABLE `tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -581,7 +593,7 @@ CREATE TABLE `usuario` (
   UNIQUE KEY `usuario_UNIQUE` (`usuario`),
   KEY `fkRolUsuario_Usuario_idx` (`idRol`),
   CONSTRAINT `fkRolUsuario_Usuario` FOREIGN KEY (`idRol`) REFERENCES `rol_usuario` (`idRolUsuario`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -590,6 +602,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
+INSERT INTO `usuario` VALUES (1,'jfuentes','Jeremy','Fuentes','Venegas','jeremyfvcr15@gmail.com','85197237','Prueba',1,2),(2,'rherrera','Rodrigo','Herrera','Castillo','rrhc1606@gmail.com','85848621','123456',1,2),(3,'jalfaro','Jeyson','Alfaro','Ríos','jeysonalfaro83@gmail.com','72501418','123456',1,2),(4,'jvazquez','Jaime','Vazquez','Ríos','jeisonv83@gmail.com','72051418','123456',1,2);
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -602,4 +615,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-12 19:50:17
+-- Dump completed on 2025-10-26 22:51:43
