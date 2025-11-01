@@ -13,7 +13,7 @@ import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import LabelIcon from '@mui/icons-material/Label';
 import { DateTimeField } from '@mui/x-date-pickers/DateTimeField';
-import {Card, CardContent, Grid, IconButton, Divider, Box, Typography, Modal,Stack } from "@mui/material";
+import {Card, CardContent, Grid, IconButton, Divider, Box, Typography, Modal,Stack,Paper } from "@mui/material";
 import { Person, CalendarMonth, Image as ImageIcon, Close } from "@mui/icons-material";
 import HistoryIcon from '@mui/icons-material/History';
 import TicketService from "../../services/TicketService";
@@ -231,8 +231,8 @@ export function TicketDetail()
                             }}
                         />             
                     </Stack>
-
-                    <Stack direction="row" spacing="10%">
+                  <Paper variant="outlined"  sx={{ p: 2 ,width:'80%'}}>                    
+                    <Stack direction="row" spacing="8%" D>
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
                             <DateTimeField label="SLA Respuesta" value={dayjs(Date.parse(ticket.slaRespuesta))} readOnly={true} format='DD/MM/YYYY hh:mm a' 
                                 slotProps={{
@@ -265,7 +265,7 @@ export function TicketDetail()
                             />
                         </LocalizationProvider>             
                     </Stack>
-
+                  </Paper>
                 </Box>
 
                 <TicketHistory movements={movements}></TicketHistory>
