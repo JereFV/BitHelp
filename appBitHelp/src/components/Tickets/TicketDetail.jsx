@@ -19,6 +19,10 @@ import HistoryIcon from '@mui/icons-material/History';
 import TicketService from "../../services/TicketService";
 import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import StarsIcon from '@mui/icons-material/Stars';
+import Alert from '@mui/material/Alert';
+import StarIcon from '@mui/icons-material/Star';
+import Rating from '@mui/material/Rating';
 
 export function TicketDetail() 
 {
@@ -40,54 +44,13 @@ export function TicketDetail()
         pr: 1,
     };
 
-    //Constante temporal para pruebas
-    // const ticket = {
-    //     idTiquete: 1,
-    //     titulo: "Error al Iniciar Sesión mediante Teams",
-    //     descripcion: "Llevo horas intentando iniciar sesión y no lo consigo, por favor ayudenme.",
-    //     fechaCreacion: dayjs("2025-10-25"),
-    //     usuarioSolicita: {
-    //         nombre: 'Oscar',
-    //         primerApellido: 'Peréz',
-    //         segundoApellido: 'Gómez'
-    //     },
-    //     estado: {
-    //         idEstadoTiquete: 2,
-    //         nombre: 'Asignado'
-    //     },
-    //     prioridad: {
-    //         idPrioridadTiquete: 1,
-    //         nombre: 'Media'
-    //     },
-    //     tecnicoAsignado: {
-    //         nombre: 'Richard',
-    //         primerApellido: 'Ríos',
-    //         segundoApellido: 'Palenque'
-    //     },
-    //     especialidad: {
-    //         idEspecialidad: 1,
-    //         nombre: 'Cuentas y Accesos'
-    //     },
-    //     slaRespuesta: dayjs("2025-10-25T13:15"),
-    //     slaResolucion: dayjs("2025-10-26T08:15"),
-    // }
-
-    // const movimientos = [
-    // {
-    //     usuario: "rherrera",
-    //     nuevoEstado: "Corregido",
-    //     fecha: "31/12/2025",
-    //     comentario: "Ticket Resuelto (Ver evidencia)",
-    //     imagenes: ["/src/images/accountAdministrator.jpg", "/uploads/evidencia2.jpg"]
-    // },
-    // {
-    //     usuario: "lalvarez",
-    //     nuevoEstado: "Resuelto",
-    //     fecha: "01/01/2026",
-    //     comentario: "Se valida corrección",
-    //     imagenes: []
-    // }
-    // ];
+    const labelsTicketRating = {      
+      1: 'Deficiente',
+      2: 'Malo',    
+      3: 'Regular',
+      4: 'Bueno',     
+      5: 'Excelente',
+    }
 
     //Obtiene los parámetros de enrutamiento contenidos en la dirección.
     const routeParams = useParams();
@@ -133,7 +96,7 @@ export function TicketDetail()
                         textShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
                         fontWeight: 'bold'
                     }}>
-                        Ticket N.° {ticket.idTiquete} - {ticket.titulo}                                              
+                        Tiquete N.° {ticket.idTiquete} - {ticket.titulo}                                              
                     </Typography>                                                                        
 
                     <Typography id="modal-modal-title" variant="h6" paddingTop={"15px"} paddingBottom={"5px"}>
@@ -270,6 +233,62 @@ export function TicketDetail()
 
                 <TicketHistory movements={movements}></TicketHistory>
 
+                <Divider sx={{ mb: 3 }} />
+
+                <Box>
+                  <Typography variant="h6" fontWeight="bold" gutterBottom paddingBottom="1.5%">
+                    <Stack alignItems={"center"} direction={"row"}>
+                      <StarsIcon
+                        fontSize="medium"
+                        color="primary"
+                        style={{ marginRight: "1%" }}
+                      />
+                      Valoración del tiquete
+                    </Stack>
+                  </Typography>
+
+                  {ticket.valoracion != null ?             
+                    <Alert severity="info">
+                      No existe valoración registrada para el tiquete seleccionado hasta que haya sido cerrado.
+                    </Alert>  
+
+                  : <Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'center'}}>
+                      <Rating
+                        name="hover-feedback"
+                        value={4}//ticket.valoracion}                       
+                        //getLabelText={labelsTicketRating[ticket.valoracion]}
+                        // onChange={(event, newValue) => {
+                        //   setValue(newValue);
+                        // }}
+                        // onChangeActive={(event, newHover) => {
+                        //   setHover(newHover);
+                        // }}
+                        emptyIcon={<StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />}
+                        readOnly
+                        size='large'                     
+                      />
+                      {/* {value !== null && ( */}
+                        <Box sx={{ ml: 1, fontSize: '1rem', fontWeight: 'bold', alignSelf: 'center' }}>{labelsTicketRating[4]}</Box>
+                      {/* )} */}  
+                    </Box>
+
+                      {/* <TextField id="outlined-read-only-input" label="Comentario Valoración" value={ticket.estadoTiquete?.nombre}
+                        slotProps={{
+                          input: {
+                            readOnly: true,
+                            startAdornment: (
+                              <InputAdornment position="start">
+                              <NotificationsIcon color='primary'/>
+                              </InputAdornment>
+                            ),
+                          },
+                        }}
+                      />                                               */}
+                    </Box>         
+                  }             
+                </Box>
+
                 <IconButton
                     onClick={() => handleClose()}
                     to={`/tickets/ticketsList`}
@@ -397,7 +416,7 @@ function TicketHistory({ movements }) {
                       marginTop: "5%",
                     }}
                   >
-                    <Typography variant="body2">{mov.comentario}</Typography>
+                    <Typography variant="body2">{mov.observacion}</Typography>
                   </Box>
 
                   {/* Recorrido de imágenes mostrandolas como adjuntos en la esquina inferior derecha del contenedor. */}
