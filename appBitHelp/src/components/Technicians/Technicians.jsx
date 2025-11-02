@@ -1,10 +1,10 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Button, Modal, Box, Typography, Chip, Divider, Paper } from '@mui/material'; // Importar Chip y componentes de diseño
+import { Button, Modal, Box, Typography, Chip, Divider, Paper, Stack } from '@mui/material'; // Importar Chip y componentes de diseño
 import { esES } from '@mui/x-data-grid/locales';
 import TechnicianService from '../../services/TechnicianService';
-import { AccountCircle, Mail, Phone, Work } from '@mui/icons-material'; // Iconos para el modal
+import { AccountCircle, Mail, Phone, Work, Verified } from '@mui/icons-material'; // Iconos para el modal
 
 // Estilo del modal para centrarlo
 const modalStyle = {
@@ -83,7 +83,8 @@ export const TechniciansDataGridWithModal = () => {
                     correo: item.correo,
                     telefono: item.telefono,
                     // Convertir a string para el DataGrid
-                    estado: String(item.estado), 
+                    estado: String(item.estado),
+                    especialidades: item.especialidades || [],
                 }));
 
                 setRows(techniciansData);
@@ -209,7 +210,7 @@ export const TechniciansDataGridWithModal = () => {
                             </Paper>
                             
                             {/* Detalle Carga/Disponibilidad */}
-                            <Paper variant="outlined" sx={{ p: 2 }}>
+                            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                                 <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
                                     MÉTRICAS DE TRABAJO
                                 </Typography>
@@ -221,7 +222,33 @@ export const TechniciansDataGridWithModal = () => {
                                     {getAvailabilityChip(selectedRow.disponibilidad)}
                                 </Box>
                             </Paper>
-                            
+
+                            {/* Detalle Especialidades */}
+                            <Paper variant="outlined" sx={{ p: 2 }}>
+                                <Box mb={1} display="flex" alignItems="center">
+                                    <Verified color="action" sx={{ mr: 1, fontSize: 18, verticalAlign: 'middle'}}/>
+                                    <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
+                                        ESPECIALIDADES
+                                    </Typography>
+                                </Box>
+                                <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
+                                    {selectedRow.especialidades && selectedRow.especialidades.length > 0 ? (
+                                        selectedRow.especialidades.map((esp, index) => (
+                                            <Chip 
+                                                key={index} 
+                                                label={esp} 
+                                                size="small" 
+                                                color="primary" 
+                                                variant="outlined" 
+                                            />
+                                        ))
+                                    ) : (
+                                        <Typography fontSize={14} color="text.secondary" sx={{ml: 0.5}}>
+                                            No tiene especialidades asignadas.
+                                        </Typography>
+                                    )}
+                                </Stack>
+                            </Paper>
                         </Box>
                     )}
                     <Button onClick={handleCloseModal} variant="contained" sx={{ mt: 3, float: 'right' }}>Cerrar</Button>
