@@ -13,7 +13,8 @@ import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import LabelIcon from '@mui/icons-material/Label';
 import { DateTimeField } from '@mui/x-date-pickers/DateTimeField';
-import {Card, CardContent, Grid, IconButton, Divider, Box, Typography, Modal,Stack,Paper } from "@mui/material";
+import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
+import {Card, CardContent, Grid, IconButton, Divider, Box, Typography, Modal,Stack ,useTheme} from "@mui/material";
 import { Person, CalendarMonth, Image as ImageIcon, Close } from "@mui/icons-material";
 import HistoryIcon from '@mui/icons-material/History';
 import TicketService from "../../services/TicketService";
@@ -23,9 +24,45 @@ import StarsIcon from '@mui/icons-material/Stars';
 import Alert from '@mui/material/Alert';
 import StarIcon from '@mui/icons-material/Star';
 import Rating from '@mui/material/Rating';
+import { getSLAStatus, formatTimeRemaining } from '../../Utilities/slaCalculations';
+
+
+
+// Mapeo para obtener los colores del tema de Material UI
+const getColorMap = (theme, severity) => {
+    switch (severity) {
+        case 'success':
+            return {
+                backgroundColor: '#E6F4EA', // Fondo verde muy claro
+                iconColor: '#388E3C',        // Icono verde oscuro
+                textColor: '#1B5E20',        // Texto verde muy oscuro
+            };
+        case 'error':
+            return {
+                backgroundColor: '#FDECEA',  // Fondo rojo muy claro
+                iconColor: '#D32F2F',         // Icono rojo oscuro
+                textColor: '#C62828',         // Texto rojo muy oscuro
+            };
+        case 'warning':
+            return {
+                backgroundColor: '#FFF8E1',
+                iconColor: '#FFC107',
+                textColor: '#FF6F00',
+            };
+        default:
+            return {
+                backgroundColor: '#E3F2FD',
+                iconColor: '#1976D2',
+                textColor: '#0D47A1',
+            };
+    }
+};
+
+
 
 export function TicketDetail() 
 {
+  const theme = useTheme();
     //Estilos definidos para el contenedor padre.
     const styleParentBox = {
         position: "absolute",
@@ -62,10 +99,12 @@ export function TicketDetail()
     //Constantes que almacena el detalle del tiquete y sus movimientos.
     const [ticket, setTicket] = useState({});
     const [movements, setMovements] = useState([]);
+    const [slaDetails, setSlaDetails] = useState(null);
 
     useEffect(() => {
+      const idTiquete = routeParams.id;
         //Obtiene el detalle del tiquete a partir del valor enviado.
-        TicketService.getTicketById(routeParams.id)
+        TicketService.getTicketById(idTiquete)
           .then((response) => {
             //Seteo del tiquete e historial de movimientos en las constantes de renderización.  
             setTicket(response.data);
@@ -74,7 +113,33 @@ export function TicketDetail()
           .catch((error) => {      
             console.log(error);      
           });
-      }, []);
+        TicketService.getSlaDetailsById(idTiquete) 
+          .then((response) => {
+            setSlaDetails(response.data); // Almacena los límites y fechas reales del backend
+          })
+          .catch((error) => {
+            console.error("Error al obtener detalles de SLA:", error);
+            // Opcional: setSlaDetails({}) o un valor para evitar errores de null checking
+          });
+      }, [routeParams.id]);
+    let slaRespuestaDisplay = null;
+    let slaResolucionDisplay = null;
+
+    if (slaDetails) {
+        // Uso de la función importada  para calcular el estado de respuesta
+        slaRespuestaDisplay = getSLAStatus(
+            slaDetails.SLARespuestaLimite,
+            slaDetails.FechaRespuestaReal,
+            slaDetails.cumplimientoSlaRespuesta
+        );
+        
+        // Uso de la función importada para calcular el estado de resolución
+        slaResolucionDisplay = getSLAStatus(
+            slaDetails.SLAResolucionLimite,
+            slaDetails.FechaResolucionReal,
+            slaDetails.cumplimientoSlaResolucion
+        );
+    }
 
     return (
         <div>
@@ -194,41 +259,162 @@ export function TicketDetail()
                             }}
                         />             
                     </Stack>
-                  <Paper variant="outlined"  sx={{ p: 2 ,width:'80%'}}>                    
-                    <Stack direction="row" spacing="8%" D>
-                        <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <DateTimeField label="SLA Respuesta" value={dayjs(Date.parse(ticket.slaRespuesta))} readOnly={true} format='DD/MM/YYYY hh:mm a' 
-                                slotProps={{
-                                    textField: {
-                                        InputProps: {
-                                            startAdornment: (
-                                            <InputAdornment position="start">
-                                                <CalendarIcon color='primary'/>          
-                                            </InputAdornment>
-                                            ),
-                                        },
-                                    },
+                    <Divider sx={{ mb: 3 }} />                    
+                    <Typography variant="subtitle1"  component="p" paddingBottom={"20px"}>
+                        <AccessAlarmIcon  color='primary' sx={{ verticalAlign: 'top' }}/> Métricas de SLA y cumplimiento
+                    </Typography>
+                    {slaDetails ? (
+                          <Grid container spacing={3} paddingBottom="25px" sx={{ width: '100%' }}>
+                              
+                              {/* SLA RESPUESTA (Límite + Cumplimiento)  */}
+                              <Grid item xs={12}>
+                                  {/* Grid anidado para colocar el DateTimeField y el Alert lado a lado */}
+                                  <Grid container spacing={9} alignItems="center">
+                                      
+                                      {/* Lado Izquierdo: DateTimeField para el Límite de Respuesta */}
+                                      <Grid item xs={12} sm={6} md={4}>
+                                          <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                              <DateTimeField 
+                                                  label="SLA Respuesta Límite" 
+                                                  value={dayjs(slaDetails.SLARespuestaLimite)} 
+                                                  readOnly={true} 
+                                                  // Aseguramos que se vean los segundos
+                                                  format='DD/MM/YYYY hh:mm:ss a' 
+                                                  slotProps={{
+                                                      textField: {
+                                                          InputProps: {
+                                                              startAdornment: (
+                                                                  <InputAdornment position="start">
+                                                                      <CalendarIcon color='primary'/>        
+                                                                  </InputAdornment>
+                                                              ),
+                                                          },
+                                                      },
+                                                  }}
+                                              />
+                                          </LocalizationProvider>
+                                      </Grid>
+                                      
+                                      {/* Lado Derecho: Alert para el Estado de Respuesta */}
+                                      <Grid item xs={12} sm={6} md={8}>
+                    {/* Obtener colores basados en el estado (usando slaRespuestaDisplay.color) */}
+                    {/* Asumo que slaRespuestaDisplay.color devuelve 'success', 'error', etc. */}
+                    {(() => {
+                        const { backgroundColor, iconColor, textColor } = getColorMap(theme, slaRespuestaDisplay.color);
+                        return (
+                            <Box 
+                                sx={{ 
+                                    width: '100%', // 🚨 EL 100% AHORA FUNCIONARÁ
+                                    backgroundColor: backgroundColor,
+                                    borderRadius: 1, // Bordes redondeados como el Alert
+                                    p: 2, // Padding interno
+                                    display: 'flex', 
+                                    alignItems: 'center',
+                                    gap: 2 // Espacio entre ícono y texto
                                 }}
-                            />
-                        </LocalizationProvider> 
+                            >
+                                {/* Ícono de Alarma */}
+                                <AccessAlarmIcon sx={{ color: iconColor }} fontSize="large" />
 
-                        <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <DateTimeField label="SLA Resolución" value={dayjs(Date.parse(ticket.slaResolucion))} readOnly={true} format='DD/MM/YYYY hh:mm a' 
-                                slotProps={{
-                                    textField: {
-                                        InputProps: {
-                                            startAdornment: (
-                                            <InputAdornment position="start">
-                                                <CalendarIcon color='primary'/>          
-                                            </InputAdornment>
-                                            ),
-                                        },
-                                    },
+                                {/* Stack con el Contenido */}
+                                <Stack sx={{ color: textColor }}>
+                                    <Typography variant="body2" fontWeight="bold">
+                                        Estado: {slaRespuestaDisplay.estado}
+                                    </Typography>
+                                    <Typography variant="caption" display="block">
+                                        {slaRespuestaDisplay.tiempoRestante}
+                                    </Typography>
+                                    {slaDetails.FechaRespuestaReal && 
+                                        <Typography variant="caption" display="block">
+                                            Respondido: {dayjs(slaDetails.FechaRespuestaReal).format('hh:mm:ss a')}
+                                        </Typography>
+                                    }
+                                </Stack>
+                            </Box>
+                        );
+                    })()}
+                </Grid>
+                                  </Grid>
+                              </Grid>
+                              
+                              {/* --- DIVISOR VISUAL --- */}
+                              <Grid item xs={12}>
+                                  <Divider />
+                              </Grid>
+
+
+                              {/* === 2. SLA RESOLUCIÓN (Límite + Cumplimiento) === */}
+                              <Grid item xs={12}>
+                                  {/* Grid anidado para colocar el DateTimeField y el Alert lado a lado */}
+                                  <Grid container spacing={9} alignItems="center">
+                                      
+                                      {/* Lado Izquierdo: DateTimeField para el Límite de Resolución */}
+                                      <Grid item xs={12} sm={6} md={2}>
+                                          <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                              <DateTimeField 
+                                                  label="SLA Resolución Límite" 
+                                                  value={dayjs(slaDetails.SLAResolucionLimite)} 
+                                                  readOnly={true} 
+                                                  // Aseguramos que se vean los segundos
+                                                  format='DD/MM/YYYY hh:mm:ss a' 
+                                                  slotProps={{
+                                                      textField: {
+                                                          InputProps: {
+                                                              startAdornment: (
+                                                                  <InputAdornment position="start">
+                                                                      <CalendarIcon color='primary'/>        
+                                                                  </InputAdornment>
+                                                              ),
+                                                          },
+                                                      },
+                                                  }}
+                                              />
+                                          </LocalizationProvider>
+                                      </Grid>
+                                      
+                                      {/* Lado Derecho: Alert para el Estado de Resolución */}
+                                      <Grid item xs={12} sm={6} md={8}>
+                    {(() => {
+                        const { backgroundColor, iconColor, textColor } = getColorMap(theme, slaResolucionDisplay.color);
+                        return (
+                            <Box 
+                                sx={{ 
+                                    width: '108%', // 🚨 EL 100% AHORA FUNCIONARÁ
+                                    backgroundColor: backgroundColor,
+                                    borderRadius: 1, 
+                                    p: 2, 
+                                    display: 'flex', 
+                                    alignItems: 'center',
+                                    gap: 2
                                 }}
-                            />
-                        </LocalizationProvider>             
-                    </Stack>
-                  </Paper>
+                            >
+                                <AccessAlarmIcon sx={{ color: iconColor }} fontSize="large" />
+                                
+                                <Stack sx={{ color: textColor }}>
+                                    <Typography variant="body2" fontWeight="bold">
+                                        Estado: {slaResolucionDisplay.estado}
+                                    </Typography>
+                                    <Typography variant="caption" display="block">
+                                        {slaResolucionDisplay.tiempoRestante}
+                                    </Typography>
+                                    {slaDetails.FechaResolucionReal && 
+                                        <Typography variant="caption" display="block">
+                                            Resuelto: {dayjs(slaDetails.FechaResolucionReal).format('hh:mm:ss a')}
+                                        </Typography>
+                                    }
+                                </Stack>
+                            </Box>
+                        );
+                    })()}
+                </Grid>
+                                  </Grid>
+                              </Grid>
+
+                          </Grid>
+                      ) : (
+                          <Alert severity="info">Cargando métricas de SLA...</Alert>
+                      )}
+            
                 </Box>
 
                 <TicketHistory movements={movements}></TicketHistory>

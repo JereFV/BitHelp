@@ -138,5 +138,51 @@ class TicketModel
             handleException($ex);
         }
     }
-}
+
+    public function getSlaDetails($id)
+    {
+        try 
+        {
+            // Consulta SQL optimizada para obtener todos los datos necesarios
+            // para el bloque de cumplimiento de SLA en una sola llamada.
+            $query = "
+                SELECT
+                    T.idTiquete,
+                    T.fechaCreacion,
+                    -- 1. Fechas Reales de Acción (Ahora contienen la fecha de respuesta/resolución real)
+                    T.slaRespuesta AS FechaRespuestaReal, 
+                    T.slaResolucion AS FechaResolucionReal, 
+                    
+                    -- 2. Estado de Cumplimiento (0 = No Cumplido, 1 = Cumplido)
+                    T.cumplimientoSlaRespuesta,
+                    T.cumplimientoSlaResolucion,
+                    
+                    -- 3. Tiempos Máximos (de la tabla SLA) para mostrar y calcular
+                    S.tiempoMaxRespuesta,  
+                    S.tiempoMaxResolucion, 
+
+                    -- 4. Cálculo del Momento Límite de Respuesta (SLA Límite)
+                    DATE_ADD(T.fechaCreacion, INTERVAL TIME_TO_SEC(S.tiempoMaxRespuesta) SECOND) AS SLARespuestaLimite,
+                    
+                    -- 5. Cálculo del Momento Límite de Resolución (SLA Límite)
+                    DATE_ADD(T.fechaCreacion, INTERVAL TIME_TO_SEC(S.tiempoMaxResolucion) SECOND) AS SLAResolucionLimite
+                FROM
+                    tiquete AS T
+                INNER JOIN especialidad AS E ON T.idEspecialidad = E.idEspecialidad
+                INNER JOIN categoria AS C ON E.idCategoria = C.idCategoria
+                INNER JOIN sla AS S ON C.idSla = S.idSla
+                WHERE
+                    T.idTiquete = $id
+            ";
+
+            $slaDetails = $this->connection->executeSQL($query);
+
+            return $slaDetails[0] ?? null;
+
+        } catch (Exception $ex) {
+            handleException($ex);
+            return null;
+        }
+    }
+    }
 ?>

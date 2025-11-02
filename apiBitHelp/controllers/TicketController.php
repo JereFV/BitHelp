@@ -52,4 +52,23 @@ class Ticket
             handleException($ex);
         }
     }
+
+    // método para obtener SOLAMENTE los detalles de SLA
+    public function getSlaDetails($id)
+    {
+        try 
+        { 
+            $response = new Response();
+            $ticketModel = new TicketModel();
+
+            // Llama al nuevo método para obtener la información de SLA con cálculos.
+            $slaDetails = $ticketModel->getSlaDetails($id);
+            
+            // Devuelve los detalles del SLA en una estructura JSON.
+            $response->toJson($slaDetails);           
+        }
+        catch (Exception $ex) {
+            handleException($ex);
+        }
+    }
 }

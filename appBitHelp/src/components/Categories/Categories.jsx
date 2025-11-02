@@ -208,7 +208,7 @@ export const CategoriesDataGridWithModal = () => {
                                 
                                 {/* Especialidades */}
                                 <Box mb={2}>            
-                                    <VerifiedIcon color="action" sx={{ mr: 1, fontSize: 18}}/>                         
+                                    <VerifiedIcon color="action" sx={{ mr: 1, fontSize: 18, verticalAlign: 'middle'}}/>                         
                                     <Typography component="span" fontWeight="bold" fontSize={16}>Especialidades:</Typography>
                                     <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
                                         {selectedRow.especialidades && selectedRow.especialidades.length > 0 ? (
@@ -231,7 +231,7 @@ export const CategoriesDataGridWithModal = () => {
 
                                 {/* Etiquetas */}
                                 <Box>
-                                    <LocalOfferIcon color="action" sx={{ mr: 1, fontSize: 18}}/>
+                                    <LocalOfferIcon color="action" sx={{ mr: 1, fontSize: 18, verticalAlign: 'middle'}}/>
                                     <Typography component="span" fontWeight="bold" fontSize={16}>Etiquetas:</Typography>
                                     <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
                                         {selectedRow.etiquetas && selectedRow.etiquetas.length > 0 ? (
