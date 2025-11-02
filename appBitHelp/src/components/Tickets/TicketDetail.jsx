@@ -25,8 +25,8 @@ import Alert from '@mui/material/Alert';
 import StarIcon from '@mui/icons-material/Star';
 import Rating from '@mui/material/Rating';
 import { getSLAStatus, formatTimeRemaining } from '../../Utilities/slaCalculations';
-
-
+import CommentIcon from '@mui/icons-material/Comment';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 
 // Mapeo para obtener los colores del tema de Material UI
 const getColorMap = (theme, severity) => {
@@ -142,356 +142,477 @@ export function TicketDetail()
     }
 
     return (
-        <div>
-            <Modal
-                open={open}
-                onClose={handleClose}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-                style={{}}
-                >           
-                <Box sx={styleParentBox}>
+      <div>
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+          style={{}}
+        >
+          <Box sx={styleParentBox}>
+            <Box sx={{ mb: 3, flexShrink: 0 }}>
+              <Typography
+                id="modal-modal-title"
+                variant="h5"
+                component="h2"
+                sx={{
+                  fontSize: "2rem",
+                  textAlign: "center",
+                  //Sombra sútil para resasltar el texto
+                  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
+                  fontWeight: "bold",
+                  marginBottom: "1.5rem"
+                }}
+              >
+                Tiquete N.° {ticket.idTiquete} - {ticket.titulo}
+              </Typography>
 
-                <Box sx={{ mb: 3, flexShrink: 0 }}>                           
-                    <Typography id="modal-modal-title" variant="h5" component="h2" 
-                    sx={{
-                        fontSize: '2rem',
-                        textAlign: 'center',
-                        //Sombra sútil para resasltar el texto
-                        textShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
-                        fontWeight: 'bold'
-                    }}>
-                        Tiquete N.° {ticket.idTiquete} - {ticket.titulo}                                              
-                    </Typography>                                                                        
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                gutterBottom
+                marginBottom="2rem"
+              >
+                <Stack alignItems={"center"} direction={"row"}>
+                  <ConfirmationNumberIcon
+                    fontSize="large"
+                    color="primary"
+                    style={{ marginRight: "1%"}}
+                  />
+                  Información General
+                </Stack>
+              </Typography>
+             
+              <TextField id="standard-basic" label="Descripción" value={ticket.descripcion}
+                fullWidth
+                multiline
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    style: {
+                      fontSize: "0.9rem",
+                      marginBottom: "1.5rem"
+                    },
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <DescriptionIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
 
-                    <Typography id="modal-modal-title" variant="h6" paddingTop={"15px"} paddingBottom={"5px"}>
-                        <Stack alignItems={'center'} direction={'row'}>
-                            <DescriptionIcon fontSize="medium" color='primary' style={{marginRight: '1%'}}/>Descripción.
-                        </Stack>   
-                    </Typography>
-                    <Typography variant="subtitle2" component="p" paddingBottom={"20px"}>
-                        {ticket.descripcion}
-                    </Typography>
+              <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
+                <TextField
+                  id="outlined-read-only-input"
+                  label="Usuario Reporta"
+                  value={`${ticket.usuarioSolicita?.nombre} ${ticket.usuarioSolicita?.primerApellido} ${ticket.usuarioSolicita?.segundoApellido}`}
+                  fullWidth
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <AccountCircle color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
 
-                    <Stack direction="row" spacing="10%" paddingBottom="25px">
-                        <TextField id="outlined-read-only-input" label="Usuario Reporta" value={`${ticket.usuarioSolicita?.nombre} ${ticket.usuarioSolicita?.primerApellido} ${ticket.usuarioSolicita?.segundoApellido}`}
-                            slotProps={{
-                                input: {
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <AccountCircle color='primary'/>
-                                        </InputAdornment>
-                                    ),
-                                },
-                            }}
-                        /> 
-
-                        <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <DateField label="Fecha de Creación" value={dayjs(ticket.fechaCreacion)} readOnly={true} format='DD/MM/YYYY' 
-                                slotProps={{
-                                    textField: {
-                                        InputProps: {
-                                            startAdornment: (
-                                            <InputAdornment position="start">
-                                                <CalendarIcon color='primary'/>          
-                                            </InputAdornment>
-                                            ),
-                                        },
-                                    },
-                                }}
-                            />
-                        </LocalizationProvider>            
-                    </Stack>
-
-                    <Stack direction="row" spacing="10%" paddingBottom="25px">
-                        <TextField id="outlined-read-only-input" label="Estado" value={ticket.estadoTiquete?.nombre}
-                            slotProps={{
-                                input: {
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <NotificationsIcon color='primary'/>
-                                        </InputAdornment>
-                                    ),
-                                },
-                            }}
-                        /> 
-
-                        <TextField id="outlined-read-only-input" label="Prioridad" value={ticket.prioridad?.nombre}
-                            slotProps={{
-                                input: {
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <PriorityHighIcon color='primary'/>
-                                        </InputAdornment>
-                                    ),
-                                },
-                            }}
-                        />             
-                    </Stack>
-
-                    <Stack direction="row" spacing="10%" paddingBottom="25px">
-                        <TextField id="outlined-read-only-input" label="Técnico Asignado" value={`${ticket.tecnicoAsignado?.nombre} ${ticket.tecnicoAsignado?.primerApellido} ${ticket.tecnicoAsignado?.segundoApellido}`}
-                            slotProps={{
-                                input: {
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <SupportAgentIcon color='primary'/>
-                                        </InputAdornment>
-                                    ),
-                                },
-                            }}
-                        /> 
-
-                        <TextField id="outlined-read-only-input" label="Especialidad" value={ticket.especialidad?.nombre}
-                            slotProps={{
-                                input: {
-                                    readOnly: true,
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <LabelIcon color='primary'/>
-                                        </InputAdornment>
-                                    ),
-                                },
-                            }}
-                        />             
-                    </Stack>
-                    <Divider sx={{ mb: 3 }} />                    
-                    <Typography variant="subtitle1"  component="p" paddingBottom={"20px"}>
-                        <AccessAlarmIcon  color='primary' sx={{ verticalAlign: 'top' }}/> Métricas de SLA y cumplimiento
-                    </Typography>
-                    {slaDetails ? (
-                          <Grid container spacing={3} paddingBottom="25px" sx={{ width: '100%' }}>
-                              
-                              {/* SLA RESPUESTA (Límite + Cumplimiento)  */}
-                              <Grid item xs={12}>
-                                  {/* Grid anidado para colocar el DateTimeField y el Alert lado a lado */}
-                                  <Grid container spacing={9} alignItems="center">
-                                      
-                                      {/* Lado Izquierdo: DateTimeField para el Límite de Respuesta */}
-                                      <Grid item xs={12} sm={6} md={4}>
-                                          <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                              <DateTimeField 
-                                                  label="SLA Respuesta Límite" 
-                                                  value={dayjs(slaDetails.SLARespuestaLimite)} 
-                                                  readOnly={true} 
-                                                  // Aseguramos que se vean los segundos
-                                                  format='DD/MM/YYYY hh:mm:ss a' 
-                                                  slotProps={{
-                                                      textField: {
-                                                          InputProps: {
-                                                              startAdornment: (
-                                                                  <InputAdornment position="start">
-                                                                      <CalendarIcon color='primary'/>        
-                                                                  </InputAdornment>
-                                                              ),
-                                                          },
-                                                      },
-                                                  }}
-                                              />
-                                          </LocalizationProvider>
-                                      </Grid>
-                                      
-                                      {/* Lado Derecho: Alert para el Estado de Respuesta */}
-                                      <Grid item xs={12} sm={6} md={8}>
-                    {/* Obtener colores basados en el estado (usando slaRespuestaDisplay.color) */}
-                    {/* Asumo que slaRespuestaDisplay.color devuelve 'success', 'error', etc. */}
-                    {(() => {
-                        const { backgroundColor, iconColor, textColor } = getColorMap(theme, slaRespuestaDisplay.color);
-                        return (
-                            <Box 
-                                sx={{ 
-                                    width: '100%', // 🚨 EL 100% AHORA FUNCIONARÁ
-                                    backgroundColor: backgroundColor,
-                                    borderRadius: 1, // Bordes redondeados como el Alert
-                                    p: 2, // Padding interno
-                                    display: 'flex', 
-                                    alignItems: 'center',
-                                    gap: 2 // Espacio entre ícono y texto
-                                }}
-                            >
-                                {/* Ícono de Alarma */}
-                                <AccessAlarmIcon sx={{ color: iconColor }} fontSize="large" />
-
-                                {/* Stack con el Contenido */}
-                                <Stack sx={{ color: textColor }}>
-                                    <Typography variant="body2" fontWeight="bold">
-                                        Estado: {slaRespuestaDisplay.estado}
-                                    </Typography>
-                                    <Typography variant="caption" display="block">
-                                        {slaRespuestaDisplay.tiempoRestante}
-                                    </Typography>
-                                    {slaDetails.FechaRespuestaReal && 
-                                        <Typography variant="caption" display="block">
-                                            Respondido: {dayjs(slaDetails.FechaRespuestaReal).format('hh:mm:ss a')}
-                                        </Typography>
-                                    }
-                                </Stack>
-                            </Box>
-                        );
-                    })()}
-                </Grid>
-                                  </Grid>
-                              </Grid>
-                              
-                              {/* --- DIVISOR VISUAL --- */}
-                              <Grid item xs={12}>
-                                  <Divider />
-                              </Grid>
-
-
-                              {/* === 2. SLA RESOLUCIÓN (Límite + Cumplimiento) === */}
-                              <Grid item xs={12}>
-                                  {/* Grid anidado para colocar el DateTimeField y el Alert lado a lado */}
-                                  <Grid container spacing={9} alignItems="center">
-                                      
-                                      {/* Lado Izquierdo: DateTimeField para el Límite de Resolución */}
-                                      <Grid item xs={12} sm={6} md={2}>
-                                          <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                              <DateTimeField 
-                                                  label="SLA Resolución Límite" 
-                                                  value={dayjs(slaDetails.SLAResolucionLimite)} 
-                                                  readOnly={true} 
-                                                  // Aseguramos que se vean los segundos
-                                                  format='DD/MM/YYYY hh:mm:ss a' 
-                                                  slotProps={{
-                                                      textField: {
-                                                          InputProps: {
-                                                              startAdornment: (
-                                                                  <InputAdornment position="start">
-                                                                      <CalendarIcon color='primary'/>        
-                                                                  </InputAdornment>
-                                                              ),
-                                                          },
-                                                      },
-                                                  }}
-                                              />
-                                          </LocalizationProvider>
-                                      </Grid>
-                                      
-                                      {/* Lado Derecho: Alert para el Estado de Resolución */}
-                                      <Grid item xs={12} sm={6} md={8}>
-                    {(() => {
-                        const { backgroundColor, iconColor, textColor } = getColorMap(theme, slaResolucionDisplay.color);
-                        return (
-                            <Box 
-                                sx={{ 
-                                    width: '108%', // 🚨 EL 100% AHORA FUNCIONARÁ
-                                    backgroundColor: backgroundColor,
-                                    borderRadius: 1, 
-                                    p: 2, 
-                                    display: 'flex', 
-                                    alignItems: 'center',
-                                    gap: 2
-                                }}
-                            >
-                                <AccessAlarmIcon sx={{ color: iconColor }} fontSize="large" />
-                                
-                                <Stack sx={{ color: textColor }}>
-                                    <Typography variant="body2" fontWeight="bold">
-                                        Estado: {slaResolucionDisplay.estado}
-                                    </Typography>
-                                    <Typography variant="caption" display="block">
-                                        {slaResolucionDisplay.tiempoRestante}
-                                    </Typography>
-                                    {slaDetails.FechaResolucionReal && 
-                                        <Typography variant="caption" display="block">
-                                            Resuelto: {dayjs(slaDetails.FechaResolucionReal).format('hh:mm:ss a')}
-                                        </Typography>
-                                    }
-                                </Stack>
-                            </Box>
-                        );
-                    })()}
-                </Grid>
-                                  </Grid>
-                              </Grid>
-
-                          </Grid>
-                      ) : (
-                          <Alert severity="info">Cargando métricas de SLA...</Alert>
-                      )}
-            
-                </Box>
-
-                <TicketHistory movements={movements}></TicketHistory>
-
-                <Divider sx={{ mb: 3 }} />
-
-                <Box>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom paddingBottom="1.5%">
-                    <Stack alignItems={"center"} direction={"row"}>
-                      <StarsIcon
-                        fontSize="medium"
-                        color="primary"
-                        style={{ marginRight: "1%" }}
-                      />
-                      Valoración del tiquete
-                    </Stack>
-                  </Typography>
-
-                  {ticket.valoracion != null ?             
-                    <Alert severity="info">
-                      No existe valoración registrada para el tiquete seleccionado hasta que haya sido cerrado.
-                    </Alert>  
-
-                  : <Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'center'}}>
-                      <Rating
-                        name="hover-feedback"
-                        value={4}//ticket.valoracion}                       
-                        //getLabelText={labelsTicketRating[ticket.valoracion]}
-                        // onChange={(event, newValue) => {
-                        //   setValue(newValue);
-                        // }}
-                        // onChangeActive={(event, newHover) => {
-                        //   setHover(newHover);
-                        // }}
-                        emptyIcon={<StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />}
-                        readOnly
-                        size='large'                     
-                      />
-                      {/* {value !== null && ( */}
-                        <Box sx={{ ml: 1, fontSize: '1rem', fontWeight: 'bold', alignSelf: 'center' }}>{labelsTicketRating[4]}</Box>
-                      {/* )} */}  
-                    </Box>
-
-                      {/* <TextField id="outlined-read-only-input" label="Comentario Valoración" value={ticket.estadoTiquete?.nombre}
-                        slotProps={{
-                          input: {
-                            readOnly: true,
-                            startAdornment: (
-                              <InputAdornment position="start">
-                              <NotificationsIcon color='primary'/>
-                              </InputAdornment>
-                            ),
-                          },
-                        }}
-                      />                                               */}
-                    </Box>         
-                  }             
-                </Box>
-
-                <IconButton
-                    onClick={() => handleClose()}
-                    to={`/tickets/ticketsList`}
-                    component={Link} 
-                    sx={{
-                    position: "absolute",
-                    top: 1,
-                    right: 1,
-                    color: "black",
-                    zIndex: 10,                                                              
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DateTimeField
+                    label="Fecha de Creación"
+                    value={dayjs(ticket.fechaCreacion)}
+                    readOnly={true}
+                    format="DD/MM/YYYY hh:mm:ss a"
+                    fullWidth
+                    slotProps={{
+                      textField: {
+                        InputProps: {
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <CalendarIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        },
+                      },
                     }}
+                  />
+                </LocalizationProvider>
+              </Stack>
+
+              <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
+                <TextField
+                  id="outlined-read-only-input"
+                  label="Estado"
+                  value={ticket.estadoTiquete?.nombre}
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <NotificationsIcon color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+
+                <TextField
+                  id="outlined-read-only-input"
+                  label="Prioridad"
+                  value={ticket.prioridad?.nombre}
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <PriorityHighIcon color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </Stack>
+
+              <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
+                <TextField
+                  id="outlined-read-only-input"
+                  label="Técnico Asignado"
+                  value={`${ticket.tecnicoAsignado?.nombre} ${ticket.tecnicoAsignado?.primerApellido} ${ticket.tecnicoAsignado?.segundoApellido}`}
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SupportAgentIcon color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+
+                <TextField
+                  id="outlined-read-only-input"
+                  label="Especialidad"
+                  value={ticket.especialidad?.nombre}
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LabelIcon color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </Stack>
+
+              <Divider sx={{ mb: 3 }} />
+              
+              {/* <Typography
+                variant="subtitle1"
+                component="p"
+                paddingBottom={"20px"}
+              >
+                <AccessAlarmIcon
+                  color="primary"
+                  sx={{ verticalAlign: "top" }}
+                />{" "}
+                Métricas de SLA y cumplimiento
+              </Typography> */}
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                gutterBottom
+                marginBottom="2rem"
+              >
+                <Stack alignItems={"center"} direction={"row"}>
+                  <AccessAlarmIcon
+                    fontSize="large"
+                    color="primary"
+                    style={{ marginRight: "1%"}}
+                  />
+                  Métricas de SLA y Cumplimiento
+                </Stack>
+              </Typography>
+
+              {slaDetails ? (
+                <Grid
+                  container
+                  spacing={3}
+                  paddingBottom="25px"
+                  sx={{ width: "100%" }}
                 >
-                    <Close />
-                </IconButton>
-                </Box>                        
-            </Modal>
-        </div>
+                  {/* SLA RESPUESTA (Límite + Cumplimiento)  */}
+                  <Grid item xs={12}>
+                    {/* Grid anidado para colocar el DateTimeField y el Alert lado a lado */}
+                    <Grid container spacing={9} alignItems="center">
+                      {/* Lado Izquierdo: DateTimeField para el Límite de Respuesta */}
+                      <Grid item xs={12} sm={6} md={4}>
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                          <DateTimeField
+                            label="SLA Respuesta Límite"
+                            value={dayjs(slaDetails.SLARespuestaLimite)}
+                            readOnly={true}
+                            // Aseguramos que se vean los segundos
+                            format="DD/MM/YYYY hh:mm:ss a"
+                            slotProps={{
+                              textField: {
+                                InputProps: {
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <CalendarIcon color="primary" />
+                                    </InputAdornment>
+                                  ),
+                                },
+                              },
+                            }}
+                          />
+                        </LocalizationProvider>
+                      </Grid>
+
+                      {/* Lado Derecho: Alert para el Estado de Respuesta */}
+                      <Grid item xs={12} sm={6} md={8}>
+                        {/* Obtener colores basados en el estado (usando slaRespuestaDisplay.color) */}
+                        {/* Asumo que slaRespuestaDisplay.color devuelve 'success', 'error', etc. */}
+                        {(() => {
+                          const { backgroundColor, iconColor, textColor } =
+                            getColorMap(theme, slaRespuestaDisplay.color);
+                          return (
+                            <Box
+                              sx={{
+                                width: "100%", // 🚨 EL 100% AHORA FUNCIONARÁ
+                                backgroundColor: backgroundColor,
+                                borderRadius: 1, // Bordes redondeados como el Alert
+                                p: 2, // Padding interno
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2, // Espacio entre ícono y texto
+                              }}
+                            >
+                              {/* Ícono de Alarma */}
+                              <AccessAlarmIcon
+                                sx={{ color: iconColor }}
+                                fontSize="large"
+                              />
+
+                              {/* Stack con el Contenido */}
+                              <Stack sx={{ color: textColor }}>
+                                <Typography variant="body2" fontWeight="bold">
+                                  Estado: {slaRespuestaDisplay.estado}
+                                </Typography>
+                                <Typography variant="caption" display="block">
+                                  {slaRespuestaDisplay.tiempoRestante}
+                                </Typography>
+                                {slaDetails.FechaRespuestaReal && (
+                                  <Typography variant="caption" display="block">
+                                    Respondido:{" "}
+                                    {dayjs(
+                                      slaDetails.FechaRespuestaReal
+                                    ).format("hh:mm:ss a")}
+                                  </Typography>
+                                )}
+                              </Stack>
+                            </Box>
+                          );
+                        })()}
+                      </Grid>
+                    </Grid>
+                  </Grid>
+
+                  {/* --- DIVISOR VISUAL --- */}
+                  <Grid item xs={12}>
+                    <Divider />
+                  </Grid>
+
+                  {/* === 2. SLA RESOLUCIÓN (Límite + Cumplimiento) === */}
+                  <Grid item xs={12}>
+                    {/* Grid anidado para colocar el DateTimeField y el Alert lado a lado */}
+                    <Grid container spacing={9} alignItems="center">
+                      {/* Lado Izquierdo: DateTimeField para el Límite de Resolución */}
+                      <Grid item xs={12} sm={6} md={2}>
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                          <DateTimeField
+                            label="SLA Resolución Límite"
+                            value={dayjs(slaDetails.SLAResolucionLimite)}
+                            readOnly={true}
+                            // Aseguramos que se vean los segundos
+                            format="DD/MM/YYYY hh:mm:ss a"
+                            slotProps={{
+                              textField: {
+                                InputProps: {
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <CalendarIcon color="primary" />
+                                    </InputAdornment>
+                                  ),
+                                },
+                              },
+                            }}
+                          />
+                        </LocalizationProvider>
+                      </Grid>
+
+                      {/* Lado Derecho: Alert para el Estado de Resolución */}
+                      <Grid item xs={12} sm={6} md={8}>
+                        {(() => {
+                          const { backgroundColor, iconColor, textColor } =
+                            getColorMap(theme, slaResolucionDisplay.color);
+                          return (
+                            <Box
+                              sx={{
+                                width: "108%", // 🚨 EL 100% AHORA FUNCIONARÁ
+                                backgroundColor: backgroundColor,
+                                borderRadius: 1,
+                                p: 2,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                              }}
+                            >
+                              <AccessAlarmIcon
+                                sx={{ color: iconColor }}
+                                fontSize="large"
+                              />
+
+                              <Stack sx={{ color: textColor }}>
+                                <Typography variant="body2" fontWeight="bold">
+                                  Estado: {slaResolucionDisplay.estado}
+                                </Typography>
+                                <Typography variant="caption" display="block">
+                                  {slaResolucionDisplay.tiempoRestante}
+                                </Typography>
+                                {slaDetails.FechaResolucionReal && (
+                                  <Typography variant="caption" display="block">
+                                    Resuelto:{" "}
+                                    {dayjs(
+                                      slaDetails.FechaResolucionReal
+                                    ).format("hh:mm:ss a")}
+                                  </Typography>
+                                )}
+                              </Stack>
+                            </Box>
+                          );
+                        })()}
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              ) : (
+                <Alert severity="info">Cargando métricas de SLA...</Alert>
+              )}
+            </Box>
+
+            <TicketHistory movements={movements}></TicketHistory>
+
+            <Divider sx={{ mb: 3 }} />
+
+            <Box>
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                gutterBottom
+                marginBottom="2rem"
+              >
+                <Stack alignItems={"center"} direction={"row"}>
+                  <StarsIcon
+                    fontSize="large"
+                    color="primary"
+                    style={{ marginRight: "1%" }}
+                  />
+                  Valoración del Tiquete
+                </Stack>
+              </Typography>
+
+              {/*Si el tiquete ya ha sido calificado por el cliente muestra los valores registrados, de lo contrario muestra un mensaje informativo.*/}
+              {ticket.valoracion ? (
+                <Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      paddingBottom: "2rem",
+                    }}
+                  >
+                    <Rating
+                      name="hover-feedback"
+                      value={ticket.valoracion} //ticket.valoracion}
+                      //getLabelText={labelsTicketRating[ticket.valoracion]}
+                      // onChange={(event, newValue) => {
+                      //   setValue(newValue);
+                      // }}
+                      // onChangeActive={(event, newHover) => {
+                      //   setHover(newHover);
+                      // }}
+                      emptyIcon={
+                        <StarIcon
+                          style={{ opacity: 0.55 }}
+                          fontSize="inherit"
+                        />
+                      }
+                      readOnly
+                      size="large"
+                    />
+                    {/* {value !== null && ( */}
+                    <Box
+                      sx={{
+                        ml: 1,
+                        fontSize: "1rem",
+                        fontWeight: "bold",
+                        alignSelf: "center",
+                      }}
+                    >
+                      {labelsTicketRating[ticket.valoracion]}
+                    </Box>
+                    {/* )} */}
+                  </Box>
+
+                  <TextField id="standard-basic" label="Comentario Valoración" value={ticket.comentarioValoracionServicio}
+                    fullWidth
+                    multiline
+                    slotProps={{
+                      input: {
+                        readOnly: true,
+                        style: {
+                          fontSize: "0.9rem",
+                        },
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <CommentIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                </Box>
+              ) : (
+                <Alert severity="info">
+                  No existe valoración registrada para el tiquete seleccionado hasta que haya sido cerrado.
+                </Alert>
+              )}
+            </Box>
+
+            <IconButton
+              onClick={() => handleClose()}
+              to={`/tickets/ticketsList`}
+              component={Link}
+              sx={{
+                position: "absolute",
+                top: 1,
+                right: 1,
+                color: "black",
+                zIndex: 10,
+              }}
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </Modal>
+      </div>
     );
 }
 
@@ -509,10 +630,10 @@ function TicketHistory({ movements }) {
       >
         <Divider sx={{ mb: 3 }} />
 
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
+        <Typography variant="h6" fontWeight="bold" gutterBottom marginBottom="2rem">
           <Stack alignItems={"center"} direction={"row"}>
             <HistoryIcon
-              fontSize="medium"
+              fontSize="large"
               color="primary"
               style={{ marginRight: "1%" }}
             />
@@ -599,7 +720,7 @@ function TicketHistory({ movements }) {
                       borderRadius: 1,
                       p: 1.5,
                       mb: mov.imagenes?.length ? 2 : 0,
-                      marginTop: "5%",
+                      marginTop: "1.5rem",
                     }}
                   >
                     <Typography variant="body2">{mov.observacion}</Typography>
