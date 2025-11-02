@@ -25,7 +25,8 @@ import Alert from '@mui/material/Alert';
 import StarIcon from '@mui/icons-material/Star';
 import Rating from '@mui/material/Rating';
 import { getSLAStatus, formatTimeRemaining } from '../../Utilities/slaCalculations';
-
+import CommentIcon from '@mui/icons-material/Comment';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 
 
 // Mapeo para obtener los colores del tema de Material UI
@@ -158,15 +159,20 @@ export function TicketDetail()
                 >           
                 <Box sx={styleParentBox}>
 
-                <Box sx={{ mb: 3, flexShrink: 0 }}>                           
-                    <Typography id="modal-modal-title" variant="h5" component="h2" 
-                    sx={{
-                        fontSize: '2rem',
-                        textAlign: 'center',
+                <Box sx={{ mb: 3, flexShrink: 0 }}>
+                    <Typography
+                      id="modal-modal-title"
+                      variant="h5"
+                      component="h2"
+                      sx={{
+                        fontSize: "2rem",
+                        textAlign: "center",
                         //Sombra sútil para resasltar el texto
-                        textShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
-                        fontWeight: 'bold'
-                    }}>
+                        textShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
+                        fontWeight: "bold",
+                        marginBottom: "1.5rem"
+                      }}
+                    >
                         Tiquete N.° {ticket.idTiquete} - {ticket.titulo}                                              
                     </Typography>                                                                        
 
@@ -540,7 +546,7 @@ function TicketHistory({ movements }) {
             }}
           />
 
-          {movements.map((mov, index) => (
+          {movements?.map((mov, index) => (
             <Box key={index} sx={{ position: "relative", mb: 4 }}>
               {/* Elemento del timeline */}
               <Box
