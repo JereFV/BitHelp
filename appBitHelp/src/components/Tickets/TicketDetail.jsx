@@ -69,7 +69,13 @@ export function TicketDetail()
         top: "50%",
         left: "50%",
         transform: "translate(-50%, -50%)",
-        width: "40%",
+        width: {
+          xs: "90%", // 90% width on extra-small screens
+          sm: "80%", // 80% width on small screens
+          md: "70%", // 70% width on medium screens
+          lg: "60%", // 60% width on large screens
+          xl: "40%", // 50% width on extra-large screens
+        },
         maxHeight: "90vh",
         bgcolor: "background.paper",
         border: "2px solid #000",
@@ -297,43 +303,44 @@ export function TicketDetail()
                                       
                                       {/* Lado Derecho: Alert para el Estado de Respuesta */}
                                       <Grid item xs={12} sm={6} md={8}>
-                    {/* Obtener colores basados en el estado (usando slaRespuestaDisplay.color) */}
-                    {/* Asumo que slaRespuestaDisplay.color devuelve 'success', 'error', etc. */}
-                    {(() => {
-                        const { backgroundColor, iconColor, textColor } = getColorMap(theme, slaRespuestaDisplay.color);
-                        return (
-                            <Box 
-                                sx={{ 
-                                    width: '100%', // 🚨 EL 100% AHORA FUNCIONARÁ
-                                    backgroundColor: backgroundColor,
-                                    borderRadius: 1, // Bordes redondeados como el Alert
-                                    p: 2, // Padding interno
-                                    display: 'flex', 
-                                    alignItems: 'center',
-                                    gap: 2 // Espacio entre ícono y texto
-                                }}
-                            >
-                                {/* Ícono de Alarma */}
-                                <AccessAlarmIcon sx={{ color: iconColor }} fontSize="large" />
+                                  {/* Obtener colores basados en el estado (usando slaRespuestaDisplay.color) */}
+                                  {/* Asumo que slaRespuestaDisplay.color devuelve 'success', 'error', etc. */}
+                                  {(() => {
+                                      const { backgroundColor, iconColor, textColor } = getColorMap(theme, slaRespuestaDisplay.color);
+                                      return (
+                                          <Box 
+                                              sx={{ 
+                                                  width: '100%', 
+                                                  backgroundColor: backgroundColor,
+                                                  borderRadius: 2, // Bordes redondeados 
+                                                  p: 0.8, // Padding interno
+                                                  display: 'flex', 
+                                                  alignItems: 'center',
+                                                  gap: 1 // Espacio entre ícono y texto
+                                              }}
+                                          >
+                                              {/* Ícono de Alarma */}
+                                              <AccessAlarmIcon sx={{ color: iconColor }} fontSize="medium" />
 
-                                {/* Stack con el Contenido */}
-                                <Stack sx={{ color: textColor }}>
-                                    <Typography variant="body2" fontWeight="bold">
-                                        Estado: {slaRespuestaDisplay.estado}
-                                    </Typography>
-                                    <Typography variant="caption" display="block">
-                                        {slaRespuestaDisplay.tiempoRestante}
-                                    </Typography>
-                                    {slaDetails.FechaRespuestaReal && 
-                                        <Typography variant="caption" display="block">
-                                            Respondido: {dayjs(slaDetails.FechaRespuestaReal).format('hh:mm:ss a')}
-                                        </Typography>
-                                    }
-                                </Stack>
-                            </Box>
-                        );
-                    })()}
-                </Grid>
+                                              {/* Stack con el Contenido */}
+                                              <Stack sx={{ color: textColor }}>
+                                                  <Typography variant="body2" fontWeight="bold">
+                                                      Estado: {slaRespuestaDisplay.estado}
+                                                  </Typography>
+                                                  <Typography variant="caption" display="block">
+                                                      {slaRespuestaDisplay.tiempoRestante}
+                                                  </Typography>
+                                                  {slaDetails.FechaRespuestaReal && 
+                                                      <Typography variant="caption" display="block">
+                                                          Respondido: {dayjs(slaDetails.FechaRespuestaReal).format('DD/MM/YYYY hh:mm:ss a')}
+                                                      </Typography>
+                                                  }
+                                              </Stack>
+                                          </Box>
+                                      );
+                                  })()}
+                              </Grid>
+                                  
                                   </Grid>
                               </Grid>
                               
@@ -379,16 +386,16 @@ export function TicketDetail()
                         return (
                             <Box 
                                 sx={{ 
-                                    width: '108%', // 🚨 EL 100% AHORA FUNCIONARÁ
+                                    width: '104%', 
                                     backgroundColor: backgroundColor,
-                                    borderRadius: 1, 
-                                    p: 2, 
+                                    borderRadius: 2, 
+                                    p: 1, 
                                     display: 'flex', 
                                     alignItems: 'center',
-                                    gap: 2
+                                    gap: 1
                                 }}
                             >
-                                <AccessAlarmIcon sx={{ color: iconColor }} fontSize="large" />
+                                <AccessAlarmIcon sx={{ color: iconColor }} fontSize="medium" />
                                 
                                 <Stack sx={{ color: textColor }}>
                                     <Typography variant="body2" fontWeight="bold">
@@ -399,7 +406,7 @@ export function TicketDetail()
                                     </Typography>
                                     {slaDetails.FechaResolucionReal && 
                                         <Typography variant="caption" display="block">
-                                            Resuelto: {dayjs(slaDetails.FechaResolucionReal).format('hh:mm:ss a')}
+                                            Resuelto: {dayjs(slaDetails.FechaResolucionReal).format('DD/MM/YYYY hh:mm:ss a')}
                                         </Typography>
                                     }
                                 </Stack>
