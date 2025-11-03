@@ -49,39 +49,61 @@ class TicketModel
     {
         try 
         {
-            $categorieModel = new CategorieModel();
-            $ticketStatusModel = new TicketStatusModel();
-            $ticketHistoryModel = new TicketHistoryModel();
+            // 1. Construir la consulta base (la misma de getAll())
+            // Esta consulta ya trae los nombres (estado, prioridad, tecnico) y calcula el tiempo.
 
-            //Construcción inicial de la consulta.
-            $query = "SELECT * FROM tiquete ";
+            $query = "
+                SELECT 
+                    t.idTiquete AS id,
+                    t.idTiquete AS numero,
+                    COALESCE(t.titulo, '') AS titulo,
+                    COALESCE(t.descripcion, '') AS descripcion,
+                    COALESCE(e.nombre, 'Sin estado') AS estado,
+                    COALESCE(p.nombre, 'Sin prioridad') AS prioridad,
+                    CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.primerApellido,''), ' ', COALESCE(u.segundoApellido,'')) AS tecnico,
+                    TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante
+                FROM tiquete t
+                LEFT JOIN estado_tiquete e ON t.idEstado = e.idEstadoTiquete
+                LEFT JOIN prioridad_tiquete p ON t.idPrioridad = p.idPrioridadTiquete
+                LEFT JOIN tecnico tec ON t.idTecnicoAsignado = tec.idTecnico
+                LEFT JOIN usuario u ON tec.idUsuario = u.idUsuario
+            ";
 
-            //Construye la consulta según el rol del usuario en sesión
-            if ($idRole == 1) //Cliente
-                $query .= "WHERE idUsuarioSolicita = $idUser";
-            else if ($idRole == 2) //Técnico
-                $query .= "WHERE idTecnicoAsignado = $idUser";
+            // 2. Añadir el filtro (WHERE) según el ROL
+            $whereClause = "";
 
-            //Ejecucción de la consulta, obtiendo los tiquetes respectivos.
+            if ($idRole == 1) // Cliente
+            {
+                // Filtra por el idUsuario que solicitó el tiquete
+                $whereClause = "WHERE t.idUsuarioSolicita = $idUser";
+            }
+            else if ($idRole == 2) // Técnico
+            {
+                // CORRECCIÓN IMPORTANTE:
+                // El $idUser es el id de la tabla 'usuario'.
+                // Necesitamos encontrar el 'idTecnico' que corresponde a ese 'idUser'.
+                
+                $idTecnicoQuery = "SELECT idTecnico FROM tecnico WHERE idUsuario = $idUser LIMIT 1";
+                $result = $this->connection->ExecuteSQL($idTecnicoQuery);
+                
+                // Si encontramos al técnico, usamos su ID para filtrar.
+                // Si no, usamos 0 para no devolver tiquetes (ya que no es un técnico válido).
+                $idTecnico = $result[0]->idTecnico ?? 0;
+                
+                $whereClause = "WHERE t.idTecnicoAsignado = $idTecnico";
+            }
+            // Si es Rol 3 (Admin), $whereClause queda vacío y trae todo.
+
+            // 3. Unir la consulta
+            $query .= " " . $whereClause . " ORDER BY t.idTiquete DESC";
+
+            // 4. Ejecutar la consulta ÚNICA
             $tickets = $this->connection->executeSQL($query);
 
-            //Iteración de elementos para la obtención de valores y estructuras adicionales sobre cada uno de ellos.
-            foreach ($tickets ?? [] as $ticket)
-            {
-                //Obtiene la categoría de cada tiquete a partir de la especialidad asociada.
-                $ticket->categoria = $categorieModel->getBySpecialty($ticket->idEspecialidad)[0];
-                
-                //Obtiene la estructura completa del estado del tiquete desde el catálogo existente.
-                $ticket->estadoTiquete = $ticketStatusModel->get($ticket->idEstado)[0];
-
-                //Elimina la propiedad del id estado tiquete, dado que ya se encuentra almacenado en una estructura.
-                unset($ticket->idEstado);
-
-                //Obtiene el historial de movimientos para cada tiquete.
-                $ticket->historialTiquete = $ticketHistoryModel->get($ticket->idTiquete);
-            }
-
             return $tickets ?? [];
+            
+            // --- FIN DE LA CORRECCIÓN ---
+
         } 
         catch (Exception $ex) {
             handleException($ex);

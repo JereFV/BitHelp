@@ -16,7 +16,7 @@ function TicketsList() {
     nombre: 'Jeremy', // <-- Clave para mostrar el nombre
     primerApellido: 'Fuentes',
     segundoApellido: 'Venegas',
-    idRol: 1
+    idRol: 3
   };
 
   localStorage.setItem('userSession', JSON.stringify(FAKE_USER_DATA));

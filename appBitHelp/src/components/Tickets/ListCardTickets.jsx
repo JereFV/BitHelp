@@ -89,7 +89,7 @@ export function ListCardTickets({ data = [] }) {
             {/* Chips de Estado y Prioridad */}
             <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
               <Chip
-                label={item.estadoTiquete.nombre ?? 'N/A'}
+                label={item.estado ?? 'N/A'} 
                 color={getStateColor(item.estado)}
                 size="small"
                 variant="filled"
@@ -119,7 +119,7 @@ export function ListCardTickets({ data = [] }) {
             <IconButton
               aria-label="Detalle"
               sx={{ ml: 'auto' }}
-              to={`/ticket/${item.idTiquete}`}
+              to={`/ticket/${item.id}`} 
               component={Link}
               color="primary"
             >
