@@ -34,11 +34,11 @@ const getPriorityColor = (prioridad) => {
 const getStateColor = (estado) => {
   switch (estado) {
     case 'Pendiente':
-      return 'warning';
+      return 'error';
     case 'Asignado':
-      return 'info';
+      return 'warning';
     case 'En Proceso':
-      return 'primary';
+      return 'info';
     case 'Resuelto':
       return 'success';
     case 'Cerrado':
@@ -74,6 +74,7 @@ export function ListCardTickets({ data = [] }) {
             display: 'flex',
             flexDirection: 'column',
             boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            borderRadius: 3,
           }}
         >
           <CardHeader
