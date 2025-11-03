@@ -9,11 +9,23 @@ function TicketsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  //Constante temporal para pruebas.
+  const FAKE_USER_DATA = {
+    idUsuario: 1,
+    usuario: 'jfuentes',
+    nombre: 'Jeremy', // <-- Clave para mostrar el nombre
+    primerApellido: 'Fuentes',
+    segundoApellido: 'Venegas',
+    idRol: 1
+  };
+
+  localStorage.setItem('userSession', JSON.stringify(FAKE_USER_DATA));
+
   useEffect(() => {
     // Carga inicial de tiquetes
-    TicketService.getTickets()
+    TicketService.getTicketsByRolUser(JSON.parse(localStorage.getItem('userSession')))
       .then((res) => {
-        setTickets(res.data || []);
+        setTickets(res?.data || []);
       })
       .catch((err) => {
         console.error('Error cargando tickets:', err);

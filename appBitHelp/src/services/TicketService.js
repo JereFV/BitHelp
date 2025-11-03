@@ -15,7 +15,7 @@ class TicketService
   getTicketsByRolUser(user) 
   {
     //Realiza la petición utilizando axios como cliente y retorna la respuesta.
-    let tickets = axios.get(`${BASE_URL}/getAllByRolUser/${user.idRole}/${user.idUser}`);
+    let tickets = axios.get(`${BASE_URL}/getAllByRolUser/${user.idRol}/${user.idUsuario}`);
 
     return tickets;
   }

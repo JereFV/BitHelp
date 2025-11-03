@@ -28,7 +28,8 @@ class Ticket
             //Obtiene los tiquetes y los devuelve en una estructura JSON como respuesta.
             $tickets = $ticketModel->getAllByRolUser($idRole, $idUser);
             
-            $response->toJson($tickets);           
+            if ($tickets) 
+                $response->toJson($tickets);           
         }
         catch (Exception $ex) {
             handleException($ex);

@@ -13,7 +13,7 @@ export const useUser = () => {
     return context;
 };
 
-const LOCAL_STORAGE_KEY = 'userSesion';
+const LOCAL_STORAGE_KEY = 'userSession';
 
 // 💡 DATOS DE USUARIO QUEMADOS BASADOS EN TU DB
 const FAKE_USER_DATA = {
@@ -22,7 +22,7 @@ const FAKE_USER_DATA = {
     nombre: 'Jeremy', // <-- Clave para mostrar el nombre
     primerApellido: 'Fuentes',
     segundoApellido: 'Venegas',
-    idRol: 2
+    idRol: 1
 };
 
 export const UserProvider = ({ children }) => {

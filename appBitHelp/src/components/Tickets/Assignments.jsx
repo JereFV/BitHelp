@@ -1,18 +1,22 @@
-import React, { Component, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import es from 'date-fns/locale/es';
-import { differenceInHours, differenceInMinutes} from 'date-fns';
+import { differenceInHours} from 'date-fns';
 //import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../../styles/AssignmentsCalendar.scss";
 import TicketService from "../../services/TicketService";
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import WatchLaterIcon from '@mui/icons-material/WatchLater';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
-import { Chip, Box, Typography } from "@mui/material";
+import { Chip, Box, Typography, IconButton } from "@mui/material";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import Alert from '@mui/material/Alert';
+import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
+import SkipNextIcon from '@mui/icons-material/SkipNext';
 //import { useTheme } from "@mui/material/styles";
 
 export function Assignments() 
@@ -41,8 +45,11 @@ export function Assignments()
     next: "Siguiente",
     today: "Hoy",
     agenda: "Agenda",
-
-    showMore: (total) => `+${total} más`,
+    noEventsInRange: (
+      <Alert severity="info" sx={{fontSize: "1rem", fontWeight: "bold"}}>
+        No existen tiquetes registrados para la semana seleccionada.
+      </Alert>
+    )
   };
 
   //const theme = useTheme();
@@ -109,17 +116,19 @@ export function Assignments()
       <Calendar
         localizer={localizer}
         defaultDate={new Date()}
-        defaultView="week"
+        defaultView="agenda"        
         events={tickets}
         style={{ height: "85vh" }}
         messages={messages}       
         min={new Date(1900, 1, 1, 6, 0, 0)}
         culture="es"
-        views={["week", "day", "agenda"]}
+        views={["agenda"]}
         components={{
           event: CustomEvent,
+          toolbar: CustomToolbar 
         }}      
         timeslots={1}
+        length={7}        
       />
     </div>
   );
@@ -173,5 +182,55 @@ function CustomEvent({ event }) {
     </Box>
   );
 }
+
+function CustomToolbar({ date, onNavigate }) {
+
+  //Constantes que definen el intervalo de fechas semanal seleccionado
+  const start = new Date(date);
+  const end = new Date(date);
+
+  //Se configura el intervalo de fechas de lunes a domingo de la semana seleccionada.
+  start.setDate(start.getDate() + 1);
+  end.setDate(start.getDate() + 6);
+
+  //Formato definido para la construcción del label de fechas según selección.
+  const format = (date) =>
+    date.toLocaleDateString("es-CR", {
+      day: "numeric",
+      month: "long",
+    });
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingY: 1,
+        paddingX: 2,
+        backgroundColor: "transparent",
+        marginBottom: "1.5rem"
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1}}>
+        {/* Botón Anterior */}
+        <IconButton  onClick={() => onNavigate("PREV")}>
+          <SkipPreviousIcon fontSize="large" color="primary"/>       
+        </IconButton >
+
+        {/* <CalendarMonthIcon fontSize="medium" color="primary" /> */}
+        <Typography variant="h5" sx={{ fontWeight: "600", borderRadius: "4px" }}>
+          Semana del {format(start)} al {format(end)}
+        </Typography>
+
+        {/* Botón Siguiente */}
+        <IconButton  onClick={() => onNavigate("NEXT")}>
+          <SkipNextIcon fontSize="large" color="primary"/>       
+        </IconButton >
+      </Box>     
+    </Box>
+  );
+}
+
  
 

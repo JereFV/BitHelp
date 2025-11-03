@@ -66,7 +66,7 @@ class TicketModel
             $tickets = $this->connection->executeSQL($query);
 
             //Iteración de elementos para la obtención de valores y estructuras adicionales sobre cada uno de ellos.
-            foreach ($tickets as $ticket)
+            foreach ($tickets ?? [] as $ticket)
             {
                 //Obtiene la categoría de cada tiquete a partir de la especialidad asociada.
                 $ticket->categoria = $categorieModel->getBySpecialty($ticket->idEspecialidad)[0];
@@ -81,7 +81,7 @@ class TicketModel
                 $ticket->historialTiquete = $ticketHistoryModel->get($ticket->idTiquete);
             }
 
-            return $tickets;
+            return $tickets ?? [];
         } 
         catch (Exception $ex) {
             handleException($ex);
