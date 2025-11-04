@@ -8,7 +8,8 @@ import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 // Componentes de Material-UI para el layout y la interacción
-import { Grid, Paper, Typography, Box, ButtonBase } from '@mui/material';
+import { Grid, Paper, Typography, Box, ButtonBase, Chip } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 
 // Importamos los iconos de Iconoir que representan cada estado y el total
 import {
@@ -98,9 +99,25 @@ function StatCard({ title, count, Icon, color, isActive, onClick }) {
         }}
       >
         <Box>
-          <Typography variant="h6" color={color} noWrap>
-            {title} {/* Nombre del estado */}
-          </Typography>
+          <Chip
+            label={title}
+            size="small"
+            sx={(theme) => ({
+              fontWeight: 'bold',
+              mb: 0.5,
+              ...(color === 'text.secondary'
+                ? {
+                    backgroundColor: theme.palette.text.primary,
+                    color: theme.palette.background.paper,
+                  }
+                : {
+                    // Son los otros chips (Pendiente, Resuelto, etc.)
+                    color: color,
+                    backgroundColor: alpha(theme.palette[color.split('.')[0]].main, 0.15),
+                  }),
+            })}
+          />
+
           <Typography variant="h4" fontWeight="bold">
             {count} {/* El número de tiquetes */}
           </Typography>

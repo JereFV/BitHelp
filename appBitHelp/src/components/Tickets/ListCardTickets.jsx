@@ -10,12 +10,13 @@ import { Info } from '@mui/icons-material';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { Chip, Box } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 
 ListCardTickets.propTypes = {
   data: PropTypes.array,
 };
 
-// Asignación de colores para los chips
+// Asignación de colores para los chips de PRIORIDAD
 const getPriorityColor = (prioridad) => {
   switch (prioridad) {
     case 'Crítica':
@@ -31,6 +32,7 @@ const getPriorityColor = (prioridad) => {
   }
 };
 
+// Asignación de colores para los chips de ESTADO
 const getStateColor = (estado) => {
   switch (estado) {
     case 'Pendiente':
@@ -47,6 +49,7 @@ const getStateColor = (estado) => {
       return 'default';
   }
 };
+// --- FIN DE LA MODIFICACIÓN ---
 
 export function ListCardTickets({ data = [] }) {
   return (
@@ -81,19 +84,66 @@ export function ListCardTickets({ data = [] }) {
             sx={{
               p: 2,
               borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+              '& .MuiCardHeader-content': { 
+                overflow: 'hidden' 
+              }, 
             }}
-            title={`#${item.numero ?? item.id} - ${item.titulo ?? ''}`}
-            titleTypographyProps={{ variant: 'h6', fontWeight: 300 }}
+            title={item.titulo ?? ''} 
+            titleTypographyProps={{ 
+              variant: 'h6', 
+              fontWeight: 300,
+              noWrap: true, 
+            }}
+            action={
+              <Typography
+                sx={{
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: 'text.secondary',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1.5,
+                }}
+              >
+                #{item.numero ?? item.id}
+              </Typography>
+            }
           />
           
-          <CardContent sx={{ flexGrow: 1 }}>
+          <CardContent sx={{ pt: 1, pb: 1.5 }}>
             {/* Chips de Estado y Prioridad */}
             <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
               <Chip
                 label={item.estado ?? 'N/A'} 
-                color={getStateColor(item.estado)}
                 size="small"
-                variant="filled"
+                sx={(theme) => {
+                  const colorName = getStateColor(item.estado); // 'error', 'warning', 'default', etc.
+                  
+                  if (colorName === 'default') {
+                    // Lógica especial para "Cerrado" (modo oscuro/claro)
+                    return (theme.palette.mode === 'light'
+                      // MODO CLARO: Fondo Negro, Fuente Blanca
+                      ? {
+                          fontWeight: 'bold',
+                          backgroundColor: '#1c1c1c', 
+                          color: '#ffffff',
+                        }
+                      // MODO OSCURO: Fondo Blanco, Fuente Negra
+                      : {
+                          fontWeight: 'bold',
+                          backgroundColor: '#ffffff',
+                          color: '#1c1c1c',
+                        }
+                    );
+                  }
+
+                  // Lógica para los otros chips (Pendiente, Asignado, etc.)
+                  return {
+                    fontWeight: 'bold',
+                    color: theme.palette[colorName].main,
+                    backgroundColor: alpha(theme.palette[colorName].main, 0.15),
+                  };
+                }}
               />
               <Chip
                 label={item.prioridad ?? 'N/A'}
@@ -103,10 +153,30 @@ export function ListCardTickets({ data = [] }) {
               />
             </Box>
 
-            <Typography variant="body2" color="text.secondary">
-              <strong>Tiempo restante:</strong>{' '}
-              {item.tiempoRestante ?? '—'} {item.tiempoRestante ? 'horas' : ''}
-            </Typography>
+            {/* Contenedor Flex para el Tiempo Restante y el Botón de Detalles */}
+            <Box 
+                sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    pr: 1, 
+                }}
+            >
+                <Typography variant="body2" color="text.secondary">
+                    <strong>Tiempo restante:</strong>{' '}
+                    {item.tiempoRestante ?? '—'} {item.tiempoRestante ? 'horas' : ''}
+                </Typography>
+
+                <IconButton
+                    aria-label="Detalle"
+                    to={`/ticket/${item.id}`}
+                    component={Link}
+                    color="primary"
+                    size="small" 
+                >
+                    <Info fontSize="small" />
+                </IconButton>
+            </Box>
           </CardContent>
 
           <CardActions
@@ -117,15 +187,6 @@ export function ListCardTickets({ data = [] }) {
               maxHeight: '30px',
             }}
           >
-            <IconButton
-              aria-label="Detalle"
-              sx={{ ml: 'auto' }}
-              to={`/ticket/${item.id}`} 
-              component={Link}
-              color="primary"
-            >
-              <Info />
-            </IconButton>
           </CardActions>
         </Card>
       ))}
