@@ -21,12 +21,12 @@ class TicketModel
                     COALESCE(e.nombre, 'Sin estado') AS estado,
                     COALESCE(p.nombre, 'Sin prioridad') AS prioridad,
                     CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.primerApellido,''), ' ', COALESCE(u.segundoApellido,'')) AS tecnico,
-                    TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante
+                    TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante,                  
                 FROM tiquete t
                 LEFT JOIN estado_tiquete e ON t.idEstado = e.idEstadoTiquete
                 LEFT JOIN prioridad_tiquete p ON t.idPrioridad = p.idPrioridadTiquete
                 LEFT JOIN tecnico tec ON t.idTecnicoAsignado = tec.idTecnico
-                LEFT JOIN usuario u ON tec.idUsuario = u.idUsuario
+                LEFT JOIN usuario u ON tec.idUsuario = u.idUsuario               
                 ORDER BY t.idTiquete DESC
             ";
 
@@ -48,7 +48,7 @@ class TicketModel
     public function getAllByRolUser($idRole, $idUser)
     {
         try 
-        {
+        {            
             // 1. Construir la consulta base (la misma de getAll())
             // Esta consulta ya trae los nombres (estado, prioridad, tecnico) y calcula el tiempo.
 
@@ -61,12 +61,18 @@ class TicketModel
                     COALESCE(e.nombre, 'Sin estado') AS estado,
                     COALESCE(p.nombre, 'Sin prioridad') AS prioridad,
                     CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.primerApellido,''), ' ', COALESCE(u.segundoApellido,'')) AS tecnico,
-                    TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante
+                    TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante,
+                    h.fecha as fechaAsignacion,
+                    c.nombre as categoria,
+                    slaResolucion
                 FROM tiquete t
                 LEFT JOIN estado_tiquete e ON t.idEstado = e.idEstadoTiquete
                 LEFT JOIN prioridad_tiquete p ON t.idPrioridad = p.idPrioridadTiquete
                 LEFT JOIN tecnico tec ON t.idTecnicoAsignado = tec.idTecnico
                 LEFT JOIN usuario u ON tec.idUsuario = u.idUsuario
+                LEFT JOIN historial_tiquete h ON t.idTiquete = h.idTiquete
+                INNER JOIN especialidad esp ON t.idEspecialidad = esp.idEspecialidad
+                INNER JOIN categoria c ON esp.idCategoria = c.idCategoria               
             ";
 
             // 2. Añadir el filtro (WHERE) según el ROL
@@ -95,7 +101,9 @@ class TicketModel
             // Si es Rol 3 (Admin), $whereClause queda vacío y trae todo.
 
             // 3. Unir la consulta
-            $query .= " " . $whereClause . " ORDER BY t.idTiquete DESC";
+            // Filtra el historial del tiquete para obtener el registro donde fue asignado al técnico.
+            $query .= " " . $whereClause . " AND h.idEstado = 2   
+                                            ORDER BY t.idTiquete DESC";
 
             // 4. Ejecutar la consulta ÚNICA
             $tickets = $this->connection->executeSQL($query);

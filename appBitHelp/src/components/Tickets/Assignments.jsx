@@ -12,11 +12,12 @@ import TicketService from "../../services/TicketService";
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import WatchLaterIcon from '@mui/icons-material/WatchLater';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
-import { Chip, Box, Typography, IconButton } from "@mui/material";
+import { Chip, Box, Typography, IconButton, Tooltip } from "@mui/material";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import Alert from '@mui/material/Alert';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 //import { useTheme } from "@mui/material/styles";
 
 export function Assignments() 
@@ -59,7 +60,7 @@ export function Assignments()
 
   //**ASIGNACIÓN TEMPORAL DE USUARIO EN SESIÓN PARA PRUEBAS*/
 
-  localStorage.setItem('userSession', JSON.stringify({idRole: 2, idUser: 1}))
+  localStorage.setItem('userSession', JSON.stringify({idRol: 2, idUsuario: 1}))
 
   useEffect(() => {
     //Agregar eventos al calendario a partir de la obtención de tiquetes para el técnico en sesión.
@@ -70,18 +71,18 @@ export function Assignments()
         {
           /*Asigna como fecha de inicio el momento en que el tiquete haya sido asignado al técnico, filtrando el historial del tiquete por el id
           del técnico y el estado "Asignado".(2)*/ 
-          const fechaInicio = new Date(ticket.historialTiquete.find((movement) => movement.usuario.idUsuario == ticket.idTecnicoAsignado && movement.idEstado == 2).fecha);
+          //const fechaInicio = new Date(ticket.historialTiquete.find((movement) => movement.usuario.idUsuario == ticket.idTecnicoAsignado && movement.idEstado == 2).fecha);
           //Calcula las horas restantes para la resolución del tiquete.
-          const horasRestantes = differenceInHours(new Date(ticket.slaResolucion), new Date())
+          //const horasRestantes = differenceInHours(new Date(ticket.slaResolucion), new Date())
 
           //Crea la estructura de evento esperada por el calendar para el tiquete en iteración.
           return {
-              idTicket: ticket.idTiquete,
+              idTicket: ticket.id,
               ticketTitle: ticket.titulo,
-              categorie: ticket.categoria.nombre,
-              status: ticket.estadoTiquete.nombre,
-              remainingTime: horasRestantes,
-              start: fechaInicio,
+              categorie: ticket.categoria,
+              status: ticket.estado,
+              remainingTime: ticket.tiempoRestante,
+              start: new Date(ticket.fechaAsignacion),
               end: new Date(ticket.slaResolucion),
               title: `#${ticket.idTiquete} ${ticket.titulo}`,
           };       
@@ -128,13 +129,14 @@ export function Assignments()
           toolbar: CustomToolbar 
         }}      
         timeslots={1}
-        length={7}        
+        length={7}  
+        //date={new Date()}      
       />
     </div>
   );
 }
 
-//Renderiza un componente visual personalizado para mostrar con cada uno de los eventos del calendario.
+//Renderiza un componente visual personalizado para mostrar cada uno de los eventos del calendario.
 function CustomEvent({ event }) {
   //const { title, categoria, estado, tiempoRestante, idticket } = event.extendedProps || {};
   
@@ -143,28 +145,55 @@ function CustomEvent({ event }) {
       sx={{
         backgroundColor: "var(--rbc-event-bg)",
         color: "var(--rbc-event-color)",
-        padding: "6px",
+        padding: "6px 10px",
         borderRadius: "8px",
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 1,
         fontSize: "0.85rem",
         boxShadow: 1,
       }}
-    >
-      <Typography variant="subtitle2" sx={{ fontWeight: "bold", display: "flex", alignItems: "center", gap: 0.5 }}>
-        <ConfirmationNumberIcon size={12} /> #{event.idTicket}: {event.ticketTitle}
-      </Typography>
+    >      
+      <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: "bold",
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            maxWidth: "180px",
+          }}
+        >
+          <ConfirmationNumberIcon sx={{ fontSize: 14 }} /> #{event.idTicket}: {event.ticketTitle}
+        </Typography>
 
-      <Typography variant="body2" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-        <LocalOfferIcon size={11} /> {event.categorie}
-      </Typography>
-
+        <Typography
+          variant="body2"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            fontSize: "0.8rem",
+            color: "text.secondary",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <LocalOfferIcon sx={{ fontSize: 12 }} /> {event.categorie}
+        </Typography>
+      </Box>
+      
       <Chip
         label={event.status}
         size="small"
         sx={{
-          mt: 0.5,
-          alignSelf: "start",
           fontSize: "0.7rem",
           backgroundColor:
             event.status === "Asignado"
@@ -173,12 +202,43 @@ function CustomEvent({ event }) {
               ? "#1976d2"
               : "#2e7d32",
           color: "white",
+          flexShrink: 0,
         }}
       />
+      
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          flexShrink: 0,
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.3,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <WatchLaterIcon sx={{ fontSize: 12 }} /> {event.remainingTime}h
+        </Typography>
 
-      <Typography variant="caption" sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
-        <WatchLaterIcon size={10} /> {event.remainingTime} h restantes
-      </Typography>
+        <Tooltip title="Ver detalle">
+          <IconButton
+            size="small"
+            //onClick={handleDetalleClick}
+            sx={{
+              color: "var(--rbc-event-color)",
+              "&:hover": { color: "#1976d2" },
+            }}
+          >
+            <InfoOutlinedIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
     </Box>
   );
 }
@@ -186,11 +246,11 @@ function CustomEvent({ event }) {
 function CustomToolbar({ date, onNavigate }) {
 
   //Constantes que definen el intervalo de fechas semanal seleccionado
-  const start = new Date(date);
+  const start = new Date(startOfWeek(date, {weekStartsOn: 1}));
   const end = new Date(date);
 
   //Se configura el intervalo de fechas de lunes a domingo de la semana seleccionada.
-  start.setDate(start.getDate() + 1);
+  start.setDate(start.getDate());
   end.setDate(start.getDate() + 6);
 
   //Formato definido para la construcción del label de fechas según selección.
