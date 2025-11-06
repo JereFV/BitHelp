@@ -406,12 +406,26 @@ export function TicketDetail()
                           return (
                             <Box
                               sx={{
-                                width: "100%", 
+                                width: {
+                                xs: "88%", // 90% width on extra-small screens
+                                sm: "98%", // 80% width on small screens
+                                md: "108%", // 70% width on medium screens
+                                lg: "60%", // 60% width on large screens
+                                xl: "145%", // 50% width on extra-large screens, 
+                                },
+                                marginLeft: {
+                                  xs: "0%",
+                                  sm: "0%",
+                                  md: "18%",
+                                  lg: "20%",
+                                  xl: "65%",
+                                },                             
                                 backgroundColor: backgroundColor,
-                                borderRadius: 1, // Bordes redondeados como el Alert
+                                borderRadius: 2, // Bordes redondeados
                                 p: 0.8, // Padding interno
                                 display: "flex",
                                 alignItems: "center",
+                                textAlign: "left",
                                 gap: 1, // Espacio entre ícono y texto
                               }}
                             >
@@ -423,14 +437,14 @@ export function TicketDetail()
 
                               {/* Stack con el Contenido */}
                               <Stack sx={{ color: textColor }}>
-                                <Typography variant="body2" fontWeight="bold">
+                                <Typography variant="body2" fontWeight="bold" fontSize="15px">
                                   Estado: {slaRespuestaDisplay.estado}
                                 </Typography>
-                                <Typography variant="caption" display="block">
+                                <Typography variant="caption" display="block" fontSize="14px">
                                   {slaRespuestaDisplay.tiempoRestante}
                                 </Typography>
                                 {slaDetails.FechaRespuestaReal && (
-                                  <Typography variant="caption" display="block">
+                                  <Typography variant="caption" display="block" fontSize="12px">
                                     Respondido:{" "}
                                     {dayjs(
                                       slaDetails.FechaRespuestaReal
@@ -486,13 +500,26 @@ export function TicketDetail()
                           return (
                             <Box
                               sx={{
-                                width: "108%", 
+                                width: {
+                                xs: "88%", // 90% width on extra-small screens
+                                sm: "98%", // 80% width on small screens
+                                md: "108%", // 70% width on medium screens
+                                lg: "60%", // 60% width on large screens
+                                xl: "152%", // 50% width on extra-large screens, 
+                                },
+                                marginLeft: {
+                                  xs: "1%",
+                                  sm: "1%",
+                                  md: "20%",
+                                  lg: "22%",
+                                  xl: "69%",
+                                },
                                 backgroundColor: backgroundColor,
-                                borderRadius: 1,
+                                borderRadius: 2,
                                 p: 1,
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 1,
+                                gap: 1,                          
                               }}
                             >
                               <AccessAlarmIcon
@@ -501,14 +528,14 @@ export function TicketDetail()
                               />
 
                               <Stack sx={{ color: textColor }}>
-                                <Typography variant="body2" fontWeight="bold">
+                                <Typography variant="body2" fontWeight="bold" fontSize="15px">
                                   Estado: {slaResolucionDisplay.estado}
                                 </Typography>
-                                <Typography variant="caption" display="block">
+                                <Typography variant="caption" display="block" fontSize="14px">
                                   {slaResolucionDisplay.tiempoRestante}
                                 </Typography>
                                 {slaDetails.FechaResolucionReal && (
-                                  <Typography variant="caption" display="block">
+                                  <Typography variant="caption" display="block" fontSize="12px">
                                     Resuelto:{" "}
                                     {dayjs(
                                       slaDetails.FechaResolucionReal
