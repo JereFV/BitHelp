@@ -26,7 +26,7 @@ const FAKE_USER_DATA = {
 };
 
 export const UserProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState([]);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     
     // Función de Decodificación de Token (Mantenida por si acaso)

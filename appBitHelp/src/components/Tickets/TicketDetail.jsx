@@ -27,6 +27,7 @@ import Rating from '@mui/material/Rating';
 import { getSLAStatus, formatTimeRemaining } from '../../Utilities/slaCalculations';
 import CommentIcon from '@mui/icons-material/Comment';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import { useNavigate } from 'react-router-dom';
 
 // Mapeo para obtener los colores del tema de Material UI
 const getColorMap = (theme, severity) => {
@@ -63,6 +64,9 @@ const getColorMap = (theme, severity) => {
 export function TicketDetail() 
 {
   const theme = useTheme();
+  //Constante para el manejo de navegación y ruteo.
+  const navigate = useNavigate();
+
     //Estilos definidos para el contenedor padre.
     const styleParentBox = {
         position: "absolute",
@@ -98,9 +102,15 @@ export function TicketDetail()
     //Obtiene los parámetros de enrutamiento contenidos en la dirección.
     const routeParams = useParams();
 
-    //Constantes auxiliares para controlar la apertura del modal.
+    //Constante auxiliar para controlar la apertura del modal.
     const [open, setOpen] = React.useState(true);
-    const handleClose = () => setOpen(false);
+
+    //Función de cerrado del modal.
+    const handleClose = () => {
+       setOpen(false);
+       //Redirrecionamiento a la pestaña de navegación anterior.
+       navigate(-1);
+    }
 
     //Constantes que almacena el detalle del tiquete y sus movimientos.
     const [ticket, setTicket] = useState({});
@@ -609,8 +619,8 @@ export function TicketDetail()
 
             <IconButton
               onClick={() => handleClose()}
-              to={`/tickets/ticketsList`}
-              component={Link}
+              //to={`/tickets/ticketsList`}
+              //component={Link}
               sx={{
                 position: "absolute",
                 top: 1,

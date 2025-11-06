@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
@@ -18,7 +18,16 @@ import Alert from '@mui/material/Alert';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-//import { useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import { Link } from 'react-router-dom';
+import { alpha } from '@mui/material/styles';
+import PropTypes from 'prop-types';
+
+//Validación de propiedades.
+CustomEvent.propTypes = {
+  event: PropTypes.object,
+};
 
 export function Assignments() 
 {
@@ -53,10 +62,14 @@ export function Assignments()
     )
   };
 
-  //const theme = useTheme();
-
   //Controla el renderizado del calendario al cambiar el estado de los tiquetes a mostrar.
   const [tickets, setTickets] = useState([]);
+
+  //Constante para el manejo de la fecha seleccionada en el objeto calendar, a partir del inicio de la semana en visualización.
+  const [date, setDate] = useState(new Date(startOfWeek(new Date(), {weekStartsOn: 1})));
+
+  //Constante de navegación, actualizando la fecha en el calendario según la semana seleccionada.
+  const onNavigate = useCallback((newDate) => setDate(newDate), [setDate]);
 
   //**ASIGNACIÓN TEMPORAL DE USUARIO EN SESIÓN PARA PRUEBAS*/
 
@@ -126,11 +139,13 @@ export function Assignments()
         views={["agenda"]}
         components={{
           event: CustomEvent,
-          toolbar: CustomToolbar 
+          toolbar: CustomToolbar,
+           
         }}      
         timeslots={1}
         length={7}  
-        //date={new Date()}      
+        date={date}
+        onNavigate={onNavigate}
       />
     </div>
   );
@@ -139,12 +154,33 @@ export function Assignments()
 //Renderiza un componente visual personalizado para mostrar cada uno de los eventos del calendario.
 function CustomEvent({ event }) {
   //const { title, categoria, estado, tiempoRestante, idticket } = event.extendedProps || {};
+  const theme = useTheme();
+
+  // Asignación de colores para los chips de ESTADO
+  const getStateColor = (estado) => {
+    switch (estado) {
+      case 'Pendiente':
+        return 'error';
+      case 'Asignado':
+        return 'warning';
+      case 'En Proceso':
+        return 'info';
+      case 'Resuelto':
+        return 'success';
+      case 'Cerrado':
+        return 'default';
+      default:
+        return 'default';
+    }
+  };
+
+  //Almacena el color a mostrar en el chip del estado.
+  const stateColor = getStateColor(event.status);
   
   return (
     <Box
       sx={{
-        backgroundColor: "var(--rbc-event-bg)",
-        color: "var(--rbc-event-color)",
+        backgroundColor: theme.palette.action.default,       
         padding: "6px 10px",
         borderRadius: "8px",
         display: "flex",
@@ -156,86 +192,79 @@ function CustomEvent({ event }) {
         boxShadow: 1,
       }}
     >      
-      <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", minWidth: "24.5rem"}}>
         <Typography
           variant="subtitle2"
           sx={{
             fontWeight: "bold",
             display: "flex",
             alignItems: "center",
-            gap: 0.5,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
+            gap: 0.5,                        
             whiteSpace: "nowrap",
-            maxWidth: "180px",
+            marginBottom: "0.8rem"           
           }}
         >
-          <ConfirmationNumberIcon sx={{ fontSize: 14 }} /> #{event.idTicket}: {event.ticketTitle}
+          <ConfirmationNumberIcon fontSize="small" color="primary" /> #{event.idTicket}: {event.ticketTitle}
         </Typography>
 
         <Typography
-          variant="body2"
+          variant="subtitle2"
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 0.5,
-            fontSize: "0.8rem",
-            color: "text.secondary",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
+            gap: 0.5,                  
           }}
         >
-          <LocalOfferIcon sx={{ fontSize: 12 }} /> {event.categorie}
+          <LocalOfferIcon fontSize="small" color="primary"/> {event.categorie}
         </Typography>
       </Box>
-      
-      <Chip
-        label={event.status}
-        size="small"
-        sx={{
-          fontSize: "0.7rem",
-          backgroundColor:
-            event.status === "Asignado"
-              ? "#f57c00"
-              : event.status === "En Proceso"
-              ? "#1976d2"
-              : "#2e7d32",
-          color: "white",
-          flexShrink: 0,
-        }}
-      />
-      
+
+      <Box display={"flex"} >
+          <Chip
+            icon={<NotificationsIcon color={stateColor == "default" ? theme.palette.mode === "dark" ? "black" : "white" : theme.palette[stateColor].main}/>}
+            label={event.status}
+            size="medium"
+            sx={{
+              fontSize: "0.8rem",
+              //El color es definido según el estado del tiquete.
+              backgroundColor: stateColor == "default" ? theme.palette.mode === "light" ? "black" : "white" : alpha(theme.palette[stateColor].main, 0.15),
+              color:  stateColor == "default" ? theme.palette.mode === "dark" ? "black" : "white" : theme.palette[stateColor].main,
+              marginRight: "1.5rem",
+              minWidth: "6rem"       
+            }}          
+          />
+
+          <Chip
+            icon={<WatchLaterIcon color="white"/>}
+            label={`${event.remainingTime}h restantes`}
+            size="medium"
+            sx={{
+              fontSize: "0.8rem",
+              color: "white",
+              backgroundColor: "#1976d2"                        
+            }}            
+          />
+      </Box>
+       
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           gap: 1,
-          flexShrink: 0,
+          flexShrink: 0,          
         }}
-      >
-        <Typography
-          variant="caption"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.3,
-            whiteSpace: "nowrap",
-          }}
-        >
-          <WatchLaterIcon sx={{ fontSize: 12 }} /> {event.remainingTime}h
-        </Typography>
-
-        <Tooltip title="Ver detalle">
+      >       
+        <Tooltip title="Ver detalle" >
           <IconButton
-            size="small"
-            //onClick={handleDetalleClick}
+            size="medium"
+            to={`/ticket/${event.idTicket}`}
+            component={Link}
             sx={{
               color: "var(--rbc-event-color)",
               "&:hover": { color: "#1976d2" },
             }}
           >
-            <InfoOutlinedIcon fontSize="small" />
+            <InfoOutlinedIcon fontSize="large" />
           </IconButton>
         </Tooltip>
       </Box>
