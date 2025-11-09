@@ -18,11 +18,13 @@ import Alert from '@mui/material/Alert';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { useTheme } from "@mui/material/styles";
+import { useColorScheme, useTheme } from "@mui/material/styles";
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { Link } from 'react-router-dom';
 import { alpha } from '@mui/material/styles';
 import PropTypes from 'prop-types';
+import CheckIcon from '@mui/icons-material/Check';
+import { CenterAlign } from "iconoir-react";
 
 //Validación de propiedades.
 CustomEvent.propTypes = {
@@ -55,6 +57,9 @@ export function Assignments()
     next: "Siguiente",
     today: "Hoy",
     agenda: "Agenda",
+    date: "Fecha",
+    time: "Horario",
+    event: "Tiquete",
     noEventsInRange: (
       <Alert severity="info" sx={{fontSize: "1rem", fontWeight: "bold"}}>
         No existen tiquetes registrados para la semana seleccionada.
@@ -70,6 +75,10 @@ export function Assignments()
 
   //Constante de navegación, actualizando la fecha en el calendario según la semana seleccionada.
   const onNavigate = useCallback((newDate) => setDate(newDate), [setDate]);
+
+  //Obtiene el tema y el esquema de colores para ajustar los colores de los componentes.
+  const colorScheme = useColorScheme();
+  const theme = useTheme();
 
   //**ASIGNACIÓN TEMPORAL DE USUARIO EN SESIÓN PARA PRUEBAS*/
 
@@ -110,22 +119,23 @@ export function Assignments()
   }, []);
 
   return (
-    <div
-      className=""
-      // style={{       
-      //   '--rbc-today-bg': theme.palette.action.selected,
-      //   '--rbc-toolbar-bg': theme.palette.background.default,
-      //   '--rbc-toolbar-text': theme.palette.text.primary,
-      //   '--rbc-button-bg': theme.palette.background.paper,
-      //   '--rbc-button-text': theme.palette.text.primary,
-      //   '--rbc-button-border': theme.palette.divider,
-      //   '--rbc-button-hover-bg': theme.palette.primary.main,
-      //   '--rbc-button-hover-text': theme.palette.primary.contrastText,
-      //   '--rbc-button-active-bg': theme.palette.primary.main,
-      //   '--rbc-button-active-text': theme.palette.primary.contrastText,
-      //   '--rbc-header-bg': theme.palette.background.default,
-      //   '--rbc-header-text': theme.palette.text.primary,
-      // }}
+
+    <Box
+      sx={{
+        "& .rbc-header": {
+          backgroundColor: 
+            colorScheme.mode === "dark"
+              ? theme.colorSchemes.dark.palette.background.paper
+              : theme.colorSchemes.light.palette.background.paper,          
+          borderBottom: `1px solid ${theme.palette.divider}`,
+        },
+        "& .rbc-agenda-table": {
+          backgroundColor:
+            colorScheme.mode === "dark"
+              ? theme.colorSchemes.dark.palette.background.paper
+              : theme.colorSchemes.light.palette.background.paper,         
+        },             
+      }}
     >
       <Calendar
         localizer={localizer}
@@ -146,8 +156,9 @@ export function Assignments()
         length={7}  
         date={date}
         onNavigate={onNavigate}
+        
       />
-    </div>
+    </Box>
   );
 }
 
@@ -155,6 +166,7 @@ export function Assignments()
 function CustomEvent({ event }) {
   //const { title, categoria, estado, tiempoRestante, idticket } = event.extendedProps || {};
   const theme = useTheme();
+  const colorScheme = useColorScheme();
 
   // Asignación de colores para los chips de ESTADO
   const getStateColor = (estado) => {
@@ -180,31 +192,65 @@ function CustomEvent({ event }) {
   return (
     <Box
       sx={{
-        backgroundColor: theme.palette.action.default,       
-        padding: "6px 10px",
+        padding: "8px 8px",
         borderRadius: "8px",
         display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 1,
+        flexDirection: {
+          xs: "column",
+          sm: "column",
+          md: "column",       
+          lg: "row",
+        },
+        alignItems: {
+          xs: "flex-start",
+          lg: "center",
+        },
+        justifyContent: {
+          xs: "flex-start",
+          lg: "space-between",
+        },
+        gap: {
+          xs: 1.2,
+          md: 1.5,
+        },
         fontSize: "0.85rem",
         boxShadow: 1,
+        transition: "all 0.25s ease-in-out",
       }}
-    >      
-      <Box sx={{ display: "flex", flexDirection: "column", minWidth: "24.5rem"}}>
+    >
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          flex: {
+            xs: "1 1 100%",
+            lg: "1 1 50%",
+          },
+          minWidth: 0,
+        }}
+      >
         <Typography
           variant="subtitle2"
           sx={{
             fontWeight: "bold",
             display: "flex",
             alignItems: "center",
-            gap: 0.5,                        
+            gap: 0.5,
             whiteSpace: "nowrap",
-            marginBottom: "0.8rem"           
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            mb: 0.5,
+            marginBottom: "0.5rem",
+            fontSize: { xs: "0.9rem", md: "1rem" }, 
+            maxWidth: {
+              xs: "8rem",
+              sm: "100%",
+              md: "100%",
+              lg: "100%" }          
           }}
         >
-          <ConfirmationNumberIcon fontSize="small" color="primary" /> #{event.idTicket}: {event.ticketTitle}
+          <ConfirmationNumberIcon fontSize="small" color="primary" /> #
+          {event.idTicket} : {event.ticketTitle}
         </Typography>
 
         <Typography
@@ -212,49 +258,110 @@ function CustomEvent({ event }) {
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 0.5,                  
+            gap: 0.5,
+            fontSize: { xs: "0.8rem", md: "0.9rem" },
           }}
         >
-          <LocalOfferIcon fontSize="small" color="primary"/> {event.categorie}
+          <LocalOfferIcon fontSize="small" color="primary" /> {event.categorie}
         </Typography>
       </Box>
 
-      <Box display={"flex"} >
-          <Chip
-            icon={<NotificationsIcon color={stateColor == "default" ? theme.palette.mode === "dark" ? "black" : "white" : theme.palette[stateColor].main}/>}
-            label={event.status}
-            size="medium"
-            sx={{
-              fontSize: "0.8rem",
-              //El color es definido según el estado del tiquete.
-              backgroundColor: stateColor == "default" ? theme.palette.mode === "light" ? "black" : "white" : alpha(theme.palette[stateColor].main, 0.15),
-              color:  stateColor == "default" ? theme.palette.mode === "dark" ? "black" : "white" : theme.palette[stateColor].main,
-              marginRight: "1.5rem",
-              minWidth: "6rem"       
-            }}          
-          />
-
-          <Chip
-            icon={<WatchLaterIcon color="white"/>}
-            label={`${event.remainingTime}h restantes`}
-            size="medium"
-            sx={{
-              fontSize: "0.8rem",
-              color: "white",
-              backgroundColor: "#1976d2"                        
-            }}            
-          />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: { xs: "flex-start", md: "center" },
+          alignItems: "center",
+          textAlign: "center",         
+          //flexBasis: { md: "7rem", lg: "8rem" },
+          flexGrow: 1,
+          flexShrink: 0,          
+        }}
+      >
+        <Chip
+          icon={
+            <NotificationsIcon
+              color={
+                stateColor === "default"
+                  ? colorScheme.mode === "dark"
+                    ? "black"
+                    : "white"
+                  : theme.palette[stateColor].main
+              }
+            />
+          }
+          label={event.status}
+          size="medium"
+          sx={{
+            fontSize: "0.8rem",
+            backgroundColor:
+              stateColor === "default"
+                ? colorScheme.mode === "light"
+                  ? "black"
+                  : "white"
+                : alpha(theme.palette[stateColor].main, 0.15),
+            color:
+              stateColor === "default"
+                ? colorScheme.mode === "dark"
+                  ? "black"
+                  : "white"
+                : theme.palette[stateColor].main,
+            justifyContent: "center",
+            fontWeight: "bold",
+            minWidth: { xs: "100%", sm: "6rem", lg: "7rem" },
+          }}
+        />
       </Box>
-       
+
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: { xs: "flex-start", md: "center" },
+          alignItems: "center",         
+          //flexBasis: { md: "7rem", lg: "8.5rem" },
+          flexGrow: 1,
+          flexShrink: 0,        
+        }}
+      >
+        <Chip
+          icon={
+            event.status === "Resuelto" || event.status === "Cerrado" ? (
+              <CheckIcon color="white" />
+            ) : (
+              <WatchLaterIcon color="white" />
+            )
+          }
+          label={
+            event.status === "Resuelto" || event.status === "Cerrado"
+              ? "Completado"
+              : `${event.remainingTime}h restantes`
+          }
+          size="medium"
+          sx={{
+            fontSize: "0.8rem",
+            color: "white",
+            backgroundColor:
+              event.status === "Resuelto" || event.status === "Cerrado"
+                ? theme.palette.success.main
+                : theme.palette.primary.main,
+            minWidth: { xs: "100%", sm: "7rem", lg: "9rem" },
+            justifyContent: "center",
+          }}
+        />
+      </Box>
+
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
-          gap: 1,
-          flexShrink: 0,          
+          justifyContent: { xs: "flex-end", lg: "flex-start" },
+          flex: {
+            xs: "1 1 100%",
+            lg: "0 0 auto",
+          },
+          mt: { xs: 0.5, lg: 0 },
         }}
-      >       
-        <Tooltip title="Ver detalle" >
+      >
+        <Tooltip title="Ver detalle">
           <IconButton
             size="medium"
             to={`/ticket/${event.idTicket}`}
