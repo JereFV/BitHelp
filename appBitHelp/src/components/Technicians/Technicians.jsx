@@ -4,7 +4,6 @@ import {
     Button, Modal, Box, Typography, Chip, Divider, Paper, Stack, Alert,
     TextField, FormControl, InputLabel, Select, MenuItem, OutlinedInput,
     FormControlLabel, Switch, IconButton,
-    // Importaciones para el nuevo Diálogo de Confirmación
     Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions 
 } from '@mui/material'; 
 import { esES } from '@mui/x-data-grid/locales'; 
@@ -71,12 +70,12 @@ export const TechniciansDataGridWithModal = () => {
         idTecnico: null, 
         idUsuario: '',
         idDisponibilidad: 1,
-        estado: 1,
+        estado: 1, // 1: Activo, 0: Inactivo
         cargaTrabajo: 0,
         especialidades: [] 
     });
     
-    const [formErrors, setFormErrors] = useState({}); // Nuevo estado para errores de formulario
+    const [formErrors, setFormErrors] = useState({}); 
 
     // Mensajes
     const [alert, setAlert] = useState({ show: false, type: '', message: '' });
@@ -90,10 +89,12 @@ export const TechniciansDataGridWithModal = () => {
 
     // Usuarios que no son técnicos (disponibles para ser creados como técnicos)
     const availableUsers = useMemo(() => {
+        // SOLUCIÓN #2: Si el técnico fue eliminado (registro borrado), su idUsuario
+        // ya no estará en technicianUserIds, y volverá a ser un availableUser.
         return usersList.filter(user => !technicianUserIds.includes(user.idUsuario));
     }, [usersList, technicianUserIds]);
 
-    // Usuario que se está editando actualmente (SOLUCIÓN AL PROBLEMA #2)
+    // Usuario que se está editando actualmente
     const currentTechnicianUser = useMemo(() => {
         if (isEditMode && formData.idUsuario && usersList.length > 0) {
             return usersList.find(u => u.idUsuario === formData.idUsuario);
@@ -101,12 +102,11 @@ export const TechniciansDataGridWithModal = () => {
         return null;
     }, [isEditMode, formData.idUsuario, usersList]);
 
-    // Función para obtener datos externos (Usuarios, Especialidades, Disponibilidad)
+    // Función para obtener datos externos
     const fetchExternalData = async () => {
         try {
-            // OBTENER USUARIOS (SOLUCIÓN AL PROBLEMA #1)
+            // OBTENER USUARIOS
             const usersResponse = await UserService.getUsers();
-            // Ajuste para manejar diferentes formatos de respuesta API
             const usersData = usersResponse.data.result || usersResponse.data;
             setUsersList(Array.isArray(usersData) ? usersData : []); 
 
@@ -151,7 +151,6 @@ export const TechniciansDataGridWithModal = () => {
                 correo: item.correo,
                 telefono: item.telefono,
                 estado: String(item.estado),
-                // Aseguramos que especialidades es un array de strings (nombres) para el modal de detalle
                 especialidades: item.especialidades && Array.isArray(item.especialidades) 
                     ? item.especialidades.map(e => typeof e === 'string' ? e : (e.nombre || 'N/A')) 
                     : [],
@@ -192,7 +191,6 @@ export const TechniciansDataGridWithModal = () => {
             isValid = false;
         }
 
-        // Carga de trabajo solo debe ser válida si no es modo edición (el sistema la maneja)
         if (!isEditMode && (formData.cargaTrabajo < 0 || formData.cargaTrabajo === undefined || formData.cargaTrabajo === null)) {
              errors.cargaTrabajo = 'La carga de trabajo inicial no puede ser negativa.';
              isValid = false;
@@ -215,10 +213,9 @@ export const TechniciansDataGridWithModal = () => {
 
     const handleOpenFormModal = (editMode = false, row = null) => {
         setIsEditMode(editMode);
-        setFormErrors({}); // Limpiar errores al abrir
+        setFormErrors({}); 
         
         if (editMode && row) {
-            // Cargar datos para editar
             TechnicianService.getTechnicianById(row.id).then(response => {
                 const data = response.data.result || response.data;
                 
@@ -227,15 +224,13 @@ export const TechniciansDataGridWithModal = () => {
                     return;
                 }
 
-                // Obtener ID de Disponibilidad (lo hacemos dentro de la promesa por si availabilityList no se ha cargado)
                 const availabilityName = data.disponibilidad;
                 const foundAvailability = availabilityList.find(
                     (item) => item.nombre === availabilityName
                 );
-                const defaultAvailabilityId = 1; // 'Disponible' por defecto
+                const defaultAvailabilityId = 1; 
                 const finalIdDisponibilidad = foundAvailability ? foundAvailability.idDisponibilidad : defaultAvailabilityId;
 
-                // *** LÓGICA DE PRECARGA DE ESPECIALIDADES: Mapear Nombres (API) a IDs (Formulario) ***
                 const techSpecialtyNames = data.especialidades && Array.isArray(data.especialidades) 
                     ? data.especialidades 
                     : [];
@@ -247,14 +242,13 @@ export const TechniciansDataGridWithModal = () => {
                     })
                     .filter(id => id !== null); 
                 
-                // Asignar los valores al estado del formulario
                 setFormData({
                     idTecnico: data.idTecnico, 
                     idUsuario: data.idUsuario || '', 
                     estado: data.estado === 1 || data.estado === '1' ? 1 : 0, 
                     idDisponibilidad: finalIdDisponibilidad,
                     cargaTrabajo: data.cargaTrabajo ? parseInt(data.cargaTrabajo, 10) || 0 : 0,      
-                    especialidades: selectedSpecialtyIds, // Array de IDs precargado
+                    especialidades: selectedSpecialtyIds, 
                 });
 
             }).catch(error => {
@@ -267,9 +261,9 @@ export const TechniciansDataGridWithModal = () => {
             setFormData({
                 idTecnico: null,
                 idUsuario: '',
-                idDisponibilidad: 1, // Por defecto 'Disponible'
-                estado: 1, // Por defecto 'Activo'
-                cargaTrabajo: 0, // Por defecto 0
+                idDisponibilidad: 1, 
+                estado: 1, 
+                cargaTrabajo: 0, 
                 especialidades: []
             });
         }
@@ -279,7 +273,6 @@ export const TechniciansDataGridWithModal = () => {
     const handleCloseFormModal = () => {
         setOpenFormModal(false);
         setFormErrors({});
-        // Limpiar formData al cerrar
         setFormData({
             idTecnico: null,
             idUsuario: '',
@@ -294,9 +287,9 @@ export const TechniciansDataGridWithModal = () => {
         setFormErrors(prev => ({ ...prev, [field]: undefined })); // Limpiar error al cambiar
 
         if (field === 'estado') {
+            // El switch pasa un booleano, lo convertimos a 1 o 0
             setFormData(prev => ({ ...prev, [field]: value ? 1 : 0 }));
         } else if (field === 'cargaTrabajo') {
-            // Asegurar que sea un número no negativo
             const numValue = parseInt(value, 10);
             setFormData(prev => ({ ...prev, [field]: isNaN(numValue) || numValue < 0 ? 0 : numValue }));
         } else {
@@ -310,34 +303,53 @@ export const TechniciansDataGridWithModal = () => {
             return;
         }
         
+        // Creamos una copia de formData para manipularla.
         let payload = { ...formData };
         
-        // Ajuste de Payload
-        if (!isEditMode) {
-            delete payload.idTecnico; 
-        } else {
-            // En edición, solo enviamos los campos que se pueden modificar.
-            // Los campos que el sistema actualiza (como cargaTrabajo y idUsuario) los eliminamos del payload de la edición
-            payload = {
-                idDisponibilidad: payload.idDisponibilidad,
-                estado: payload.estado,
-                especialidades: payload.especialidades,
-            }
-        }
-
         try {
             if (isEditMode) {
-                await TechnicianService.updateTechnician(formData.idTecnico, payload);
+                // **MODO EDICIÓN (PUT) - AJUSTE AL BACKEND PHP**
+                
+                // La función PHP espera estos 4 argumentos en la Petición/Payload:
+                // 1. $idDisponibilidad (int)
+                // 2. $cargaTrabajo (string)
+                // 3. $estado (int)
+                // 4. $especialidades (array)
+
+                const updatePayload = {
+                    idDisponibilidad: Number(payload.idDisponibilidad), // De vuelta a Number/Int
+                    // CRÍTICO: Carga de trabajo como string '00:00:00'. Como no es editable, usaremos '00:00:00'
+                    // Asumimos que la API debe recibir una cadena TIME válida para no fallar.
+                    cargaTrabajo: '00:00:00', 
+                    estado: Number(payload.estado), // De vuelta a Number/Int
+                    especialidades: payload.especialidades, // Ya es un array de IDs
+                };
+
+                // Enviamos el ID en la URL y el Payload exacto en el cuerpo
+                await TechnicianService.updateTechnician(payload.idTecnico, updatePayload);
                 showAlert('success', 'Técnico actualizado exitosamente');
+                
             } else {
-                await TechnicianService.createTechnician(payload);
+                // **MODO CREACIÓN (POST)**
+                // Asumimos que la creación espera un objeto JSON diferente (más sencillo) o que la carga de trabajo debe ser '00:00:00'.
+                let creationPayload = {
+                    idUsuario: payload.idUsuario,
+                    idDisponibilidad: Number(payload.idDisponibilidad),
+                    cargaTrabajo: '00:00:00', // Iniciamos con el formato TIME correcto
+                    estado: Number(payload.estado),
+                    especialidades: payload.especialidades
+                };
+
+                await TechnicianService.createTechnician(creationPayload);
                 showAlert('success', 'Técnico creado exitosamente');
             }
+            
             handleCloseFormModal();
             fetchTechnicians(); // Recargar la lista después de la operación
         } catch (error) {
-            console.error("Error al guardar:", error.response?.data?.message || error.message);
-            showAlert('error', `Error al guardar el técnico: ${error.response?.data?.message || 'Error de conexión'}`);
+            console.error("Error al guardar (payload enviado):", isEditMode ? updatePayload : creationPayload);
+            console.error("Detalles del Error:", error.response?.data?.message || error.message);
+            showAlert('error', `Error al guardar: ${error.response?.data?.message || 'Revisar la consola para el payload enviado.'}`);
         }
     };
 
@@ -355,18 +367,18 @@ export const TechniciansDataGridWithModal = () => {
     
     // FUNCIÓN QUE EJECUTA LA ELIMINACIÓN (Llamada desde el Dialog)
     const executeDelete = async () => {
-        setIsDeleteDialogOpen(false); // Cierra el modal primero
+        setIsDeleteDialogOpen(false); 
         if (!technicianToDeleteId) return;
 
         try {
             await TechnicianService.deleteTechnician(technicianToDeleteId);
             showAlert('success', 'Técnico despromovido exitosamente');
-            fetchTechnicians();
+            fetchTechnicians(); // SOLUCIÓN #2: Recarga la lista, limpiando el ID del técnico eliminado.
         } catch (error) {
             console.error("Error al despromover:", error.response?.data?.message || error.message);
             showAlert('error', `Error al despromover el técnico: ${error.response?.data?.message || 'Error de conexión'}`);
         } finally {
-            setTechnicianToDeleteId(null); // Limpia el ID
+            setTechnicianToDeleteId(null); 
         }
     };
 
@@ -399,8 +411,8 @@ export const TechniciansDataGridWithModal = () => {
             minWidth: 140,
             headerAlign: 'center',
             align: 'center',
-            sortable: false, // Las acciones no son ordenables
-            filterable: false, // Las acciones no son filtrables
+            sortable: false, 
+            filterable: false, 
             flex: 0.6,
             renderCell: (params) => (
                 <Stack direction="row" spacing={2} justifyContent="center">
@@ -410,7 +422,6 @@ export const TechniciansDataGridWithModal = () => {
                     <IconButton color="primary" size="small" onClick={() => handleOpenFormModal(true, params.row)} aria-label="Editar">
                         <EditIcon />
                     </IconButton>
-                    {/* Llamada al nuevo Diálogo de Confirmación */}
                     <IconButton color="error" size="small" onClick={() => confirmDelete(params.row.id)} aria-label="Eliminar/Despromover">
                         <DeleteIcon />
                     </IconButton>
@@ -464,7 +475,7 @@ export const TechniciansDataGridWithModal = () => {
                 />
             )}
 
-            {/* Modal de Detalles del Técnico (sin cambios) */}
+            {/* Modal de Detalles del Técnico */}
             <Modal
                 open={openModal}
                 onClose={handleCloseModal}
@@ -564,12 +575,12 @@ export const TechniciansDataGridWithModal = () => {
                     <Divider sx={{ mb: 2 }} />
 
                     <Stack spacing={3}>
-                        {/* Campo: Usuario Asociado (SOLUCIÓN PARA EDICIÓN) */}
+                        {/* Campo: Usuario Asociado */}
                         <FormControl 
                             fullWidth 
                             required 
                             error={!!formErrors.idUsuario}
-                            disabled={isEditMode} // Mantenemos el campo deshabilitado en edición
+                            disabled={isEditMode}
                         >
                             <InputLabel id="user-select-label">Usuario</InputLabel>
                             <Select
@@ -623,7 +634,7 @@ export const TechniciansDataGridWithModal = () => {
                             </Select>
                         </FormControl>
 
-                        {/* Campo: Carga de Trabajo (Solo editable en Creación, es una métrica de sistema) */}
+                        {/* Campo: Carga de Trabajo (Solo editable en Creación) */}
                         <TextField
                             fullWidth
                             label="Carga de Trabajo (Tickets asignados)"
@@ -631,7 +642,7 @@ export const TechniciansDataGridWithModal = () => {
                             value={formData.cargaTrabajo}
                             onChange={(e) => handleInputChange('cargaTrabajo', e.target.value)}
                             InputProps={{ inputProps: { min: 0 } }}
-                            disabled={isEditMode} // Deshabilitado en edición
+                            disabled={isEditMode}
                             error={!!formErrors.cargaTrabajo}
                             helperText={formErrors.cargaTrabajo || (isEditMode ? 'Esta métrica se actualiza automáticamente por el sistema.' : 'Carga de trabajo inicial.')}
                         />
@@ -672,7 +683,7 @@ export const TechniciansDataGridWithModal = () => {
                             {formErrors.especialidades && <Typography color="error" variant="caption" sx={{ml: 2, mt: 0.5}}>{formErrors.especialidades}</Typography>}
                         </FormControl>
 
-                        {/* Campo: Estado (Switch) */}
+                        {/* Campo: Estado (Switch) - Solución #1 aplicada en handleInputChange y handleSubmit */}
                         <FormControlLabel
                             control={
                                 <Switch
@@ -706,7 +717,7 @@ export const TechniciansDataGridWithModal = () => {
                 </Box>
             </Modal>
 
-            {/* Diálogo de Confirmación de Eliminación (NUEVA SOLUCIÓN) */}
+            {/* Diálogo de Confirmación de Eliminación (MUI Dialog) */}
             <Dialog
                 open={isDeleteDialogOpen}
                 onClose={handleCancelDelete}

@@ -46,9 +46,9 @@ class TechnicianService
      * @param {number} id El idTecnico a actualizar.
      * @param {object} technicianData {idDisponibilidad: 2, cargaTrabajo: "05:30:00", especialidades: [...]}
      */
-    updateTechnician(id, technicianData)
+    updateTechnician(idTecnico, payload)
     {
-        return axios.put(`${BASE_URL}/${id}`, technicianData);
+        return axios.put(`${BASE_URL}/${idTecnico}`, payload);
     }
 
     /**
