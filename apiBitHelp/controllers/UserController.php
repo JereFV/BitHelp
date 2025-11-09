@@ -24,12 +24,12 @@ class user
         //Dar respuesta
         $response->toJSON($result);
     }
-    public function allCustomer()
+    public function getAllUsers()
     {
         $response = new Response();
         //Obtener el listado del Modelo
         $usuario = new UserModel();
-        $result = $usuario->allCustomer();
+        $result = $usuario->getAllUsers();
         //Dar respuesta
         $response->toJSON($result);
     }

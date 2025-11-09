@@ -1,5 +1,5 @@
 <?php
-// Sustituye categorie por technician
+
 class technician
 {
     public function index()
@@ -44,6 +44,57 @@ class technician
         }
     }
 
+    /**
+     * Endpoint: GET /technician/getCandidates
+     * Obtiene la lista de usuarios que pueden ser promovidos a técnico.
+     */
+    public function getCandidates() // <== Nuevo método para la ruta /getCandidates
+    {
+        try {
+            $response = new Response();
+            $technicianModel = new TechnicianModel();
+            
+            $users = $technicianModel->getCandidateUsers(); 
+            
+            if (!empty($users)) {
+                $response->toJson($users);
+            } else {
+                // Devuelve un array vacío si no hay candidatos, para evitar errores en el frontend.
+                $response->toJson([]);
+            }
+        } catch (Exception $ex) {
+            handleException($ex);
+        }
+    }
+
+    public function getDisponibilities() // <== Nuevo método para la ruta /getDisponibilities
+  {
+    try {
+      $response = new Response();
+      $technicianModel = new TechnicianModel();
+            // NOTA: Asume que el modelo tendrá una función llamada getAllDisponibilities()
+      $disponibilities = $technicianModel->getAllDisponibilities(); 
+      $response->toJson($disponibilities);      
+    } catch (Exception $ex) {
+      handleException($ex);
+    }
+  }
+
+  /**
+  * Endpoint: GET /technician/getSpecialties
+  */
+  public function getSpecialties() // <== Nuevo método para la ruta /getSpecialties
+  {
+    try {
+      $response = new Response();
+      $technicianModel = new TechnicianModel();
+            // NOTA: Asume que el modelo tendrá una función llamada getAllSpecialtiesOptions()
+      $specialties = $technicianModel->getAllSpecialtiesOptions(); 
+      $response->toJson($specialties);      
+    } catch (Exception $ex) {
+      handleException($ex);
+    }
+  }
     
 
     /**

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Box, TextField, Button, Typography, Select, MenuItem, FormControl, InputLabel, Alert, CircularProgress } from '@mui/material';
-import UserService from '../../services/UserService'; // Asegúrate de que la ruta es correcta
+import UserService from '../../services/userService'; // Asegúrate de que la ruta es correcta
 
 // Estilo básico para centrar el modal
 const style = {
@@ -15,14 +15,15 @@ const style = {
     borderRadius: 1,
 };
 
-// Estructura base inicial con campos de tu DB
+// Estructura base inicial con campos de tu ENDPOINT
 const initialUserState = {
-    nombre: '', // Corresponde a 'name'
-    primer_apellido: '', // Nuevo campo para edición
-    segundo_apellido: '', // Nuevo campo para edición
-    correo: '', // Corresponde a 'email'
-    password: '', 
-    rol_id: 1,  
+    nombre: '', 
+    primerApellido: '', // Corregido
+    segundoApellido: '', // Corregido
+    correo: '', 
+    contrasenna: '', // Usando el nombre real del campo de contraseña
+    idRol: '1',  // Usando el nombre real del campo de rol, inicializado como string "1"
+    telefono: '', // Añadido el campo de teléfono
 };
 
 export default function UserFormModal({ open, handleClose, userToEdit }) {
@@ -35,13 +36,15 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
     // --- Efecto para cargar datos en el formulario ---
     useEffect(() => {
         if (isEditing) {
+            // Mapeo de la data real del endpoint a los campos del formulario
             setFormData({
                 nombre: userToEdit.nombre || '',
-                primer_apellido: userToEdit.primer_apellido || '',
-                segundo_apellido: userToEdit.segundo_apellido || '',
+                primerApellido: userToEdit.primerApellido || '',
+                segundoApellido: userToEdit.segundoApellido || '',
                 correo: userToEdit.correo || '',
-                rol_id: userToEdit.rol_id || 1,
-                password: '', // Siempre vacío al editar
+                telefono: userToEdit.telefono || '',
+                idRol: userToEdit.idRol || '1',
+                contrasenna: '', // Siempre vacío al editar
             });
         } else {
             setFormData(initialUserState);
@@ -52,8 +55,9 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
     // --- Manejo de cambios en los inputs ---
     const handleChange = (e) => {
         const { name, value } = e.target;
-        // Convertir rol_id a número, ya que el Select lo devuelve como string
-        const finalValue = name === 'rol_id' ? Number(value) : value; 
+        // Para Select, aseguramos que el valor de rol se mantenga como string, como lo trae el endpoint.
+        // Si tu backend espera un número, quita el .toString() y haz Number(value).
+        const finalValue = name === 'idRol' ? value.toString() : value; 
         setFormData(prev => ({ ...prev, [name]: finalValue }));
     };
 
@@ -66,20 +70,20 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
         const dataToSend = { ...formData };
         
         // 1. Manejo de Contraseña
-        if (isEditing && !dataToSend.password) {
-            // Si estamos editando y el campo de password está vacío, no lo enviamos
-            delete dataToSend.password;
+        if (isEditing && !dataToSend.contrasenna) {
+            // Si estamos editando y el campo de contraseña está vacío, no lo enviamos
+            delete dataToSend.contrasenna;
         }
 
         try {
             let message = '';
             if (isEditing) {
-                // Modo Edición (PUT): Usamos idUsuario y dataToSend
+                // Modo Edición (PUT)
                 await UserService.updateUser(userToEdit.idUsuario, dataToSend);
                 message = `Usuario ${userToEdit.idUsuario} actualizado correctamente.`;
             } else {
                 // Modo Creación (POST)
-                if (!dataToSend.password) {
+                if (!dataToSend.contrasenna) {
                     setError("La contraseña es obligatoria para crear un nuevo usuario.");
                     setLoading(false);
                     return;
@@ -93,7 +97,6 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
 
         } catch (err) {
             console.error(isEditing ? "Error al actualizar usuario:" : "Error al crear usuario:", err);
-            // Intenta obtener un mensaje de error del backend
             setError(`Error al guardar: ${err.response?.data?.message || 'Verifica la conexión o los datos.'}`);
         } finally {
             setLoading(false);
@@ -120,8 +123,8 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                 />
                 <TextField
                     label="Primer Apellido"
-                    name="primer_apellido"
-                    value={formData.primer_apellido}
+                    name="primerApellido" // Corregido
+                    value={formData.primerApellido}
                     onChange={handleChange}
                     fullWidth
                     required
@@ -129,8 +132,8 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                 />
                 <TextField
                     label="Segundo Apellido (Opcional)"
-                    name="segundo_apellido"
-                    value={formData.segundo_apellido}
+                    name="segundoApellido" // Corregido
+                    value={formData.segundoApellido}
                     onChange={handleChange}
                     fullWidth
                     margin="normal"
@@ -146,15 +149,24 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                     required
                     margin="normal"
                 />
+                
+                <TextField
+                    label="Teléfono"
+                    name="telefono"
+                    value={formData.telefono}
+                    onChange={handleChange}
+                    fullWidth
+                    margin="normal"
+                />
 
                 <TextField
                     label={isEditing ? "Contraseña (Dejar vacío para no cambiar)" : "Contraseña"}
-                    name="password"
+                    name="contrasenna" // Corregido
                     type="password"
-                    value={formData.password}
+                    value={formData.contrasenna}
                     onChange={handleChange}
                     fullWidth
-                    required={!isEditing} // Requerida solo en modo creación
+                    required={!isEditing} 
                     margin="normal"
                 />
 
@@ -163,14 +175,14 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                     <Select
                         labelId="rol-select-label"
                         id="rol-select"
-                        name="rol_id"
-                        value={formData.rol_id}
+                        name="idRol" // Corregido
+                        value={formData.idRol}
                         label="Rol"
                         onChange={handleChange}
                     >
-                        <MenuItem value={1}>Cliente</MenuItem>
-                        <MenuItem value={2}>Técnico</MenuItem>
-                        <MenuItem value={3}>Administrador</MenuItem>
+                        <MenuItem value={"1"}>Cliente</MenuItem>
+                        <MenuItem value={"2"}>Técnico</MenuItem>
+                        <MenuItem value={"3"}>Administrador</MenuItem>
                     </Select>
                 </FormControl>
 

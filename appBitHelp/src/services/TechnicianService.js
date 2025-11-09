@@ -20,6 +20,17 @@ class TechnicianService
     }
 
     /**
+     * Obtiene todos los usuarios que son candidatos para ser técnicos.
+     * GET /technician/getCandidates 
+     * @returns {Promise<axios.Response>} La promesa de la respuesta de axios.
+     */
+    getTechnicianCandidates()
+    {
+        // Realiza la petición GET al endpoint /technician/getCandidates
+        return axios.get(`${BASE_URL}/getCandidates`); 
+    }
+
+    /**
      * Promueve un usuario existente a técnico.
      * POST /technicians
      * @param {object} technicianData {idUsuario: 5, especialidades: [1, 2], ...}

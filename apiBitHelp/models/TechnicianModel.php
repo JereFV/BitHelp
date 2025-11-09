@@ -10,55 +10,67 @@ class TechnicianModel
     }
 
     /**
- * Obtiene todos los técnicos, incluyendo la información de su usuario y sus especialidades.
- * @return array|null Los técnicos encontrados.
- */
-public function getAllTechnicians()
-{
-    try {
-        // Consulta SQL para obtener los técnicos, especialidades y combinar con la tabla 'usuario'.
-        $query = "SELECT
-                    t.idTecnico,
-                    t.idUsuario,
-                    dt.nombre AS disponibilidad, 
-                    t.cargaTrabajo,
-                    t.estado,
-                    u.nombre,
-                    u.primerApellido,
-                    u.segundoApellido,
-                    u.correo,
-                    u.telefono
-                FROM
-                    tecnico t
-                INNER JOIN
-                    usuario u ON t.idUsuario = u.idUsuario
-                INNER JOIN
-                    disponibilidad_tecnico dt ON t.idDisponibilidad = dt.idDisponibilidad;";
-        // Ejecución de la consulta.
-        $technicians = $this->connection->ExecuteSQL($query);
+     * Obtiene todos los técnicos, incluyendo la información de su usuario y sus especialidades.
+     * @return array|null Los técnicos encontrados.
+     */
+    public function getAllTechnicians()
+    {
+        try {
+            // Consulta SQL para obtener los técnicos, especialidades y combinar con la tabla 'usuario'.
+            $query = "SELECT
+                        t.idTecnico,
+                        t.idUsuario,
+                        dt.nombre AS disponibilidad, 
+                        t.cargaTrabajo,
+                        t.estado,
+                        u.nombre,
+                        u.primerApellido,
+                        u.segundoApellido,
+                        u.correo,
+                        u.telefono
+                    FROM
+                        tecnico t
+                    INNER JOIN
+                        usuario u ON t.idUsuario = u.idUsuario
+                    INNER JOIN
+                        disponibilidad_tecnico dt ON t.idDisponibilidad = dt.idDisponibilidad;";
+            // Ejecución de la consulta.
+            $technicians = $this->connection->ExecuteSQL($query);
 
-        // Iterar sobre cada técnico para añadir sus especialidades
-        foreach ($technicians as $tech) {
+            // Si no hay técnicos, devuelve un array vacío (o el resultado de ExecuteSQL)
+            if (empty($technicians)) {
+                return [];
+            }
             
-            // Query secundario para obtener las especialidades de ESTE técnico
-            $specialtyQuery = "SELECT e.nombre 
-                               FROM tecnico_especialidad te
-                               INNER JOIN especialidad e ON te.idEspecialidad = e.idEspecialidad
-                               WHERE te.idTecnico = " . $tech->idTecnico;
-            
-            $specialtiesResult = $this->connection->ExecuteSQL($specialtyQuery);
-            
-            // Mapear los resultados (objetos) a un array simple de strings (nombres)
-            // Esto creará el array [ "Soporte Redes", "Hardware", ... ]
-            $tech->especialidades = array_map(function($spec) {
-                return $spec->nombre;
-            }, $specialtiesResult);
+            // Iterar sobre cada técnico para añadir sus especialidades
+            foreach ($technicians as $tech) {
+                
+                // Query secundario para obtener las especialidades de ESTE técnico
+                $specialtyQuery = "SELECT e.nombre 
+                                FROM tecnico_especialidad te
+                                INNER JOIN especialidad e ON te.idEspecialidad = e.idEspecialidad
+                                WHERE te.idTecnico = " . $tech->idTecnico;
+                
+                $specialtiesResult = $this->connection->ExecuteSQL($specialtyQuery);
+                
+                // ****** INICIO DE LA CORRECCIÓN ******
+                // Asegurar que el resultado sea un array antes de usar array_map (prevención de TypeError)
+                if (!is_array($specialtiesResult)) {
+                    $specialtiesResult = [];
+                }
+                // ****** FIN DE LA CORRECCIÓN ******
+
+                // Mapear los resultados (objetos) a un array simple de strings (nombres)
+                // Esto creará el array [ "Soporte Redes", "Hardware", ... ]
+                $tech->especialidades = array_map(function($spec) {
+                    return $spec->nombre;
+                }, $specialtiesResult);
+            }
+            return $technicians;
+        } catch (Exception $ex) {
+            handleException($ex);
         }
-        return $technicians;
-    } catch (Exception $ex) {
-        handleException($ex);
     }
-}
 
     public function getTechnicianById(int $idTecnico)
     {
@@ -121,6 +133,63 @@ public function getAllTechnicians()
         }
     }
 
+    /**
+  * Obtiene la lista completa de opciones de disponibilidad.
+  * @return array Las opciones de disponibilidad.
+  */
+  public function getAllDisponibilities()
+  {
+    try {
+      $query = "SELECT idDisponibilidad, nombre FROM disponibilidad_tecnico WHERE estado = 1";
+      return $this->connection->ExecuteSQL($query);
+    } catch (Exception $ex) {
+      handleException($ex);
+    }
+  }
+
+  /**
+  * Obtiene la lista completa de opciones de especialidades.
+  * @return array Las opciones de especialidad.
+  */
+  public function getAllSpecialtiesOptions()
+  {
+    try {
+      $query = "SELECT idEspecialidad, nombre FROM especialidad WHERE estado = 1";
+      return $this->connection->ExecuteSQL($query);
+    } catch (Exception $ex) {
+      handleException($ex);
+    }
+  }
+    /**
+     * Obtiene todos los usuarios que tienen el rol de Cliente (idRol = 1) 
+     * y que NO son técnicos (no tienen registro en la tabla 'tecnico').
+     * Esto se asume para el proceso de 'Promover a Técnico'.
+     * @return array|null Los usuarios que pueden ser promovidos.
+     */
+    public function getCandidateUsers()
+    {
+        try {
+            // Obtenemos los usuarios con rol 1 (Cliente/Estándar) Y 
+            // que no tienen un idUsuario en la tabla 'tecnico' (LEFT JOIN + IS NULL)
+            $query = "SELECT 
+                            u.idUsuario,
+                            u.usuario,
+                            u.nombre,
+                            u.primerApellido,
+                            u.segundoApellido
+                        FROM
+                            usuario u
+                        LEFT JOIN
+                            tecnico t ON u.idUsuario = t.idUsuario
+                        WHERE
+                            u.idRol = 1 AND t.idUsuario IS NULL AND u.estado = 1"; // Asume u.estado = 1 (Activo)
+            
+            return $this->connection->ExecuteSQL($query);
+        } catch (Exception $ex) {
+            handleException($ex);
+        }
+    }
+    
     /**
      * Crea un nuevo registro de técnico a partir de un usuario existente.
      * Realiza las siguientes acciones en una transacción:

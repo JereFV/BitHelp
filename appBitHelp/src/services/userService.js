@@ -9,6 +9,9 @@ class UserService {
     return axios.get(BASE_URL + '/' + UserId);
   }
   
+  getAllUsers() {
+    return axios.get(BASE_URL + '/getAllUsers');
+  }
   createUser(User) {
      
       return axios.post(BASE_URL, User); 

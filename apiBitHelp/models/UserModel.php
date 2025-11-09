@@ -40,20 +40,38 @@ class UserModel
         }
     }
 
-	public function allCustomer()
+	public function getAllUsers()
 	{
 		try {
-			//Consulta sql
-			$vSql = "SELECT * FROM bithelp.usuario
-					where idRol=1;";
+			$query = "
+				SELECT 
+					u.idUsuario,
+					u.usuario,
+					u.nombre,
+					u.primerApellido,
+					u.segundoApellido,
+					CONCAT_WS(' ', u.nombre, u.primerApellido, u.segundoApellido) AS nombreCompleto,
+					u.correo,
+					u.telefono,
+					u.estado,
+					u.idRol,
+					r.nombre AS nombreRol
+				FROM
+					usuario u
+				INNER JOIN 
+					rol_usuario r ON u.idRol = r.idRolUsuario
+				-- Puedes añadir un WHERE si solo quieres usuarios activos (u.estado = 1)
+				ORDER BY
+					u.idUsuario DESC
+			";
 
-			//Ejecutar la consulta
-			$vResultado = $this->enlace->ExecuteSQL($vSql);
-
-			// Retornar el objeto
-			return $vResultado;
-		} catch (Exception $e) {
-			die($e->getMessage());
+			$result = $this->enlace->executeSQL($query);
+			// Asumiendo que executeSQL devuelve un array de objetos/filas
+			return $result; 
+		} 
+		catch (Exception $ex) {
+			// Manejo de excepciones
+			handleException($ex);
 		}
 	}
 	/*
