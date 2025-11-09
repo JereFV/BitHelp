@@ -8,14 +8,21 @@ class UserService {
   getUserById(UserId) {
     return axios.get(BASE_URL + '/' + UserId);
   }
-  getAllCustomer() {
-    return axios.get(BASE_URL + '/allCustomer/');
-  }
-  getCustomerbyShopRental(ShopRentalId) {
-    return axios.get(BASE_URL + '/customerbyShopRental/'+ ShopRentalId);
-  }
+  
   createUser(User) {
-    return axios.post(BASE_URL, JSON.stringify(User));
+     
+      return axios.post(BASE_URL, User); 
+  }
+    
+  // Actualiza un usuario existente (asume PUT)
+  updateUser(userId, UserData) {
+      // La API necesita el ID para saber qué actualizar
+      return axios.put(`${BASE_URL}/${userId}`, UserData); 
+  }
+
+  // Elimina un usuario
+  deleteUser(userId) {
+      return axios.delete(`${BASE_URL}/${userId}`);
   }
   loginUser(User) {
     return axios.post(BASE_URL + '/login/', JSON.stringify(User));
@@ -23,3 +30,4 @@ class UserService {
 }
 
 export default new UserService();
+
