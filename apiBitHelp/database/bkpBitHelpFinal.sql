@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS `categoria`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `categoria` (
-  `idCategoria` int(11) NOT NULL,
+  `idCategoria` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
   `idSla` int(11) NOT NULL,
   `estado` tinyint(4) NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE `categoria` (
   UNIQUE KEY `idCategoria_UNIQUE` (`idCategoria`),
   KEY `fk_Sla_Categoria_idx` (`idSla`),
   CONSTRAINT `fk_Sla_Categoria` FOREIGN KEY (`idSla`) REFERENCES `sla` (`idSla`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -44,6 +44,33 @@ LOCK TABLES `categoria` WRITE;
 /*!40000 ALTER TABLE `categoria` DISABLE KEYS */;
 INSERT INTO `categoria` VALUES (1,'\"Hardware\" y dispositivos',4,1),(2,'\"Software\" y aplicaciones',3,1),(3,'Cuentas y Acceso',1,1),(4,'Redes y conectividad',2,1);
 /*!40000 ALTER TABLE `categoria` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `categoria_especialidad`
+--
+
+DROP TABLE IF EXISTS `categoria_especialidad`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `categoria_especialidad` (
+  `idCategoria` int(11) NOT NULL,
+  `idEspecialidad` int(11) NOT NULL,
+  PRIMARY KEY (`idCategoria`,`idEspecialidad`),
+  KEY `idEspecialidad` (`idEspecialidad`),
+  CONSTRAINT `categoria_especialidad_ibfk_1` FOREIGN KEY (`idCategoria`) REFERENCES `categoria` (`idCategoria`),
+  CONSTRAINT `categoria_especialidad_ibfk_2` FOREIGN KEY (`idEspecialidad`) REFERENCES `especialidad` (`idEspecialidad`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `categoria_especialidad`
+--
+
+LOCK TABLES `categoria_especialidad` WRITE;
+/*!40000 ALTER TABLE `categoria_especialidad` DISABLE KEYS */;
+INSERT INTO `categoria_especialidad` VALUES (1,1),(1,2),(1,3),(1,4),(2,5),(2,6),(2,7),(3,8),(3,9),(3,10),(4,11),(4,12),(4,13),(4,14);
+/*!40000 ALTER TABLE `categoria_especialidad` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -79,17 +106,14 @@ DROP TABLE IF EXISTS `especialidad`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `especialidad` (
-  `idEspecialidad` int(11) NOT NULL,
-  `idCategoria` int(11) NOT NULL,
+  `idEspecialidad` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
   `estado` varchar(45) NOT NULL,
   `idmetodoAsignacion` int(11) NOT NULL,
   PRIMARY KEY (`idEspecialidad`),
-  KEY `fk_Categoria_Especialidad_idx` (`idCategoria`),
   KEY `dk_MetodoAsignacion_Especialidad_idx` (`idmetodoAsignacion`),
-  CONSTRAINT `fk_Categoria_Especialidad` FOREIGN KEY (`idCategoria`) REFERENCES `categoria` (`idCategoria`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_MetodoAsignacion_Especialidad` FOREIGN KEY (`idmetodoAsignacion`) REFERENCES `metodo_asignacion` (`idMetodoAsignacion`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -98,7 +122,7 @@ CREATE TABLE `especialidad` (
 
 LOCK TABLES `especialidad` WRITE;
 /*!40000 ALTER TABLE `especialidad` DISABLE KEYS */;
-INSERT INTO `especialidad` VALUES (1,1,'Incidente con computadora','1',2),(2,1,'Incidente con impresa','1',1),(3,1,'Incidente con periféricos','1',2),(4,1,'Solicitud o préstamo de equipo','1',2),(5,2,'Incidente con aplicación','1',2),(6,2,'Incidente con archivo','1',1),(7,2,'Solicitud de instalación de aplicación','1',2),(8,3,'Restablecimiento de contraseña','1',2),(9,3,'Solicitude de desbloqueo','1',2),(10,3,'Gestión de permisos','1',1),(11,4,'Incidente con conexión a internet','1',2),(12,4,'Incidente con VPN','1',2),(13,4,'Incidente con acceso a servidores','1',2),(14,4,'Incidente con acceso a recursos compartidos','1',1);
+INSERT INTO `especialidad` VALUES (1,'Incidente con computadora','1',2),(2,'Incidente con impresa','1',1),(3,'Incidente con periféricos','1',2),(4,'Solicitud o préstamo de equipo','1',2),(5,'Incidente con aplicación','1',2),(6,'Incidente con archivo','1',1),(7,'Solicitud de instalación de aplicación','1',2),(8,'Restablecimiento de contraseña','1',2),(9,'Solicitude de desbloqueo','1',2),(10,'Gestión de permisos','1',1),(11,'Incidente con conexión a internet','1',2),(12,'Incidente con VPN','1',2),(13,'Incidente con acceso a servidores','1',2),(14,'Incidente con acceso a recursos compartidos','1',1);
 /*!40000 ALTER TABLE `especialidad` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -172,6 +196,7 @@ CREATE TABLE `etiqueta` (
 
 LOCK TABLES `etiqueta` WRITE;
 /*!40000 ALTER TABLE `etiqueta` DISABLE KEYS */;
+INSERT INTO `etiqueta` VALUES (1,'Computadora',1),(2,'Impresora',1),(3,'Monitor',1),(4,'Sistema Operativo',1),(5,'Antivirus',1),(6,'Correo Institucional',1),(7,'Conexión WiFi',1),(8,'Cableado',1),(9,'Licencia de Software',1),(10,'Cuenta de Usuario',1);
 /*!40000 ALTER TABLE `etiqueta` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -198,6 +223,7 @@ CREATE TABLE `etiqueta_categoria` (
 
 LOCK TABLES `etiqueta_categoria` WRITE;
 /*!40000 ALTER TABLE `etiqueta_categoria` DISABLE KEYS */;
+INSERT INTO `etiqueta_categoria` VALUES (1,1),(2,1),(3,1),(4,2),(5,2),(6,3),(7,4),(8,4),(9,2),(10,3);
 /*!40000 ALTER TABLE `etiqueta_categoria` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -234,6 +260,7 @@ CREATE TABLE `historial_asignacion_tiquete` (
 
 LOCK TABLES `historial_asignacion_tiquete` WRITE;
 /*!40000 ALTER TABLE `historial_asignacion_tiquete` DISABLE KEYS */;
+INSERT INTO `historial_asignacion_tiquete` VALUES (1,1,3,1,'2025-11-04 09:05:00',3,'Asignación manual del equipo de Redes.'),(2,2,4,2,'2025-11-03 14:00:01',NULL,'Asignación automática a técnico con menor carga.'),(3,3,1,2,'2025-11-15 13:30:01',NULL,'Asignación automática por especialidad de software.'),(4,4,2,2,'2025-11-14 11:05:00',NULL,'Asignación automática por especialidad de red/VPN.'),(5,5,3,1,'2025-11-09 16:05:00',3,'Asignación manual para coordinación de licenciamiento.'),(6,6,1,2,'2025-10-30 08:00:01',NULL,'Asignación automática por especialidad de impresión.'),(7,7,2,2,'2025-11-06 15:30:01',NULL,'Asignación automática por prioridad crítica.'),(8,8,2,1,'2025-11-01 10:05:00',2,'Asignación manual rápida, Técnico 2 estaba disponible.'),(9,9,4,2,'2025-11-20 07:20:00',NULL,'Asignación automática por especialidad de cuentas/DB.'),(10,10,3,2,'2025-10-27 08:05:00',NULL,'Asignación automática por especialidad de contraseñas.');
 /*!40000 ALTER TABLE `historial_asignacion_tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -265,7 +292,7 @@ CREATE TABLE `historial_tiquete` (
 
 LOCK TABLES `historial_tiquete` WRITE;
 /*!40000 ALTER TABLE `historial_tiquete` DISABLE KEYS */;
-INSERT INTO `historial_tiquete` VALUES (1,1,'2025-10-28 09:00:00',1,'Asignación Automática',2),(1,2,'2025-10-28 12:00:00',1,'',2),(1,3,'2025-10-28 15:00:00',1,'',2),(1,4,'2025-10-30 08:30:00',2,'',2),(2,1,'2025-10-28 10:00:00',1,'Empieza atención del ticket.',3);
+INSERT INTO `historial_tiquete` VALUES (1,1,'2025-11-04 09:00:00',5,'Tiquete creado por el usuario solicitante.',1),(2,1,'2025-11-04 09:05:00',3,'Asignado a Soporte Redes. Diagnóstico iniciado.',2),(3,1,'2025-11-04 12:50:00',3,'Problema de servidor resuelto. Tiquete marcado como resuelto.',4),(4,1,'2025-11-04 13:10:00',5,'Usuario confirma la solución y cierra el tiquete.',5),(5,2,'2025-11-03 14:00:00',6,'Solicitud de periférico creada.',1),(6,2,'2025-11-03 14:05:00',4,'Asignado a Inventario/Periféricos.',2),(7,2,'2025-11-04 11:00:00',4,'Equipo entregado y configurado. Resuelto por técnico.',4),(8,2,'2025-11-04 11:30:00',6,'Usuario cierra y valora el servicio.',5),(9,3,'2025-11-15 13:30:00',7,'Tiquete creado. Problema de aplicación.',1),(10,3,'2025-11-15 13:30:01',1,'Asignación automática a Soporte Software.',2),(11,3,'2025-11-15 13:45:00',1,'Técnico inicia el proceso de reinstalación de Office.',3),(12,3,'2025-11-15 14:45:00',1,'Proceso finalizado. Tiquete resuelto, esperando confirmación.',4),(13,4,'2025-11-14 11:00:00',8,'Incidente de VPN reportado (Alta).',1),(14,4,'2025-11-14 11:05:00',2,'Asignado a Redes. Se revisan logs de conexión.',3),(15,4,'2025-11-14 11:30:00',2,'Se requiere revisión de la configuración del firewall central.',3),(16,5,'2025-11-09 16:00:00',9,'Solicitud de instalación de AutoCAD.',1),(17,5,'2025-11-09 16:05:00',3,'Asignado a Diseño/CAD. Se coordina licencia y horario de instalación.',2),(18,6,'2025-10-30 08:00:00',10,'Reporte de lentitud en impresora.',1),(19,6,'2025-10-30 08:00:01',1,'Asignación automática a Impresoras.',2),(20,6,'2025-10-30 09:30:00',1,'Técnico revisa configuración, se encuentra error en el spooler.',3),(21,6,'2025-11-01 10:45:00',1,'Problema resuelto. Tiquete marcado como resuelto.',4),(22,6,'2025-11-01 11:00:00',10,'Usuario cierra el tiquete.',5),(23,7,'2025-11-06 15:30:00',9,'Fallo de acceso a recursos críticos. Máxima prioridad.',1),(24,8,'2025-11-01 10:00:00',8,'PC con reinicios constantes. Atención urgente.',1),(25,8,'2025-11-01 10:05:00',2,'Asignado a Hardware. Diagnóstico remoto.',3),(26,8,'2025-11-01 12:45:00',2,'Reemplazo de hardware. Resuelto por técnico.',4),(27,8,'2025-11-01 13:00:00',8,'Usuario cierra el tiquete.',5),(28,9,'2025-11-20 07:10:00',7,'Solicitud de gestión de permisos para DB.',1),(29,9,'2025-11-20 07:20:00',4,'Asignado a Bases de Datos. Revisando aprobación de Gerencia.',3),(30,9,'2025-11-20 08:30:00',4,'Permisos concedidos en ambiente de pruebas.',3),(31,10,'2025-10-27 08:00:00',6,'Reporte de contraseña olvidada.',1),(32,10,'2025-10-27 08:05:00',3,'Asignado a Cuentas. Reseteo de contraseña iniciado.',3),(33,10,'2025-10-27 08:20:00',3,'Contraseña actualizada y verificada con el usuario.',4),(34,10,'2025-10-27 15:35:00',6,'Usuario cierra el tiquete.',5);
 /*!40000 ALTER TABLE `historial_tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -293,7 +320,7 @@ CREATE TABLE `imagen_historial_tiquete` (
 
 LOCK TABLES `imagen_historial_tiquete` WRITE;
 /*!40000 ALTER TABLE `imagen_historial_tiquete` DISABLE KEYS */;
-INSERT INTO `imagen_historial_tiquete` VALUES (1,1,1,'/src/images/Problema Inicio Sesión.png'),(1,1,2,'/src/images/Error acceso nube_1.jpg'),(1,1,3,'/src/images/Error impresión.png'),(2,1,2,'/src/images/Error nube_2.png');
+INSERT INTO `imagen_historial_tiquete` VALUES (1,1,1,'/src/images/error_correo_electronico.png'),(2,4,1,'/src/images/correoEnviado.png'),(3,5,2,'/src/images/mouseErgonomicoSolicitado.jpg'),(4,6,2,'/src/images/mouseErgoAInventario.png'),(5,7,2,'/src/images/mouseErgoConfigurado.png'),(6,16,5,'/src/images/LicenciaAutoCAD.jpg');
 /*!40000 ALTER TABLE `imagen_historial_tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -489,6 +516,7 @@ CREATE TABLE `tecnico_especialidad` (
 
 LOCK TABLES `tecnico_especialidad` WRITE;
 /*!40000 ALTER TABLE `tecnico_especialidad` DISABLE KEYS */;
+INSERT INTO `tecnico_especialidad` VALUES (1,2),(1,5),(2,1),(2,12),(2,14),(3,7),(3,8),(3,13),(4,2),(4,3),(4,4),(4,10);
 /*!40000 ALTER TABLE `tecnico_especialidad` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -534,8 +562,8 @@ CREATE TABLE `tiquete` (
   `fechaCreacion` datetime NOT NULL,
   `fechaCierre` datetime DEFAULT NULL,
   `tiempoResolucion` datetime DEFAULT NULL,
-  `slaRespuesta` datetime NOT NULL,
-  `slaResolucion` datetime NOT NULL,
+  `slaRespuesta` datetime DEFAULT NULL,
+  `slaResolucion` datetime DEFAULT NULL,
   `cumplimientoSlaRespuesta` tinyint(4) DEFAULT NULL,
   `cumplimientoSlaResolucion` tinyint(4) DEFAULT NULL,
   `idTecnicoAsignado` int(11) NOT NULL,
@@ -566,7 +594,7 @@ CREATE TABLE `tiquete` (
 
 LOCK TABLES `tiquete` WRITE;
 /*!40000 ALTER TABLE `tiquete` DISABLE KEYS */;
-INSERT INTO `tiquete` VALUES (1,1,NULL,'Problemas al iniciar sesión','No me deja iniciar sesión a pesar de haber digitado las credenciales.',1,2,8,'2025-10-28 09:00:00',NULL,NULL,'2025-10-28 09:30:00','2025-10-28 13:00:00',NULL,NULL,1,2,NULL,NULL),(2,1,NULL,'Permisos al servidor de la nube','Buenas tardes, necesito permsisos para acceder al servidor xxxxxxxx desde mi máquina local.',1,3,10,'2025-10-28 12:00:00',NULL,NULL,'2025-10-28 12:30:00','2025-10-28 16:00:00',NULL,NULL,1,1,NULL,NULL),(3,1,NULL,'Error al imprimir documentos','Buenas tardes, estoy intentando imprimir documentos pero me sale un error inesperado.',1,3,2,'2025-10-28 15:00:00',NULL,NULL,'2025-10-28 15:30:00','2025-10-29 15:00:00',NULL,NULL,1,2,NULL,NULL),(4,2,NULL,'Lentitud en el sistema de inventario','El sistema está muy lento, no puedo ingresar datos de nuevos productos rápidamente.',1,2,5,'2025-10-30 08:30:00',NULL,NULL,'2025-10-30 09:00:00','2025-10-30 12:30:00',NULL,NULL,2,1,NULL,NULL);
+INSERT INTO `tiquete` VALUES (1,5,5,'Servidor de Correo Caído','Nadie puede enviar o recibir correos electrónicos, impacto crítico en la operación.',5,1,13,'2025-11-04 09:00:00','2025-11-04 13:10:00','2025-11-04 04:10:00','2025-11-04 09:15:00','2025-11-04 13:00:00',1,1,3,1,'Resolvieron un problema muy serio en tiempo récord.',5),(2,6,6,'Solicitud de mouse ergonómico','Necesito un mouse vertical para prevenir el dolor de muñeca.',5,4,3,'2025-11-03 14:00:00','2025-11-04 11:30:00','2025-11-04 21:30:00','2025-11-03 14:30:00','2025-11-04 10:00:00',1,1,4,2,'El equipo fue entregado al día siguiente sin problemas.',4),(3,7,NULL,'Problema con Excel en equipo nuevo','Al abrir archivos grandes, Excel se cierra inesperadamente.',4,3,5,'2025-11-15 13:30:00',NULL,NULL,NULL,NULL,NULL,NULL,1,2,NULL,NULL),(4,8,NULL,'Mi cuenta de VPN no funciona','No puedo conectarme a la red de la oficina desde casa.',3,2,12,'2025-11-14 11:00:00',NULL,NULL,'2025-11-14 11:10:00',NULL,1,NULL,2,2,NULL,NULL),(5,9,NULL,'Petición de software de diseño','Solicito la instalación del programa AutoCAD en mi estación.',2,4,7,'2025-11-09 16:00:00',NULL,NULL,'2025-11-09 16:30:00','2025-11-10 14:00:00',1,1,3,1,NULL,NULL),(6,10,10,'Impresora del 3er piso imprime lento','El trabajo de impresión tarda más de 5 minutos en salir.',5,3,2,'2025-10-30 08:00:00','2025-11-01 11:00:00','2025-11-06 03:00:00','2025-10-30 08:50:00','2025-11-01 09:30:00',0,0,1,2,'Demoró más de lo esperado en resolverse.',2),(7,9,NULL,'No puedo acceder a recursos compartidos','Error de permisos al intentar abrir la carpeta del departamento de marketing.',1,1,14,'2025-11-06 15:30:00',NULL,NULL,'2025-11-06 15:58:00','2025-11-06 16:30:00',1,1,2,2,'Excelente atención me ayudaron muy rápido',5),(8,8,8,'Mi PC se reinicia constantemente','Fallo de hardware intermitente. Urgente para poder trabajar.',5,2,1,'2025-11-01 10:00:00','2025-11-01 13:00:00','2025-11-04 03:00:00','2025-11-01 10:28:30','2025-11-01 12:46:00',1,1,2,1,'El técnico fue muy profesional y cambió la memoria en menos de 3 horas.',5),(9,7,NULL,'Solicitud de acceso a base de datos','Necesito permisos de lectura para la DB de producción.',3,3,10,'2025-11-20 07:10:00',NULL,NULL,'2025-11-20 07:29:00','2025-11-20 10:09:00',1,1,4,2,NULL,NULL),(10,6,6,'Restablecer mi contraseña de dominio','Olvidé mi contraseña después de las vacaciones.',5,3,8,'2025-10-27 08:00:00','2025-10-27 15:35:00','2025-11-04 07:35:00','2025-10-27 08:23:07','2025-10-27 14:50:45',1,1,3,2,'Fue una resolución del mismo día, excelente servicio.',5);
 /*!40000 ALTER TABLE `tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -593,7 +621,7 @@ CREATE TABLE `usuario` (
   UNIQUE KEY `usuario_UNIQUE` (`usuario`),
   KEY `fkRolUsuario_Usuario_idx` (`idRol`),
   CONSTRAINT `fkRolUsuario_Usuario` FOREIGN KEY (`idRol`) REFERENCES `rol_usuario` (`idRolUsuario`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -602,7 +630,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
-INSERT INTO `usuario` VALUES (1,'jfuentes','Jeremy','Fuentes','Venegas','jeremyfvcr15@gmail.com','85197237','Prueba',1,2),(2,'rherrera','Rodrigo','Herrera','Castillo','rrhc1606@gmail.com','85848621','123456',1,2),(3,'jalfaro','Jeyson','Alfaro','Ríos','jeysonalfaro83@gmail.com','72501418','123456',1,2),(4,'jvazquez','Jaime','Vazquez','Ríos','jeisonv83@gmail.com','72051418','123456',1,2);
+INSERT INTO `usuario` VALUES (1,'jfuentes','Jeremy','Fuentes','Venegas','jeremyfvcr15@gmail.com','85197237','Prueba',1,2),(2,'rherrera','Rodrigo','Herrera','Castillo','rrhc1606@gmail.com','85848621','123456',1,2),(3,'jalfaro','Jeyson','Alfaro','Ríos','jeysonalfaro83@gmail.com','72501418','123456',1,2),(4,'jvazquez','Jaime','Vazquez','Ríos','jeisonv83@gmail.com','72051418','123456',1,2),(5,'msoto','María','Soto','Soto','msoto.soto@techpro.com','6011-2022','pass123',1,1),(6,'lchavez','Luis','Chávez','Arias','lchavez@protool.com','6033-4044','pass123',1,1),(7,'aflores','Andrés','Flores','Vargas','aflores.vargas@rugama.com','6055-6066','pass123',1,1),(8,'crojas','Carla','Rojas','Mora','crojas.mora@tonypan.com','6077-8088','pass123',1,1),(9,'pmendez','Pablo','Méndez','Castro','pmendez@techpro.com','6099-0100','pass123',1,1),(10,'gquiros','Gabriela','Quirós','León','gquiros.leon@protool.com','6111-2122','pass123',1,1);
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -615,4 +643,5 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-26 22:51:43
+-- Dump completed on 2025-11-09  3:10:26
+

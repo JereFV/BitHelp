@@ -3,13 +3,11 @@ class RoutesController
 {
     public function index()
     {
-        //include "routes/routes.php";
         if (isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['REQUEST_URI'])) {
             //Gestion de imagenes
             if (strpos($_SERVER['REQUEST_URI'], '/uploads/') === 0) {
                 $filePath = __DIR__ . $_SERVER['REQUEST_URI'];
                 
-                // Verificar si el archivo existe
                 if (file_exists($filePath)) {
                     header('Content-Type: ' . mime_content_type($filePath));
                     readfile($filePath);
@@ -19,15 +17,14 @@ class RoutesController
                     echo 'Archivo no encontrado.';
                 }
             }
-             //FIN Gestion de imagenes
-             //Solicitud preflight
-             if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-                // Terminar la solicitud de preflight
+             
+            //Solicitud preflight
+            if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
                 http_response_code(200);
                 exit();
             }
+            
             $routesArray = explode("/", $_SERVER['REQUEST_URI']);
-            // Eliminar elementos vacíos del array
             $routesArray = array_filter($routesArray);
 
             if (count($routesArray) < 2) {
@@ -44,49 +41,38 @@ class RoutesController
                 $action = $routesArray[4] ?? null;
                 $param1 = $routesArray[5] ?? null;
                 $param2 = $routesArray[6] ?? null;
+                
                 if ($controller) {
                     try {
                         if (class_exists($controller)) {
                             $response = new $controller();
+                            
                             switch ($_SERVER['REQUEST_METHOD']) {
                                 case 'GET':
                                     if ($param1 && $param2) {
                                         $response->$action($param1, $param2);
-                                    } elseif ($param1 && !isset($action)) {
-                                        $response->get($param1);
+                                    } elseif ($action && is_numeric($action) && method_exists($controller, 'get')) {
+                                        // Si action es numérico y existe método get, es un ID
+                                        $response->get($action);
                                     } elseif ($param1 && isset($action)) {
                                         $response->$action($param1);
+                                    } elseif ($action && method_exists($controller, $action)) {
+                                        // Es una acción válida (como getSpecialties)
+                                        $response->$action();
                                     } elseif (!isset($action)) {
                                         $response->index();
-                                    } elseif ($action) {
-                                        if (method_exists($controller, $action)) {
-                                            $response->$action();
-                                        } elseif (count($routesArray) == 3) {
-                                            $response->get($action);
-                                        } else {
-                                            $json = array(
-                                                'status' => 404,
-                                                'result' => 'Acción no encontrada'
-                                            );
-                                            echo json_encode($json, http_response_code($json["status"]));
-                                        }
                                     } else {
-                                        // Llamar a la acción index si no hay acción ni parámetro
-                                        $response->index();
+                                        $json = array(
+                                            'status' => 404,
+                                            'result' => 'Acción no encontrada'
+                                        );
+                                        echo json_encode($json, http_response_code($json["status"]));
                                     }
                                     break;
 
                                 case 'POST':
-                                    if ($action) {
-                                        if (method_exists($controller, $action)) {
-                                            $response->$action();
-                                        } else {
-                                            $json = array(
-                                                'status' => 404,
-                                                'result' => 'Acción no encontrada'
-                                            );
-                                            echo json_encode($json, http_response_code($json["status"]));
-                                        }
+                                    if ($action && method_exists($controller, $action)) {
+                                        $response->$action();
                                     } else {
                                         $response->create();
                                     }
@@ -94,36 +80,26 @@ class RoutesController
 
                                 case 'PUT':
                                 case 'PATCH':
-                                    if ($param1) {
+                                    if ($action && is_numeric($action) && method_exists($controller, 'update')) {
+                                        // Si action es numérico y existe método update, es un ID
+                                        $response->update($action);
+                                    } elseif ($param1) {
                                         $response->update($param1);
-                                    } elseif ($action) {
-                                        if (method_exists($controller, $action)) {
-                                            $response->$action();
-                                        } else {
-                                            $json = array(
-                                                'status' => 404,
-                                                'result' => 'Acción no encontrada'
-                                            );
-                                            echo json_encode($json, http_response_code($json["status"]));
-                                        }
+                                    } elseif ($action && method_exists($controller, $action)) {
+                                        $response->$action();
                                     } else {
                                         $response->update();
                                     }
                                     break;
 
                                 case 'DELETE':
-                                    if ($param1) {
+                                    if ($action && is_numeric($action) && method_exists($controller, 'delete')) {
+                                        // Si action es numérico y existe método delete, es un ID
+                                        $response->delete($action);
+                                    } elseif ($param1) {
                                         $response->delete($param1);
-                                    } elseif ($action) {
-                                        if (method_exists($controller, $action)) {
-                                            $response->$action();
-                                        } else {
-                                            $json = array(
-                                                'status' => 404,
-                                                'result' => 'Acción no encontrada'
-                                            );
-                                            echo json_encode($json, http_response_code($json["status"]));
-                                        }
+                                    } elseif ($action && method_exists($controller, $action)) {
+                                        $response->$action();
                                     } else {
                                         $response->delete();
                                     }

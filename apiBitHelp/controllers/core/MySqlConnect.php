@@ -8,7 +8,7 @@ class MySqlConnect {
 	private $password;
 	private $host;
 	private $dbname;
-	private $link;
+	public $link; // Cambiado de private a public
 
 	private $log;
 	

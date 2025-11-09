@@ -21,7 +21,7 @@ class TicketModel
                     COALESCE(e.nombre, 'Sin estado') AS estado,
                     COALESCE(p.nombre, 'Sin prioridad') AS prioridad,
                     CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.primerApellido,''), ' ', COALESCE(u.segundoApellido,'')) AS tecnico,
-                    TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante,                  
+                    TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante                  
                 FROM tiquete t
                 LEFT JOIN estado_tiquete e ON t.idEstado = e.idEstadoTiquete
                 LEFT JOIN prioridad_tiquete p ON t.idPrioridad = p.idPrioridadTiquete
@@ -30,6 +30,7 @@ class TicketModel
                 ORDER BY t.idTiquete DESC
             ";
 
+            // Ejecuta la consulta y obtiene todos los resultados.
             $tickets = $this->connection->ExecuteSQL($query);
 
             // Retorna la lista de tiquetes.
@@ -71,7 +72,8 @@ class TicketModel
                 LEFT JOIN usuario u ON tec.idUsuario = u.idUsuario
                 LEFT JOIN historial_tiquete h ON t.idTiquete = h.idTiquete
                 INNER JOIN especialidad esp ON t.idEspecialidad = esp.idEspecialidad
-                INNER JOIN categoria c ON esp.idCategoria = c.idCategoria               
+                INNER JOIN categoria_especialidad ce ON esp.idEspecialidad = ce.idEspecialidad
+                INNER JOIN categoria c ON ce.idCategoria = c.idCategoria               
             ";
 
             // 2. Añadir el filtro (WHERE) según el ROL
@@ -198,7 +200,8 @@ class TicketModel
                 FROM
                     tiquete AS T
                 INNER JOIN especialidad AS E ON T.idEspecialidad = E.idEspecialidad
-                INNER JOIN categoria AS C ON E.idCategoria = C.idCategoria
+                INNER JOIN categoria_especialidad AS CE ON E.idEspecialidad = CE.idEspecialidad
+                INNER JOIN categoria AS C ON CE.idCategoria = C.idCategoria
                 INNER JOIN sla AS S ON C.idSla = S.idSla
                 WHERE
                     T.idTiquete = $id
@@ -213,5 +216,5 @@ class TicketModel
             return null;
         }
     }
-    }
+}
 ?>

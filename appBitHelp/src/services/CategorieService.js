@@ -1,13 +1,46 @@
 import axios from 'axios';
-const BASE_URL = import.meta.env.VITE_BASE_URL +'categorie';
+const BASE_URL = import.meta.env.VITE_BASE_URL + 'categorie';
 
 class CategorieService 
 {
     getAllCategories()
     {
-        //Realiza la petición utilizando axios como cliente y retorna la respuesta.
-        let categories = axios.get(BASE_URL);
-        return categories;
+        return axios.get(BASE_URL);
+    }
+
+    getCategoryById(id)
+    {
+        return axios.get(`${BASE_URL}/${id}`);
+    }
+
+    getSpecialties()
+    {
+        return axios.get(`${BASE_URL}/getSpecialties`);
+    }
+
+    getTags()
+    {
+        return axios.get(`${BASE_URL}/getTags`);
+    }
+
+    getSlas()
+    {
+        return axios.get(`${BASE_URL}/getSlas`);
+    }
+
+    createCategory(categoryData)
+    {
+        return axios.post(BASE_URL, categoryData);
+    }
+
+    updateCategory(id, categoryData)
+    {
+        return axios.put(`${BASE_URL}/${id}`, categoryData);
+    }
+
+    deleteCategory(id)
+    {
+        return axios.delete(`${BASE_URL}/${id}`);
     }
 }
 
