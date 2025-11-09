@@ -17,10 +17,10 @@ function TicketsList() {
   const FAKE_USER_DATA = {
     idUsuario: 1,
     usuario: 'jfuentes',
-    nombre: 'Jeremy', // <-- Clave para mostrar el nombre
+    nombre: 'Jeremy',
     primerApellido: 'Fuentes',
     segundoApellido: 'Venegas',
-    idRol: 3
+    idRol: 2
   };
 
   localStorage.setItem('userSession', JSON.stringify(FAKE_USER_DATA));
