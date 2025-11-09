@@ -21,8 +21,6 @@ import {
     MenuList, MenuItem, ListItemText, ListItemIcon, Avatar
 } from '@mui/material';
 
-import Header from './Header'; // El componente Header se mantiene importado (pero ya no en el slot header)
-
 
 // --- CONFIGURACIÓN DE SESIÓN Y ROLES ---
 const FAKE_USER_DATA = {

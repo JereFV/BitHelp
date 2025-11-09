@@ -1,15 +1,16 @@
-import { CssBaseline, ThemeProvider } from "@mui/material";
-import { appTheme } from "./themes/theme";
+import { CssBaseline} from "@mui/material";
 import { Layout } from "./components/Layout/Layout";
-import { Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom';
 
+//El tema es definido en el layout utilizando Toolpad.
 export default function App() { 
+
   return ( 
-      <ThemeProvider theme={appTheme}> 
+    <>
         <CssBaseline enableColorScheme /> 
         <Layout> 
           <Outlet /> 
         </Layout> 
-      </ThemeProvider> 
+    </>
   ); 
 }
