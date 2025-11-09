@@ -3,8 +3,7 @@ import * as React from 'react';
 import PropTypes from 'prop-types'; 
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import { AppProvider, DashboardLayout, PageContainer } from '@toolpad/core'; 
-// eslint-disable-next-line no-unused-vars
-import { useHref, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { extendTheme } from '@mui/material/styles';
 import Header from './Header';
 import { useColorScheme } from '@mui/material/styles';
@@ -13,123 +12,136 @@ import GroupIcon from '@mui/icons-material/Group';
 import ViewListIcon from '@mui/icons-material/ViewList';
 
 Layout.propTypes = { children: PropTypes.node.isRequired }; 
- 
-export function Layout({ children }) { 
-  // Hooks de React Router para obtener la ubicación real
-  const location = useLocation();
-  const navigate = useNavigate();
-     // Cbjeto 'router' que Toolpad necesita
-    const router = React.useMemo(() => {
-        return {
-            pathname: location.pathname, // URL actual
-            searchParams: new URLSearchParams(location.search),
-            navigate: (path) => navigate(path), // Función para navegar
-        };
-    }, [location.pathname, location.search, navigate]);
-  return ( 
-    <AppProvider
-      navigation ={NAVIGATION}
-      router ={router}
-      theme={demoTheme}
-      branding={{
-      logo :<LogoSwitcher/>,
-      title: '',      
-      }}
-    >      <DashboardLayout  header={<Header/>}>
-        <PageContainer title='' breadcrumbs={[]} maxWidth={false}>
-            {children}
-        </PageContainer>         
-      </DashboardLayout>
-    </AppProvider>
-  ); 
-} 
 
-/**
- * 
- * @returns Función que permite evaluar si está en modo claro u oscuro y base a eso cambar el logo de app
- */
-function LogoSwitcher() {
-  const { mode } = useColorScheme(); // Detecta si está en 'light' o 'dark'
+// --- CONFIGURACIÓN DE ROLES ---
+const ROLE_ID_USER = 1;
+const ROLE_ID_TECHNICIAN = 2;
+const ROLE_ID_ADMIN = 3;
 
-  const logoSrc = mode === 'dark'
-    ? '/src/assets/BitHelpSinFondoDarkmode2.png'   //  versión oscura del logo
-    : '/src/assets/BitHelpSinFondo.png'; // versión clara del logo
-
-  return (
-    <img
-      src={logoSrc}
-      alt="BitHelp Logo"
-    />
-  );
+function getUserRoleId() {
+  const sessionData = localStorage.getItem('userSession');
+  if (sessionData) {
+    try {
+      const userData = JSON.parse(sessionData);
+      return userData.idRol || null;
+    } catch (error) {
+      console.error('Error al parsear userSession de localStorage:', error);
+      return null;
+    }
+  }
+  return null;
 }
 
+export function Layout({ children }) { 
+ // 1. Obtener el rol actual del usuario desde localStorage
+ const userRoleId = getUserRoleId();
+ 
+ // Determina si el usuario tiene el rol de Técnico
+ const isTechnician = userRoleId === ROLE_ID_TECHNICIAN; 
 
-const NAVIGATION = [
-  {
-    kind: 'header',
-    title: 'Menú Principal',
-  },
-  {
-    // IMPORTANTE: El 'href' dirige la navegación. Usa '/' para tu ruta raíz.
-    segment: 'Home', // Segmento interno de Toolpad (puede ser cualquiera)
-    title: 'Inicio',
-    icon: <DashboardIcon />
-  },
-  {
+ // Hooks de React Router
+ const location = useLocation();
+ const navigate = useNavigate();
+
+ // 2. Generación dinámica del objeto de navegación (basado en el rol)
+ const dynamicNavigation = React.useMemo(() => {
+  // Definición base de los hijos de 'Tiquetes'
+  const ticketChildren = [
+   {
+    segment: 'ticketsList',   
+    title: 'Lista de Tiquetes',  
+   },
+  ];
+
+  // Lógica Condicional: Agregar 'Asignaciones' solo si es Técnico
+  if (isTechnician) {
+   ticketChildren.push({
+    segment: 'assignments',
+    title: 'Asignaciones',    
+   });
+  }
+
+ // Estructura completa de la navegación
+  return [
+   { kind: 'header', title: 'Menú Principal' },
+   { segment: 'Home', title: 'Inicio', icon: <DashboardIcon /> },
+   {
     segment: 'tickets',
     title: 'Tiquetes',
     icon: <AssignmentIcon />,
-    children: [
-      {
-        segment: 'ticketsList',      // Identificador único (en minúsculas es buena práctica)
-        title: 'Lista de Tiquetes',     // El texto visible en el menú
-      },
-      {
-        segment: 'assignments',
-        title: 'Asignaciones',       
-      }
-    ],
+    children: ticketChildren, // Usamos la lista condicional
   },
-  {
-    kind: 'divider',
-  },
-  // Adapta el resto de tu NAVIGATION a tus rutas...
-  {
-    kind: 'header',
-    title: 'Técnicos',
-  },
-  {
-    segment: 'technician',
-    title: 'Técnicos',
-    icon: <GroupIcon />,
-  },
-  {
-    kind: 'divider',
-  },
-  {
-    // Ejemplo de otra ruta
-    segment: 'categories', 
-    title: 'Categorias',
-    icon: <ViewListIcon/>
-  },
-];
+   { kind: 'divider' },
+   { kind: 'header', title: 'Técnicos' },
+   { segment: 'technician', title: 'Técnicos', icon: <GroupIcon /> },
+   { kind: 'divider' },
+   { segment: 'categories', title: 'Categorias', icon: <ViewListIcon/> },
+  ];
+ }, [isTechnician]); // Regenerar la navegación si el rol cambia
+  
+  // Objeto 'router' que Toolpad necesita
+  const router = React.useMemo(() => {
+    return {
+      pathname: location.pathname, // URL actual
+     searchParams: new URLSearchParams(location.search),
+      navigate: (path) => navigate(path), // Función para navegar
+    };
+  }, [location.pathname, location.search, navigate]);
+ 
+ return ( 
+  <AppProvider
+   navigation ={dynamicNavigation} // <-- Usando la navegación dinámica
+   router ={router}
+   theme={demoTheme}
+   branding={{
+   logo :<LogoSwitcher/>,
+   title: '', 
+   }}
+  >   <DashboardLayout header={<Header/>}>
+    <PageContainer title='' breadcrumbs={[]} maxWidth={false}>
+     {children}
+   </PageContainer>     
+   </DashboardLayout>
+  </AppProvider>
+ ); 
+} 
+
+
+
+/**
+ * @returns Función que permite evaluar si está en modo claro u oscuro y base a eso cambar el logo de app
+ */
+function LogoSwitcher() {
+ const { mode } = useColorScheme(); // Detecta si está en 'light' o 'dark'
+
+ const logoSrc = mode === 'dark'
+  ? '/src/assets/BitHelpSinFondoDarkmode2.png'  // versión oscura del logo
+  : '/src/assets/BitHelpSinFondo.png'; // versión clara del logo
+
+ return (
+  <img
+   src={logoSrc}
+   alt="BitHelp Logo"
+  />
+ );
+}
 
 const demoTheme = extendTheme({
-  colorSchemes: {
-    light: {
-      palette: {
-        background: {
-          default: '#f9f9f9',
-        },
-      },
+ colorSchemes: {
+  light: {
+   palette: {
+    background: {
+     default: '#f9f9f9',
     },
-    dark: {
+   },
+  },
+  dark: {
       palette: {
         background: {
           default: '#121212',
-          paper: '#1c1c1c',
+        paper: '#1c1c1c',
         },
-      },
+     },
     },
   },
   colorSchemeSelector: 'class',
@@ -137,7 +149,7 @@ const demoTheme = extendTheme({
     values: {
       xs: 0,
       sm: 600,
-      md: 900, // 👈 corregido, antes md = sm
+      md: 900, 
       lg: 1200,
       xl: 1536,
     },
