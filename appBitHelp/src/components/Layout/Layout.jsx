@@ -60,6 +60,13 @@ export function Layout({ children }) {
     title: 'Asignaciones',    
    });
   }
+  //Muestra la opción de Agregar Tiquete únicamente si el rol es Cliente. 
+  else if (userRoleId === ROLE_ID_USER) {
+    ticketChildren.push({
+      segment: 'createTicket',
+      title: 'Crear Tiquete',    
+    });
+  }
 
  // Estructura completa de la navegación
   return [
@@ -105,8 +112,6 @@ export function Layout({ children }) {
   </AppProvider>
  ); 
 } 
-
-
 
 /**
  * @returns Función que permite evaluar si está en modo claro u oscuro y base a eso cambar el logo de app

@@ -1,6 +1,5 @@
 import React, {useState, useEffect} from 'react';
 import DescriptionIcon from '@mui/icons-material/Description';
-import { DateField } from '@mui/x-date-pickers/DateField';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
@@ -19,7 +18,6 @@ import { Person, CalendarMonth, Image as ImageIcon, Close } from "@mui/icons-mat
 import HistoryIcon from '@mui/icons-material/History';
 import TicketService from "../../services/TicketService";
 import { useParams } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import StarsIcon from '@mui/icons-material/Stars';
 import Alert from '@mui/material/Alert';
 import StarIcon from '@mui/icons-material/Star';
@@ -28,6 +26,12 @@ import { getSLAStatus, formatTimeRemaining } from '../../Utilities/slaCalculatio
 import CommentIcon from '@mui/icons-material/Comment';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
+
+//Validación de propiedades para el historial del tiquete
+TicketHistory.propTypes = {
+  movements: PropTypes.array
+}
 
 // Mapeo para obtener los colores del tema de Material UI
 const getColorMap = (theme, severity) => {
@@ -58,8 +62,6 @@ const getColorMap = (theme, severity) => {
             };
     }
 };
-
-
 
 export function TicketDetail() 
 {
@@ -222,7 +224,7 @@ export function TicketDetail()
               <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
                 <TextField
                   id="outlined-read-only-input"
-                  label="Usuario Reporta"
+                  label="Usuario Solicitante"
                   value={`${ticket.usuarioSolicita?.nombre} ${ticket.usuarioSolicita?.primerApellido} ${ticket.usuarioSolicita?.segundoApellido}`}
                   fullWidth
                   slotProps={{

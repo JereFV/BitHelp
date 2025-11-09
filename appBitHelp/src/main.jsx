@@ -11,6 +11,7 @@ import { TechniciansDataGridWithModal } from "./components/Technicians/Technicia
 import TicketsList from "./components/Tickets/TicketsList";
 import UserProvider from './components/User/UserProvider';
 import { TicketDetail } from "./components/Tickets/TicketDetail";
+import { CreateTicket } from "./components/Tickets/CreateTicket";
 
 const rutas=createBrowserRouter(
   [
@@ -37,6 +38,11 @@ const rutas=createBrowserRouter(
               // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
               path:'assignments',
               element: <Assignments/>
+            },
+            {
+              // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
+              path:'createTicket',
+              element: <CreateTicket/>
             }            
           ]
         },   

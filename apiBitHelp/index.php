@@ -41,6 +41,7 @@ require_once "controllers/CategorieController.php";
 require_once "controllers/TicketController.php";
 require_once "controllers/UserController.php";
 require_once "controllers/TechnicianController.php";
+require_once "controllers/TicketPriorityController.php";
 
 //Enrutador
 require_once "routes/RoutesController.php";

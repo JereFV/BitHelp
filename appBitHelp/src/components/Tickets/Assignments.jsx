@@ -5,7 +5,7 @@ import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import es from 'date-fns/locale/es';
-import { differenceInHours} from 'date-fns';
+//import { differenceInHours} from 'date-fns';
 //import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../../styles/AssignmentsCalendar.scss";
 import TicketService from "../../services/TicketService";
@@ -13,7 +13,6 @@ import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import WatchLaterIcon from '@mui/icons-material/WatchLater';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import { Chip, Box, Typography, IconButton, Tooltip } from "@mui/material";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import Alert from '@mui/material/Alert';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
@@ -24,7 +23,6 @@ import { Link } from 'react-router-dom';
 import { alpha } from '@mui/material/styles';
 import PropTypes from 'prop-types';
 import CheckIcon from '@mui/icons-material/Check';
-import { CenterAlign } from "iconoir-react";
 
 //Validación de propiedades.
 CustomEvent.propTypes = {
