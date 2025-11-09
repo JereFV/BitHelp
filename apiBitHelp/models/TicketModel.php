@@ -30,7 +30,6 @@ class TicketModel
                 ORDER BY t.idTiquete DESC
             ";
 
-            // Ejecuta la consulta y obtiene todos los resultados.
             $tickets = $this->connection->ExecuteSQL($query);
 
             // Retorna la lista de tiquetes.
