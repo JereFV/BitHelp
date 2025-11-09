@@ -26,28 +26,20 @@ class UserModel
 		}
 	}
 
-	public function get($id)
-	{
-		try {
-			$rolM = new RolModel();
+	// Método para obtener un usuario por ID (usado después de crear o actualizar)
+    public function get($id)
+    {
+        try {
+            // Usar idUsuario para buscar
+            $vSql = "SELECT * FROM usuario where idUsuario = $id"; 
+            $vResultado = $this->enlace->ExecuteSQL($vSql);
+            
+            return $vResultado ? $vResultado[0] : null;
+        } catch (Exception $e) {
+            die($e->getMessage());
+        }
+    }
 
-			//Consulta sql
-			$vSql = "SELECT * FROM usuario where idUsuario=$id";
-			//Ejecutar la consulta
-			$vResultado = $this->enlace->ExecuteSQL($vSql);
-			if ($vResultado) {
-				$vResultado = $vResultado[0];
-				// $rol = $rolM->getRolUser($id);
-				// $vResultado->rol = $rol;
-				// Retornar el objeto
-				return $vResultado;
-			} else {
-				return null;
-			}
-		} catch (Exception $e) {
-			die($e->getMessage());
-		}
-	}
 	public function allCustomer()
 	{
 		try {
@@ -118,22 +110,73 @@ class UserModel
 		}
 	}
 	public function create($objeto)
-	{
-		try {
-			if (isset($objeto->password) && $objeto->password != null) {
-				$crypt = password_hash($objeto->password, PASSWORD_BCRYPT);
-				$objeto->password = $crypt;
-			}
-			//Consulta sql            
-			$vSql = "Insert into usuario (name,email,password,rol_id)" .
-				" Values ('$objeto->name','$objeto->email','$objeto->password',$objeto->rol_id)";
+    {
+        try {
+            if (isset($objeto->contrasenna) && !empty($objeto->contrasenna)) {
+                $crypt = password_hash($objeto->contrasenna, PASSWORD_BCRYPT);
+                $objeto->contrasenna = $crypt;
+            } else {
+                 throw new Exception("La contraseña es obligatoria para crear un usuario.");
+            }
+            
+            // Consulta SQL usando los nombres de columna exactos de tu DB:
+            $vSql = "INSERT INTO usuario (usuario, nombre, primer_apellido, segundo_apellido, correo, telefono, contrasenna, estado, idRol)
+                     VALUES (
+                        '$objeto->usuario', 
+                        '$objeto->nombre', 
+                        '$objeto->primer_apellido', 
+                        '$objeto->segundo_apellido', 
+                        '$objeto->correo', 
+                        '$objeto->telefono', 
+                        '$objeto->contrasenna', 
+                        1,  -- Asume estado 1 (activo) por defecto
+                        $objeto->idRol
+                     )";
 
-			//Ejecutar la consulta
-			$vResultado = $this->enlace->executeSQL_DML_last($vSql);
-			// Retornar el objeto creado
-			return $this->get($vResultado);
-		} catch (Exception $e) {
-			handleException($e);
-		}
-	}
+            $vResultado = $this->enlace->executeSQL_DML_last($vSql);
+            return $this->get($vResultado);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+
+	public function update($objeto)
+    {
+        try {
+            $password_update = "";
+            if (isset($objeto->contrasenna) && !empty($objeto->contrasenna)) {
+                $crypt = password_hash($objeto->contrasenna, PASSWORD_BCRYPT);
+                $password_update = ", contrasenna = '$crypt'";
+            }
+            
+            // Consulta SQL usando los nombres de columna exactos de tu DB y idUsuario para WHERE:
+            $vSql = "UPDATE usuario SET 
+                        usuario = '$objeto->usuario',
+                        nombre = '$objeto->nombre', 
+                        primer_apellido = '$objeto->primer_apellido',
+                        segundo_apellido = '$objeto->segundo_apellido',
+                        correo = '$objeto->correo', 
+                        telefono = '$objeto->telefono',
+                        estado = $objeto->estado, 
+                        idRol = $objeto->idRol
+                        $password_update
+                    WHERE idUsuario = $objeto->idUsuario";
+
+            $this->enlace->executeSQL_DML($vSql);
+            return $this->get($objeto->idUsuario);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+
+	public function delete($id)
+    {
+        try {
+            // Usar idUsuario para eliminar
+            $vSql = "DELETE FROM usuario WHERE idUsuario = $id";
+            return $this->enlace->executeSQL_DML($vSql);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
 }

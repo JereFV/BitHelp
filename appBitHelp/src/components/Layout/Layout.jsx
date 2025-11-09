@@ -83,6 +83,8 @@ export function Layout({ children }) {
    { segment: 'technician', title: 'Técnicos', icon: <GroupIcon /> },
    { kind: 'divider' },
    { segment: 'categories', title: 'Categorias', icon: <ViewListIcon/> },
+   { kind: 'divider' },
+   { segment: 'users', title: 'Usuarios', icon: <GroupIcon /> },
   ];
  }, [isTechnician]); // Regenerar la navegación si el rol cambia
   

@@ -12,7 +12,7 @@ import TicketsList from "./components/Tickets/TicketsList";
 import UserProvider from './components/User/UserProvider';
 import { TicketDetail } from "./components/Tickets/TicketDetail";
 import { CreateTicket } from "./components/Tickets/CreateTicket";
-
+import UserMaintenance from "./components/User/UserMaintenance.jsx";
 const rutas=createBrowserRouter(
   [
     {
@@ -59,6 +59,11 @@ const rutas=createBrowserRouter(
           path:'ticket/:id',
           element: <TicketDetail/>
         },
+        {
+          path:'users',
+          element: <UserMaintenance/>
+        }
+
       ]
     }
   ]
