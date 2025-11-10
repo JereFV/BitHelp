@@ -46,78 +46,57 @@ class TicketModel
     // Rol 2-Técnico: Tiquetes que le han sido asignados.
     // Rol 3-Administrador: Todos los tiquetes existentes sin filtro alguno.
     public function getAllByRolUser($idRole, $idUser)
-    {
-        try 
-        {            
-            // 1. Construir la consulta base (la misma de getAll())
-            // Esta consulta ya trae los nombres (estado, prioridad, tecnico) y calcula el tiempo.
+{
+    try 
+    {            
+        $query = "
+            SELECT 
+                t.idTiquete AS id,
+                t.idTiquete AS numero,
+                COALESCE(t.titulo, '') AS titulo,
+                COALESCE(t.descripcion, '') AS descripcion,
+                COALESCE(e.nombre, 'Sin estado') AS estado,
+                COALESCE(p.nombre, 'Sin prioridad') AS prioridad,
+                CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.primerApellido,''), ' ', COALESCE(u.segundoApellido,'')) AS tecnico,
+                TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante,
+                (SELECT h.fecha FROM historial_tiquete h 
+                 WHERE h.idTiquete = t.idTiquete AND h.idEstado = 2 
+                 ORDER BY h.fecha ASC LIMIT 1) as fechaAsignacion,
+                (SELECT c.nombre FROM categoria c 
+                 INNER JOIN categoria_especialidad ce ON c.idCategoria = ce.idCategoria
+                 WHERE ce.idEspecialidad = t.idEspecialidad LIMIT 1) as categoria,
+                t.slaResolucion
+            FROM tiquete t
+            LEFT JOIN estado_tiquete e ON t.idEstado = e.idEstadoTiquete
+            LEFT JOIN prioridad_tiquete p ON t.idPrioridad = p.idPrioridadTiquete
+            LEFT JOIN tecnico tec ON t.idTecnicoAsignado = tec.idTecnico
+            LEFT JOIN usuario u ON tec.idUsuario = u.idUsuario
+        ";
 
-            $query = "
-                SELECT 
-                    t.idTiquete AS id,
-                    t.idTiquete AS numero,
-                    COALESCE(t.titulo, '') AS titulo,
-                    COALESCE(t.descripcion, '') AS descripcion,
-                    COALESCE(e.nombre, 'Sin estado') AS estado,
-                    COALESCE(p.nombre, 'Sin prioridad') AS prioridad,
-                    CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.primerApellido,''), ' ', COALESCE(u.segundoApellido,'')) AS tecnico,
-                    TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante,
-                    h.fecha as fechaAsignacion,
-                    c.nombre as categoria,
-                    slaResolucion
-                FROM tiquete t
-                LEFT JOIN estado_tiquete e ON t.idEstado = e.idEstadoTiquete
-                LEFT JOIN prioridad_tiquete p ON t.idPrioridad = p.idPrioridadTiquete
-                LEFT JOIN tecnico tec ON t.idTecnicoAsignado = tec.idTecnico
-                LEFT JOIN usuario u ON tec.idUsuario = u.idUsuario
-                LEFT JOIN historial_tiquete h ON t.idTiquete = h.idTiquete
-                INNER JOIN especialidad esp ON t.idEspecialidad = esp.idEspecialidad
-                INNER JOIN categoria_especialidad ce ON esp.idEspecialidad = ce.idEspecialidad
-                INNER JOIN categoria c ON ce.idCategoria = c.idCategoria               
-            ";
+        $whereClause = "";
 
-            // 2. Añadir el filtro (WHERE) según el ROL
-            $whereClause = "";
-
-            if ($idRole == 1) // Cliente
-            {
-                // Filtra por el idUsuario que solicitó el tiquete
-                $whereClause = "WHERE t.idUsuarioSolicita = $idUser";
-            }
-            else if ($idRole == 2) // Técnico
-            {
-                // CORRECCIÓN IMPORTANTE:
-                // El $idUser es el id de la tabla 'usuario'.
-                // Necesitamos encontrar el 'idTecnico' que corresponde a ese 'idUser'.
-                
-                $idTecnicoQuery = "SELECT idTecnico FROM tecnico WHERE idUsuario = $idUser LIMIT 1";
-                $result = $this->connection->ExecuteSQL($idTecnicoQuery);
-                
-                // Si encontramos al técnico, usamos su ID para filtrar.
-                // Si no, usamos 0 para no devolver tiquetes (ya que no es un técnico válido).
-                $idTecnico = $result[0]->idTecnico ?? 0;
-                
-                $whereClause = "WHERE t.idTecnicoAsignado = $idTecnico";
-            }
-            // Si es Rol 3 (Admin), $whereClause queda vacío y trae todo.
-
-            // 3. Unir la consulta
-            // Filtra el historial del tiquete para obtener el registro donde fue asignado al técnico.
-            $query .= " " . $whereClause . " AND h.idEstado = 2   
-                                            ORDER BY t.idTiquete DESC";
-
-            // 4. Ejecutar la consulta ÚNICA
-            $tickets = $this->connection->executeSQL($query);
-
-            return $tickets ?? [];
-            
-            // --- FIN DE LA CORRECCIÓN ---
-
-        } 
-        catch (Exception $ex) {
-            handleException($ex);
+        if ($idRole == 1) 
+        {
+            $whereClause = "WHERE t.idUsuarioSolicita = $idUser";
         }
+        else if ($idRole == 2) 
+        {
+            $idTecnicoQuery = "SELECT idTecnico FROM tecnico WHERE idUsuario = $idUser LIMIT 1";
+            $result = $this->connection->ExecuteSQL($idTecnicoQuery);
+            $idTecnico = $result[0]->idTecnico ?? 0;
+            $whereClause = "WHERE t.idTecnicoAsignado = $idTecnico";
+        }
+
+        $query .= " " . $whereClause . " ORDER BY t.idTiquete DESC";
+
+        $tickets = $this->connection->executeSQL($query);
+
+        return $tickets ?? [];
+    } 
+    catch (Exception $ex) {
+        handleException($ex);
     }
+}
 
     public function get( $id )
     {

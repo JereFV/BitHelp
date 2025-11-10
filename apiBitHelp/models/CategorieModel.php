@@ -9,43 +9,68 @@ class CategorieModel
     }
 
     public function getAllCategories()
-    {
-        try {
-            $query = "
-            SELECT 
-                c.idCategoria,
-                c.nombre AS nombreCategoria,
-                c.estado AS estadoCategoria,
-                c.idSla,
-                s.tiempoMaxRespuesta,
-                s.tiempoMaxResolucion,
-                GROUP_CONCAT(DISTINCT e.nombre ORDER BY e.nombre SEPARATOR '|||') AS especialidades_concatenadas,
-                GROUP_CONCAT(DISTINCT et.nombre ORDER BY et.nombre SEPARATOR '|||') AS etiquetas_concatenadas
-            FROM
-                categoria c
-            INNER JOIN 
-                sla s ON c.idSla = s.idSla
-            LEFT JOIN
-                categoria_especialidad ce ON c.idCategoria = ce.idCategoria
-            LEFT JOIN
-                especialidad e ON ce.idEspecialidad = e.idEspecialidad
-            LEFT JOIN
-                etiqueta_categoria ec ON c.idCategoria = ec.idCategoria
-            LEFT JOIN
-                etiqueta et ON ec.idEtiqueta = et.idEtiqueta
-            GROUP BY
-                c.idCategoria, c.nombre, c.estado, c.idSla, s.tiempoMaxRespuesta, s.tiempoMaxResolucion
-            ORDER BY
-                c.idCategoria;
-            ";
+{
+    try {
+        $query = "
+        SELECT 
+            c.idCategoria,
+            c.nombre AS nombreCategoria,
+            c.estado AS estadoCategoria,
+            c.idSla,
+            s.tiempoMaxRespuesta,
+            s.tiempoMaxResolucion
+        FROM
+            categoria c
+        INNER JOIN 
+            sla s ON c.idSla = s.idSla
+        ORDER BY
+            c.idCategoria;
+        ";
 
-            $categorie = $this->connection->ExecuteSQL($query);
-            return $categorie;
-        } 
-        catch (Exception $ex) {
-            handleException($ex);
+        $categories = $this->connection->ExecuteSQL($query);
+        
+        // Convertir objetos a arrays y obtener especialidades/etiquetas
+        $result = [];
+        foreach ($categories as $category) {
+            // Convertir objeto a array
+            $catArray = (array) $category;
+            $idCat = $category->idCategoria;
+            
+            // Obtener especialidades
+            $queryEsp = "
+                SELECT e.idEspecialidad, e.nombre 
+                FROM especialidad e
+                INNER JOIN categoria_especialidad ce ON e.idEspecialidad = ce.idEspecialidad
+                WHERE ce.idCategoria = $idCat
+                ORDER BY e.nombre
+            ";
+            $especialidades = $this->connection->ExecuteSQL($queryEsp);
+            $catArray['especialidades'] = $especialidades ? array_map(function($e) {
+                return (array) $e;
+            }, $especialidades) : [];
+            
+            // Obtener etiquetas
+            $queryEti = "
+                SELECT et.idEtiqueta, et.nombre 
+                FROM etiqueta et
+                INNER JOIN etiqueta_categoria ec ON et.idEtiqueta = ec.idEtiqueta
+                WHERE ec.idCategoria = $idCat
+                ORDER BY et.nombre
+            ";
+            $etiquetas = $this->connection->ExecuteSQL($queryEti);
+            $catArray['etiquetas'] = $etiquetas ? array_map(function($e) {
+                return (array) $e;
+            }, $etiquetas) : [];
+            
+            $result[] = $catArray;
         }
+        
+        return $result;
+    } 
+    catch (Exception $ex) {
+        handleException($ex);
     }
+}
 
     //Obtiene la categoría de un tiquete a partir de la especialidad del mismo.
     public function getBySpecialty($idSpecialty)
@@ -69,45 +94,65 @@ class CategorieModel
 
     // Obtiene una categoría específica por ID con todos sus detalles
     public function getById($idCategoria)
-    {
-        try {
-            $query = "
-            SELECT 
-                c.idCategoria,
-                c.nombre AS nombreCategoria,
-                c.estado AS estadoCategoria,
-                c.idSla,
-                s.tiempoMaxRespuesta,
-                s.tiempoMaxResolucion,
-                GROUP_CONCAT(DISTINCT e.idEspecialidad ORDER BY e.idEspecialidad SEPARATOR ',') AS especialidades_ids,
-                GROUP_CONCAT(DISTINCT e.nombre ORDER BY e.nombre SEPARATOR '|||') AS especialidades_concatenadas,
-                GROUP_CONCAT(DISTINCT et.idEtiqueta ORDER BY et.idEtiqueta SEPARATOR ',') AS etiquetas_ids,
-                GROUP_CONCAT(DISTINCT et.nombre ORDER BY et.nombre SEPARATOR '|||') AS etiquetas_concatenadas
-            FROM
-                categoria c
-            INNER JOIN 
-                sla s ON c.idSla = s.idSla
-            LEFT JOIN
-                categoria_especialidad ce ON c.idCategoria = ce.idCategoria
-            LEFT JOIN
-                especialidad e ON ce.idEspecialidad = e.idEspecialidad
-            LEFT JOIN
-                etiqueta_categoria ec ON c.idCategoria = ec.idCategoria
-            LEFT JOIN
-                etiqueta et ON ec.idEtiqueta = et.idEtiqueta
-            WHERE
-                c.idCategoria = $idCategoria
-            GROUP BY
-                c.idCategoria, c.nombre, c.estado, c.idSla, s.tiempoMaxRespuesta, s.tiempoMaxResolucion
-            ";
+{
+    try {
+        $query = "
+        SELECT 
+            c.idCategoria,
+            c.nombre AS nombreCategoria,
+            c.estado AS estadoCategoria,
+            c.idSla,
+            s.tiempoMaxRespuesta,
+            s.tiempoMaxResolucion
+        FROM
+            categoria c
+        INNER JOIN 
+            sla s ON c.idSla = s.idSla
+        WHERE
+            c.idCategoria = $idCategoria
+        ";
 
-            $result = $this->connection->executeSQL($query);
-            return $result ? $result[0] : null;
-        } 
-        catch (Exception $ex) {
-            handleException($ex);
+        $result = $this->connection->executeSQL($query);
+        
+        if ($result && count($result) > 0) {
+            // Convertir objeto a array
+            $category = (array) $result[0];
+            
+            // Obtener especialidades
+            $queryEsp = "
+                SELECT e.idEspecialidad, e.nombre 
+                FROM especialidad e
+                INNER JOIN categoria_especialidad ce ON e.idEspecialidad = ce.idEspecialidad
+                WHERE ce.idCategoria = $idCategoria
+                ORDER BY e.nombre
+            ";
+            $especialidades = $this->connection->executeSQL($queryEsp);
+            $category['especialidades'] = $especialidades ? array_map(function($e) {
+                return (array) $e;
+            }, $especialidades) : [];
+            
+            // Obtener etiquetas
+            $queryEti = "
+                SELECT et.idEtiqueta, et.nombre 
+                FROM etiqueta et
+                INNER JOIN etiqueta_categoria ec ON et.idEtiqueta = ec.idEtiqueta
+                WHERE ec.idCategoria = $idCategoria
+                ORDER BY et.nombre
+            ";
+            $etiquetas = $this->connection->executeSQL($queryEti);
+            $category['etiquetas'] = $etiquetas ? array_map(function($e) {
+                return (array) $e;
+            }, $etiquetas) : [];
+            
+            return $category;
         }
+        
+        return null;
+    } 
+    catch (Exception $ex) {
+        handleException($ex);
     }
+}
 
     // Obtiene todas las especialidades disponibles
     public function getAllSpecialties()

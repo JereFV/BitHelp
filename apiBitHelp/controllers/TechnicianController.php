@@ -96,7 +96,37 @@ class technician
     }
   }
     
+    public function getByUserId($idUsuario) // El parámetro debe coincidir con la ruta esperada
+    {
+        try {
+            $response = new Response();
+            $technicianModel = new TechnicianModel(); 
+            $id = (int)$idUsuario;
 
+            if ($id <= 0) {
+                // Validación básica
+                $response->error(400, 'ID de usuario inválido.');
+                return;
+            }
+
+            // Llama al método del modelo que creamos en la respuesta anterior
+            $technicianDetails = $technicianModel->getTechnicianDetailsByUserId($id);
+            
+            if ($technicianDetails) {
+                // Éxito: Devolver los detalles. 
+                // Nota: Los enviamos dentro de 'result' para ser consistentes con tu patrón de respuesta.
+                $response->toJson(['result' => $technicianDetails], 200); 
+            } else {
+                // 404 si no se encuentra el registro de técnico para ese usuario
+                $response->error(404, 'No se encontró un registro de técnico para el ID de usuario proporcionado.');
+            }
+        }
+        catch (Exception $ex)
+        {
+            handleException($ex);
+        }
+    }
+    
     /**
      * Promueve un usuario a técnico (POST /technicians).
      * Se espera recibir idUsuario y un array de especialidades.

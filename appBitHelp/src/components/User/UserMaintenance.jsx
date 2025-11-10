@@ -8,25 +8,25 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import AccountCircle from '@mui/icons-material/AccountCircle'; // Icono para Nombre
-import Mail from '@mui/icons-material/MailOutline'; // Icono para Correo
-import Phone from '@mui/icons-material/Phone'; // Icono para Teléfono
-import Work from '@mui/icons-material/WorkOutline'; // Icono para Carga
-import Verified from '@mui/icons-material/VerifiedUserOutlined'; // Icono para Especialidades
-// Asegúrate de que las rutas sean correctas
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import Mail from '@mui/icons-material/MailOutline';
+import Phone from '@mui/icons-material/Phone';
+import Work from '@mui/icons-material/WorkOutline';
+import Verified from '@mui/icons-material/VerifiedUserOutlined';
+import LockResetIcon from '@mui/icons-material/LockReset';
+import TechnicianService from '../../services/TechnicianService'; 
 import UserService from '../../services/userService'; 
 import UserFormModal from './UserFormModal'; 
-
+import PasswordChangeModal from './PasswordChangeModal';
 // --- FUNCIONES HELPER ---
 // 1. Chip para el Estado (Activo/Inactivo)
 const getStatusChip = (estado) => {
-    // La data viene como string, por eso usamos '1'
     const isActive = estado === '1' || estado === 1; 
     return (
         <Chip
             label={isActive ? 'Activo' : 'Inactivo'}
             color={isActive ? 'success' : 'error'}
-            variant="filled" // Cambiado a filled para mayor visibilidad
+            variant="filled" 
             size="small"
             sx={{ ml: 1, verticalAlign: 'middle' }}
         />
@@ -35,10 +35,16 @@ const getStatusChip = (estado) => {
 
 // 2. Chip para la Disponibilidad del Técnico (Asumiendo 1=Disponible, 2=Ocupado)
 const getAvailabilityChip = (idDisponibilidad) => {
-    const isAvailable = idDisponibilidad === '1' || idDisponibilidad === 1;
+    // Usamos Number() para asegurar la comparación
+    const isAvailable = Number(idDisponibilidad) === 1;
     const label = isAvailable ? 'DISPONIBLE' : 'OCUPADO';
     const color = isAvailable ? 'info' : 'warning';
     
+    // Si idDisponibilidad es null o 0, mostramos 'N/A'
+    if (!idDisponibilidad) {
+        return <Chip label="N/A" color="default" size="small" sx={{ fontWeight: 'bold' }} />;
+    }
+
     return (
         <Chip 
             label={label} 
@@ -49,10 +55,9 @@ const getAvailabilityChip = (idDisponibilidad) => {
     );
 };
 
-// --- 1. DEFINICIÓN DE COLUMNAS (CORREGIDO EL PASO DE ARGUMENTOS) ---
-// Ahora recibe handleOpenDetailModal como primer argumento
-const getColumns = (handleOpenDetailModal, handleEdit, handleDelete) => [
-    { field: 'idUsuario', headerName: 'ID', width: 90, headerAlign: 'center', align: 'center'  },
+// --- 1. DEFINICIÓN DE COLUMNAS ---
+const getColumns = (handleOpenDetailModal, handleEdit, handleDelete,handleOpenPasswordModal) => [
+    { field: 'idUsuario', headerName: 'ID', width: 90, headerAlign: 'center', align: 'center' ,type: 'number' },
     { 
         field: 'nombreCompleto', headerAlign: 'center', align: 'center' , 
         headerName: 'Nombre Completo', 
@@ -72,7 +77,7 @@ const getColumns = (handleOpenDetailModal, handleEdit, handleDelete) => [
         headerName: 'Rol', 
         minWidth: 150,
         width: 250,
-        flex: 0.6,          
+        flex: 0.6, 
     },
     {
         field: 'actions', headerAlign: 'center', align: 'center' ,
@@ -80,20 +85,25 @@ const getColumns = (handleOpenDetailModal, handleEdit, handleDelete) => [
         minWidth: 250,
         sortable: false,
         renderCell: (params) => (
-                <Stack direction="row" spacing={2} justifyContent="center">
-                    {/* ENLACE CORREGIDO: Llama a handleOpenDetailModal */}
-                    <IconButton color="primary" size="small" onClick={() => handleOpenDetailModal(params.row)}>
-                        <VisibilityIcon />
-                    </IconButton>
-                    <IconButton color="primary" size="small" onClick={() => handleEdit(params.row)}>
-                        <EditIcon />
-                    </IconButton>
-                    {/* ELIMINAR CORREGIDO: Usar idUsuario */}
-                    <IconButton color="error" size="small" onClick={() => handleDelete(params.row.idUsuario)}>
-                        <DeleteIcon />
-                    </IconButton>
-                </Stack>
-            ),
+            <Stack direction="row" spacing={2} justifyContent="center">
+                <IconButton color="primary" size="small" onClick={() => handleOpenDetailModal(params.row)}>
+                    <VisibilityIcon />
+                </IconButton>
+                <IconButton color="primary" size="small" onClick={() => handleEdit(params.row)}>
+                    <EditIcon />
+                </IconButton>
+                <IconButton 
+                    color="warning" 
+                    size="small"
+                    onClick={() => handleOpenPasswordModal(params.row)}
+                >
+                    <LockResetIcon />
+                </IconButton>
+                <IconButton color="error" size="small" onClick={() => handleDelete(params.row.idUsuario)}>
+                    <DeleteIcon />
+                </IconButton>
+            </Stack>
+        ),
     },
 ];
 
@@ -105,9 +115,10 @@ export default function UserMaintenance() {
     const [successMessage, setSuccessMessage] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null); 
-
+    const [passModalOpen, setPassModalOpen] = useState(false);
     const [openDetailModal, setOpenDetailModal] = useState(false);
-    const [selectedUser, setSelectedUser] = useState(null);
+    // selectedUser será un objeto que puede contener datos de usuario BÁSICO O extendido (si es técnico)
+    const [selectedUser, setSelectedUser] = useState(null); 
     const [detailLoading, setDetailLoading] = useState(false);
 
     // --- ESTILO DEL MODAL ---
@@ -121,7 +132,7 @@ export default function UserMaintenance() {
         borderRadius: 2,
         boxShadow: 24,
         p: 4,
-        maxHeight: '90vh', // Para permitir scroll
+        maxHeight: '90vh', 
         overflowY: 'auto',
     };
 
@@ -134,8 +145,15 @@ export default function UserMaintenance() {
         setError(null);
         try {
             const response = await UserService.getAllUsers(); 
-            console.log("Datos de la API recibidos:", response.data);
-            setUsers(response.data); 
+            // Aseguramos que los datos del técnico vengan con campos por defecto
+            const mappedUsers = response.data.map(user => ({
+                ...user,
+                // Añadimos campos de técnico por defecto
+                cargaTrabajo: user.cargaTrabajo || null, 
+                idDisponibilidad: user.idDisponibilidad || null,
+                especialidades: user.especialidades && Array.isArray(user.especialidades) ? user.especialidades : []
+            }));
+            setUsers(mappedUsers); 
         } catch (err) {
             console.error("Error al cargar usuarios:", err);
             setError("No se pudieron cargar los usuarios. Verifica la conexión a la API.");
@@ -149,38 +167,71 @@ export default function UserMaintenance() {
         fetchUsers();
     }, [fetchUsers]); 
 
-    // --- MANEJO DE ACCIONES CRUD SIN CAMBIOS ---
-
     const handleCloseDetailModal = () => {
         setOpenDetailModal(false);
         setSelectedUser(null);
         setDetailLoading(false);
     };
 
-    // Apertura del modal de detalles (NOMBRE DE FUNCIÓN CORREGIDO)
-    const handleOpenDetailModal = useCallback(async (user) => { // CORRECCIÓN 1: De handleOpenDatailModal a handleOpenDetailModal
+    const handleOpenPasswordModal = useCallback((user) => {
+        setSelectedUser(user); 
+        setPassModalOpen(true); 
+    }, []);
+
+    const handlePassModalClose = useCallback((success = false, message = null) => {
+        setPassModalOpen(false);
+            setSelectedUser(null); // Limpiamos el usuario seleccionado
+            
+        if (success) {
+        // Usamos la misma lógica de éxito que en handleModalClose
+                setSuccessMessage(message);
+        // No recargamos la lista, ya que la contraseña no se muestra en la tabla.
+        }
+    }, []);
+
+    /**
+     * Apertura del modal de detalles con carga de datos adicionales si es Técnico.
+     */
+    const handleOpenDetailModal = useCallback(async (user) => { 
+        // 1. Mostrar la data básica inmediatamente
         setSelectedUser(user);
         setOpenDetailModal(true);
 
-        // Si el usuario es un Técnico, podríamos necesitar cargar data adicional (especialidades, carga)
-        // Asumiendo que idRol 2 es Técnico
+        // 2. Si el usuario es un Técnico (idRol 2), cargamos su data adicional
         if (user.idRol === '2' || user.nombreRol === 'Técnico') {
             setDetailLoading(true);
             try {
-                // NOTA: NECESITAS UN ENDPOINT QUE OBTENGA LOS DETALLES DEL TÉCNICO
-                // Si tienes un servicio para esto, descomenta y ajusta:
-                /*
-                const technicianDetails = await UserService.getTechnicianDetails(user.idUsuario);
+                // LLAMADA AL SERVICIO DE TÉCNICOS USANDO EL idUsuario
+                // **NOTA CRÍTICA: Debes tener un endpoint que acepte idUsuario**
+                const response = await TechnicianService.getTechnicianDetailsByUserId(user.idUsuario);
+                
+                // Si la API devuelve el objeto de técnico directamente
+                const technicianDetails = response.data.result || response.data;
+                
+                // Aseguramos que las especialidades sean un array de strings si vienen de forma plana.
+                let finalSpecialties = technicianDetails.especialidades || [];
+                if (typeof finalSpecialties === 'string') {
+                    // Si viene como una cadena separada por algún delimitador (ej: 'Especialidad1|||Especialidad2')
+                    finalSpecialties = finalSpecialties.split('|||');
+                }
+                
+                // Actualizar el estado con la data extendida
                 setSelectedUser(prev => ({ 
                     ...prev, 
-                    ...technicianDetails.data, 
-                    especialidades: technicianDetails.data.especialidades.split('|||')
+                    // Sobreescribir campos con la data del técnico (carga, disponibilidad, especialidades)
+                    cargaTrabajo: technicianDetails.cargaTrabajo || '00:00:00', 
+                    idDisponibilidad: technicianDetails.idDisponibilidad || 0,
+                    especialidades: finalSpecialties,
                 }));
-                */
-                // Si no se carga data adicional, los campos de métricas/especialidades se basarán en lo que viene en la lista inicial.
-                
             } catch (error) {
-                console.error("Error al cargar detalles del técnico:", error);
+                console.error("Error al cargar detalles del técnico:", error.response?.data || error.message);
+                // Si falla la carga del detalle del técnico, el modal sigue mostrando la info básica
+                setSelectedUser(prev => ({ 
+                    ...prev, 
+                    cargaTrabajo: 'N/A', 
+                    idDisponibilidad: 0,
+                    especialidades: [],
+                }));
             } finally {
                 setDetailLoading(false);
             }
@@ -237,29 +288,24 @@ export default function UserMaintenance() {
 
 
     // --- RENDERIZADO ---
-    // CORRECCIÓN 5: Se pasa handleOpenDetailModal a getColumns
-    const columns = getColumns(handleOpenDetailModal, handleEdit, handleDelete);
+    const columns = getColumns(handleOpenDetailModal, handleEdit,handleDelete,handleOpenPasswordModal);
 
     return (
-        <Box sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#004d40', fontWeight: 'bold' }}>
-                👤 Mantenimiento de Usuarios
-            </Typography>
-
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+        <Box sx={{ p: 0, height: '100%' }}>
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-start' }}>
                 <Button 
                     variant="contained" 
                     color="primary" 
                     onClick={handleNewUser}
-                    sx={{ backgroundColor: '#00796b', '&:hover': { backgroundColor: '#004d40' } }}
+                    startIcon={<AddIcon />}
                 >
-                    + Crear Nuevo Usuario
+                    Crear Usuario
                 </Button>
             </Box>
 
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             
-            <Box sx={{ height: 700, width: '100%', backgroundColor: 'white', borderRadius: 2, boxShadow: 3 }}>
+            <Box sx={{ height: 630, width: '100%', backgroundColor: 'white', borderRadius: 2, boxShadow: 3 }}>
                 {loading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                         <CircularProgress sx={{ color: '#00796b' }} />
@@ -271,13 +317,14 @@ export default function UserMaintenance() {
                         columns={columns}
                         initialState={{ 
                             pagination: { paginationModel: { pageSize: 10 } },
-                            sorting: { sortModel: [{ field: 'idUsuario', sort: 'asc' }] } // Ordenación por defecto
+                            
                         }}
-                        pageSizeOptions={[5, 10, 25]}
+                        pageSizeOptions={[5, 10, 25,50]}
                         disableSelectionOnClick
                         localeText={{ noRowsLabel: 'No hay usuarios registrados' }}
                         sx={{ border: 0 }}
                     />
+                    
                 )}
             </Box>
             
@@ -286,6 +333,15 @@ export default function UserMaintenance() {
                 handleClose={handleModalClose}
                 userToEdit={currentUser}
             /> 
+
+            {selectedUser && (
+                <PasswordChangeModal 
+                open={passModalOpen}
+                handleClose={handlePassModalClose}
+                userId={selectedUser.idUsuario}
+                userName={selectedUser.nombreCompleto || selectedUser.nombre} 
+                />
+            )}
 
             {/* MODAL DE VISUALIZACIÓN DE DETALLES */}
             <Modal
@@ -303,6 +359,7 @@ export default function UserMaintenance() {
                     {detailLoading ? (
                         <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                             <CircularProgress size={30} />
+                            <Typography variant="body1" sx={{ ml: 2, alignSelf: 'center' }}>Cargando detalles de técnico...</Typography>
                         </Box>
                     ) : selectedUser && (
                         <Box id="modal-modal-description">
@@ -345,10 +402,11 @@ export default function UserMaintenance() {
                                         </Typography>
                                         <Box display="flex" alignItems="center" mb={1}>
                                             <Work color="action" sx={{ mr: 1, fontSize: 18 }} />
-                                            <Typography variant="body2">Carga de Trabajo: {selectedUser.cargaTrabajo || '00:00:00'}</Typography>
+                                            <Typography variant="body2">
+                                                Carga de Trabajo: <strong>{selectedUser.cargaTrabajo || '00:00:00'}</strong>
+                                            </Typography>
                                         </Box>
                                         <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
-                                            {/* Usamos el idDisponibilidad. Si no viene, será un chip por defecto */}
                                             {getAvailabilityChip(selectedUser.idDisponibilidad)} 
                                         </Box>
                                     </Paper>
@@ -362,7 +420,6 @@ export default function UserMaintenance() {
                                             </Typography>
                                         </Box>
                                         <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
-                                            {/* NOTA: selectedUser.especialidades DEBE ser un array de strings, si viene como string, debe descomentarse la lógica de split en handleOpenDetailModal */}
                                             {selectedUser.especialidades && selectedUser.especialidades.length > 0 ? (
                                                 selectedUser.especialidades.map((esp, index) => (
                                                     <Chip 
@@ -399,7 +456,7 @@ export default function UserMaintenance() {
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        ¿Estás seguro de que deseas eliminar al usuario con ID **{userToDelete}**? Esta acción no se puede deshacer.
+                        ¿Estás seguro de que deseas eliminar al usuario con ID {userToDelete}? Esta acción no se puede deshacer.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
