@@ -145,6 +145,27 @@ class CategorieModel
         }
     }
 
+    //Obtiene la categoría de un tiquete a partir de la etiqueta del mismo.
+    public function getByTag($idTag)
+    {
+        try 
+        {
+            $query = "SELECT c.nombre
+                      FROM categoria c
+                      INNER JOIN etiqueta_categoria ec 
+                      ON c.idCategoria = ec.idCategoria          
+                      WHERE ec.idEtiqueta = $idTag";
+
+            $categorie = $this->connection->executeSQL($query);
+
+            //Selecciona el primer elemento del arreglo devuelto en la consulta.
+            return $categorie ? $categorie[0] : null;
+        } 
+        catch (Exception $ex) {
+            handleException($ex);
+        }
+    }
+
     // Crea una nueva categoría
     public function create($nombre, $idSla, $estado, $especialidades, $etiquetas)
     {

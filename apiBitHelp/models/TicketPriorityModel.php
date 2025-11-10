@@ -14,7 +14,7 @@ class TicketPriorityModel
         try
         {
             $query = "SELECT *
-                  FROM prioridad_tiquete";
+                      FROM prioridad_tiquete";
 
             $ticketPriority = $this->connection->executeSQL($query);
 

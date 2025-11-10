@@ -28,6 +28,11 @@ class CategorieService
         return axios.get(`${BASE_URL}/getSlas`);
     }
 
+    getCategoryByTag(idTag)
+    {
+        return axios.get(`${BASE_URL}/getByTag/${idTag}`);
+    }
+
     createCategory(categoryData)
     {
         return axios.post(BASE_URL, categoryData);

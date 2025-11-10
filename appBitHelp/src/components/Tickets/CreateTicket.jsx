@@ -8,22 +8,22 @@ import InputAdornment from '@mui/material/InputAdornment';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import CalendarIcon from '@mui/icons-material/CalendarMonth';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
-import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import LabelIcon from '@mui/icons-material/Label';
 import { DateTimeField } from '@mui/x-date-pickers/DateTimeField';
-import {IconButton, Divider, Box, Typography, Modal, Stack, InputLabel, Select, FormControl, MenuItem} from "@mui/material";
+import {IconButton, Alert, Box, Typography, Modal, Stack, InputLabel, Select, FormControl, MenuItem, FormHelperText, Button} from "@mui/material";
 import TicketPriorityService from "../../services/TicketPriorityService";
 import { useParams } from 'react-router-dom';
-import StarsIcon from '@mui/icons-material/Stars';
-import Alert from '@mui/material/Alert';
-import StarIcon from '@mui/icons-material/Star';
-import Rating from '@mui/material/Rating';
-import CommentIcon from '@mui/icons-material/Comment';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useNavigate } from 'react-router-dom';
 import { Close } from '@mui/icons-material';
 import TitleIcon from '@mui/icons-material/Title';
+import CategoryIcon from '@mui/icons-material/Category';
+import TicketTagService from "../../services/TicketTagService";
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import CategorieService from "../../services/CategorieService";
+import { Image, Delete } from '@mui/icons-material';
+import { styled } from '@mui/material/styles';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import SendIcon from '@mui/icons-material/Send';
 
 export function CreateTicket() 
 {
@@ -54,14 +54,6 @@ export function CreateTicket()
         pr: 1,
     };
 
-    const labelsTicketRating = {      
-      1: 'Deficiente',
-      2: 'Malo',    
-      3: 'Regular',
-      4: 'Bueno',     
-      5: 'Excelente',
-    }
-
     //Obtiene los parámetros de enrutamiento contenidos en la dirección.
     const routeParams = useParams();
 
@@ -78,26 +70,65 @@ export function CreateTicket()
        navigate(-1);
     }
 
-    //Almacena el listado de opciones a mostrar en el campo de Prioridad.
+    //Almacenan el listado de opciones a mostrar en los campos de lista desplegable. (Prioridad y Etiqueta)
     const [ticketpriorities, setTicketPriorities] = useState([]);
+    const [ticketTags, setTicketTags] = useState([]);
 
-    //Constante para el manejo de la prioridad seleccionada, junto con su evento de control.
+    //Constantes para el manejo de valores seleccionados sobre las listas desplegables.
     const [selectedPriority, setSelectedPriority] = useState("");
+    const [selectedTag, setSelectedTag] = useState("");
 
+    //Almacena la categoría a mostrar según la etiqueta seleccionada.
+    const [categorie, setCategorie] = useState("");
+
+    //Funciones de control de eventos OnChange sobre las listas desplegables.
     const handlePriorityChange = (event) => {
-        setSelectedPriority(event.target.value);
+      setSelectedPriority(event.target.value);
     };
 
-    useEffect(() => {
-        //Consulta el catálogo interno de prioridades de tiquetes.
-        TicketPriorityService.getTicketPriorities()
+    const handleTagChange = (event) => {
+      setSelectedTag(event.target.value);
+      
+      //Al cambiar la etiqueta seleccionada, obtiene la categoría relacionada.
+      CategorieService.getCategoryByTag(event.target.value)
         .then((response) => {
-            //Almacena las prioridades obtenidas en la constante auxiliar de renderización.  
-            setTicketPriorities(response.data);          
-          })
-          .catch((error) => {      
-            console.log(error);      
-        });  
+          //Almacena la categoría obtenida en la constante auxiliar de renderización.
+          setCategorie(response.data.nombre);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    };
+
+    // const [form, setForm] = useState({
+    //   descripcion: "",
+    //   imagenes: [],
+    // });
+
+    // const handleImagenes = (imagenesSeleccionadas) => {
+    //   setForm({ ...form, imagenes: imagenesSeleccionadas });
+    // };
+
+    useEffect(() => {
+      //Consulta el catálogo interno de prioridades de tiquetes.
+      TicketPriorityService.getTicketPriorities()
+        .then((response) => {
+          //Almacena las prioridades obtenidas en la constante auxiliar de renderización.
+          setTicketPriorities(response.data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+
+      //Consulta el catálogo interno de etiquetas de tiquetes.
+      TicketTagService.getTicketTags()
+        .then((response) => {
+          //Almacena las etiquetas obtenidas en la constante auxiliar de renderización.
+          setTicketTags(response.data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     }, [routeParams.id]);
     
     return (
@@ -116,35 +147,57 @@ export function CreateTicket()
                 variant="h5"
                 component="h2"
                 sx={{
-                  fontSize: "2rem",                
+                  fontSize: "2rem",
                   //Sombra sútil para resasltar el texto
                   textShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
                   fontWeight: "bold",
-                  marginBottom: "2.5rem"
+                  marginBottom: "1.5rem",
                 }}
               >
-                <Stack alignItems={"center"} direction={"row"} justifyContent={"center"}>
+                <Stack
+                  alignItems={"center"}
+                  direction={"row"}
+                  justifyContent={"center"}
+                >
                   <ConfirmationNumberIcon
                     fontSize="large"
                     color="primary"
-                    style={{ marginRight: "1%"}}
+                    style={{ marginRight: "1%" }}
                   />
                   Nuevo Tiquete
                 </Stack>
               </Typography>
-             
+
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                gutterBottom
+                marginBottom="2rem"
+              >
+                <Stack alignItems={"center"} direction={"row"}>
+                  <DescriptionIcon
+                    fontSize="large"
+                    color="primary"
+                    style={{ marginRight: "1%" }}
+                  />
+                  Información General
+                </Stack>
+              </Typography>
+
               <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
-                <TextField id="standard-basic" label="Título"
-                    fullWidth                
-                    slotProps={{
-                    input: {                       
-                        startAdornment: (
+                <TextField
+                  id="standard-basic"
+                  label="Título"
+                  fullWidth
+                  slotProps={{
+                    input: {
+                      startAdornment: (
                         <InputAdornment position="start">
-                            <TitleIcon color="primary" />
+                          <TitleIcon color="primary" />
                         </InputAdornment>
-                        ),
+                      ),
                     },
-                    }}
+                  }}
                 />
 
                 <TextField
@@ -164,146 +217,97 @@ export function CreateTicket()
                   }}
                 />
               </Stack>
-           
-              {/*Stack padre con dos stack hijos, cada uno con distribuciones diferentes en pantalla.*/}
-              {/* <Stack direction="row" spacing={"10%"} paddingBottom="1.5rem" alignItems={"center"}>
-                <Stack width={"50%"}>
-                    <TextField id="standard-basic" label="Descripción"
-                        fullWidth
-                        multiline
-                        maxRows={2}
-                        minRows={2}                             
-                        slotProps={{
-                            input: {
-                                style: {
-                                //fontSize: "0.9rem",                    
-                                //marginBottom: "1.5rem",                     
-                                },
-                                startAdornment: (
-                                <InputAdornment position="start">
-                                    <DescriptionIcon color="primary" />
-                                </InputAdornment>
-                                ),
-                            },
-                        }}
-                    />
-                </Stack>              
-                
-                <Stack width={"50%"}>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DateTimeField
-                            label="Fecha de Creación"
-                            value={dayjs(ticket.fechaCreacion)}
-                            readOnly={true}
-                            format="DD/MM/YYYY"
-                            fullWidth
-                            slotProps={{
-                            textField: {
-                                InputProps: {
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                    <CalendarIcon color="primary" />
-                                    </InputAdornment>
-                                ),
-                                },
-                            },
-                            }}
-                        />
-                    </LocalizationProvider>    
-
-                    
-                </Stack>               
-              </Stack>     */}
 
               {/*Stack padre con dos stack hijos, cada uno con distribuciones diferentes en pantalla.*/}
-              <Stack direction="row" spacing={"10%"} paddingBottom="1.5rem">
+              <Stack direction="row" spacing={"10%"} paddingBottom="2rem">
                 <Stack width={"50%"} alignSelf={"center"}>
-                    <TextField id="standard-basic" label="Descripción"
-                        fullWidth
-                        multiline
-                        maxRows={4}
-                        minRows={4}                             
-                        // slotProps={{
-                        //     input: {
-                        //         style: {
-                        //         //fontSize: "0.9rem",                                                                       
-                        //         },
-                        //         startAdornment: (
-                        //         <InputAdornment position="start">
-                        //             <DescriptionIcon color="primary" />
-                        //         </InputAdornment>
-                        //         ),
-                        //     },
-                        // }}
-                    />
-                </Stack>              
-                
+                  <TextField
+                    id="standard-basic"
+                    label="Descripción"
+                    fullWidth
+                    multiline
+                    maxRows={4}
+                    minRows={4}
+                    // slotProps={{
+                    //     input: {
+                    //         style: {
+                    //         //fontSize: "0.9rem",
+                    //         },
+                    //         startAdornment: (
+                    //         <InputAdornment position="start">
+                    //             <DescriptionIcon color="primary" />
+                    //         </InputAdornment>
+                    //         ),
+                    //     },
+                    // }}
+                  />
+                </Stack>
+
                 <Stack direction="column" spacing={"1rem"} width={"50%"}>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DateTimeField
-                            label="Fecha de Creación"
-                            value={dayjs(new Date())}
-                            readOnly={true}
-                            format="DD/MM/YYYY"
-                            fullWidth
-                            size='small'
-                            slotProps={{
-                                textField: {
-                                    InputProps: {
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                        <CalendarIcon color="primary" />
-                                        </InputAdornment>
-                                    ),
-                                    },
-                                },
-                            }}
-                        />
-                    </LocalizationProvider>    
-
-                    <TextField
-                        id="outlined-read-only-input"
-                        label="Estado Inicial"
-                        fullWidth
-                        value={"Pendiente"}
-                        size='small'
-                        slotProps={{
-                            input: {
-                            readOnly: true,
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DateTimeField
+                      label="Fecha de Creación"
+                      value={dayjs(new Date())}
+                      readOnly={true}
+                      format="DD/MM/YYYY"
+                      fullWidth
+                      size="small"
+                      slotProps={{
+                        textField: {
+                          InputProps: {
                             startAdornment: (
-                                <InputAdornment position="start">
-                                    <NotificationsIcon color="primary" />
-                                </InputAdornment>
+                              <InputAdornment position="start">
+                                <CalendarIcon color="primary" />
+                              </InputAdornment>
                             ),
-                            },
-                        }}
+                          },
+                        },
+                      }}
                     />
+                  </LocalizationProvider>
 
-                    <FormControl size="small">
-                        <InputLabel >Prioridad</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-helper-label"
-                            id="demo-simple-select-helper"
-                            value={selectedPriority}
-                            label="Prioridad"                                                    
-                            onChange={handlePriorityChange}                           
-                        >
-                       {ticketpriorities && ticketpriorities.map((priority) => (
-                                <MenuItem key={priority.idPrioridadTiquete} value={priority.nombre}>
-                                    {priority.nombre}
-                                </MenuItem>
-                            ))
-                        }
-                        </Select>
-                    </FormControl>
-                    
-                </Stack>               
-              </Stack>                       
-            </Box>           
+                  <TextField
+                    id="outlined-read-only-input"
+                    label="Estado Inicial"
+                    fullWidth
+                    value={"Pendiente"}
+                    size="small"
+                    slotProps={{
+                      input: {
+                        readOnly: true,
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <NotificationsIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
 
-            <Divider sx={{ mb: 3 }} />
+                  <FormControl size="small">
+                    <InputLabel>Prioridad</InputLabel>
+                    <Select
+                      labelId="demo-simple-select-helper-label"
+                      id="demo-simple-select-helper"
+                      value={selectedPriority}
+                      label="Prioridad"
+                      onChange={handlePriorityChange}
+                      fullWidth
+                    >
+                      {ticketpriorities &&
+                        ticketpriorities.map((priority) => (
+                          <MenuItem
+                            key={priority.idPrioridadTiquete}
+                            value={priority.nombre}
+                          >
+                            {priority.nombre}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                </Stack>
+              </Stack>
 
-            <Box>
               <Typography
                 variant="h6"
                 fontWeight="bold"
@@ -311,15 +315,61 @@ export function CreateTicket()
                 marginBottom="2rem"
               >
                 <Stack alignItems={"center"} direction={"row"}>
-                  <StarsIcon
+                  <CategoryIcon
                     fontSize="large"
                     color="primary"
                     style={{ marginRight: "1%" }}
                   />
-                  Valoración del Tiquete
+                  Categorización del Tiquete
                 </Stack>
               </Typography>
+
+              <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
+                <FormControl fullWidth>
+                  <InputLabel>Etiqueta</InputLabel>
+                  <Select
+                    labelId="demo-simple-select-helper-label"
+                    id="demo-simple-select-helper"
+                    value={selectedTag}
+                    label="Etiqueta"
+                    onChange={handleTagChange}  
+                  >
+                    {ticketTags &&
+                      ticketTags.map((tag) => (
+                        <MenuItem
+                          key={tag.idEtiqueta}
+                          value={tag.idEtiqueta}
+                        >
+                          {tag.nombre}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                  <FormHelperText>Seleccione la etiqueta más adecuada según su problema.</FormHelperText>
+                </FormControl>
+
+                <FormControl fullWidth>
+                  <TextField
+                    id="outlined-read-only-input"
+                    label="Categoría"
+                    value={categorie} 
+                    fullWidth
+                    slotProps={{
+                      input: {
+                        readOnly: true,
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LocalOfferIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                  <FormHelperText>Obtenida a partir de la etiqueta seleccionada.</FormHelperText>
+                </FormControl>
+              </Stack>
             </Box>
+
+            <ImagesSelector onChange={""} />
 
             <IconButton
               onClick={() => handleClose()}
@@ -339,4 +389,193 @@ export function CreateTicket()
         </Modal>
       </div>
     );
+}
+
+export default function ImagesSelector({ onChange }) {
+  //Constante auxiliar para el manejo de imágenes adjuntas.
+  const [images, setImages] = useState([]);
+
+  //Almacena la imagen seleccionada de los adjuntos para ser ampliada en otra vista.
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  //Evento de selección de imagen.
+  const handleSeleccion = (e) => {
+    //Obtiene los archivos seleccionados y crea la estructura de imágenes nuevas.
+    const files = Array.from(e.target.files);
+
+    const newImages = files.map((file) => ({
+      file,
+      //Crea una dirección url temporal de acceso sobre la imagen.
+      preview: URL.createObjectURL(file),
+    }));
+
+    //Crea una estructura con las imagenes existentes y los nuevos adjuntos para renderización en pantalla.
+    const updateImages = [...images, ...newImages];
+    setImages(updateImages);
+    //onChange && onChange(actualizadas.map((i) => i.file));
+  };
+
+  const handleEliminar = (index) => {
+    //Filtra el arreglo de imágenes adjuntas, excluyendo el elemento seleccionado para eliminación.
+    const actualizadas = images.filter((_, i) => i !== index);
+
+    //Renderizado de imágenes luego de la eliminación del elemento.
+    setImages(actualizadas);
+    //onChange && onChange(actualizadas.map((i) => i.file));
+  };
+
+  //Componente input personalizado de MUI.
+  const VisuallyHiddenInput = styled('input')({
+    clip: 'rect(0 0 0 0)',
+    clipPath: 'inset(50%)',
+    height: 1,
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    whiteSpace: 'nowrap',
+    width: 1,
+  });
+
+  return (
+    <Box>
+      <Typography
+        variant="h6"
+        fontWeight="bold"
+        gutterBottom
+        marginBottom="1.5rem"
+      >
+        <Stack alignItems={"center"} direction={"row"}>
+          <Image
+            fontSize="large"
+            color="primary"
+            style={{ marginRight: "1%" }}
+          />
+          Imágenes Adjuntas
+        </Stack>
+      </Typography>
+
+      {/* Contenedor de imágenes seleccionadas.*/}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 2.5,
+          marginBottom: "1.5rem",
+        }}
+      >
+        {images.length > 0 ? (
+          images.map((img, index) => (
+            <Box
+              key={index}
+              sx={{
+                position: "relative",
+                width: 120,
+                height: 120,
+                borderRadius: 1,
+                overflow: "hidden",
+                boxShadow: 2,
+              }}  
+            >
+              <img
+                src={img.preview}
+                alt={`Adjunto ${index + 1}`}
+                onClick={() => setSelectedImage(img.preview)}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+              <IconButton
+                size="small"
+                onClick={() => handleEliminar(index)}
+                sx={{
+                  position: "absolute",
+                  top: 2,
+                  right: 2,
+                  bgcolor: "rgba(0,0,0,0.4)",
+                  color: "#fff",
+                  "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
+                }}
+              >
+                <Delete fontSize="small" />
+              </IconButton>
+            </Box>
+          ))
+        ) : (
+          <Alert
+            severity="info"
+            sx={{ fontSize: "1rem", fontWeight: "bold", width: "100%" }}
+          >
+            No existen imágenes adjuntas para el tiquete en creación.
+          </Alert>
+        )}
+      </Box>
+
+      {/* Contenedor de botones de acciones.*/}
+      <Box display={"flex"} justifyContent={"end"} gap={1}>
+        <Button
+          component="label"
+          role={undefined}
+          variant="contained"
+          tabIndex={-1}
+          startIcon={<CloudUploadIcon />}
+         
+        >
+          Seleccionar Imágenes
+          <VisuallyHiddenInput
+            type="file"
+            onChange={handleSeleccion}
+            multiple
+            accept="image/*"
+          />
+        </Button>
+
+        <Button variant="contained" startIcon={<SendIcon />} color="success">
+            Crear Tiquete
+        </Button>
+      </Box>
+
+      {/* Ventana desplegable de vista ampliada de imágenes adjuntas.*/}
+      <Modal open={!!selectedImage}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            borderRadius: 2,
+            p: 2,
+          }}
+        >
+          {selectedImage && (
+            <img
+              src={selectedImage}
+              alt="Vista ampliada"
+              style={{
+                width: "100%",
+                height: "auto",
+                display: "block",
+                borderRadius: "4px",
+                marginBottom: "1rem"
+              }}
+            />
+          )}
+
+          <Button 
+            variant="contained" 
+            startIcon={<Close />} 
+            sx={{display: "flex", justifySelf: "end"}} 
+            size="small"
+            onClick={() => setSelectedImage(null)}
+          >
+            Cerrar
+          </Button>
+        </Box>
+      </Modal>
+    </Box>
+  );
 }

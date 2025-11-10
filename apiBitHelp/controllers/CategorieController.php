@@ -91,6 +91,23 @@ class categorie
         }
     }
 
+    //Obtiene la categoría a partir de la etiqueta enviada.
+    public function getByTag($idTag)
+    {
+        try { 
+            $response = new Response();
+            $categorieModel = new categorieModel();
+           
+            $categorie = $categorieModel->getByTag($idTag);
+
+            $response->toJson($categorie);           
+        }
+        catch (Exception $ex)
+        {
+            handleException($ex);
+        }
+    }
+
     // Crea una nueva categoría
     public function create()
     {
