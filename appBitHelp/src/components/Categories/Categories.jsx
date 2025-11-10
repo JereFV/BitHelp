@@ -1,9 +1,11 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { 
     Button, Modal, Box, Typography, Stack, Chip, Divider, Paper, 
     TextField, FormControl, InputLabel, Select, MenuItem, OutlinedInput,
-    FormControlLabel, Switch, IconButton
+    FormControlLabel, Switch, IconButton,
+    Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 import toast, { Toaster } from 'react-hot-toast';
 import CategorieService from '../../services/CategorieService';
@@ -35,6 +37,10 @@ export const CategoriesDataGridWithModal = () => {
     const [openFormModal, setOpenFormModal] = useState(false);
     const [selectedRow, setSelectedRow] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
+    
+    // Estados para el diálogo de confirmación de eliminación
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [categoryToDeleteId, setCategoryToDeleteId] = useState(null);
     
     // Datos del formulario
     const [formData, setFormData] = useState({
@@ -191,16 +197,32 @@ export const CategoriesDataGridWithModal = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('¿Está seguro de eliminar esta categoría?')) {
-            try {
-                await CategorieService.deleteCategory(id);
-                toast.success('Categoría eliminada exitosamente');
-                fetchCategories();
-            } catch (error) {
-                console.error("Error:", error);
-                toast.error('Error al eliminar la categoría');
-            }
+    // Función para abrir el diálogo de confirmación
+    const confirmDelete = (id) => {
+        setCategoryToDeleteId(id);
+        setIsDeleteDialogOpen(true);
+    };
+
+    // Función para cerrar el diálogo de confirmación
+    const handleCancelDelete = () => {
+        setIsDeleteDialogOpen(false);
+        setCategoryToDeleteId(null);
+    };
+
+    // Función que ejecuta la eliminación
+    const executeDelete = async () => {
+        setIsDeleteDialogOpen(false);
+        if (!categoryToDeleteId) return;
+
+        try {
+            await CategorieService.deleteCategory(categoryToDeleteId);
+            toast.success('Categoría eliminada exitosamente');
+            fetchCategories();
+        } catch (error) {
+            console.error("Error al eliminar:", error);
+            toast.error('Error al eliminar la categoría');
+        } finally {
+            setCategoryToDeleteId(null);
         }
     };
 
@@ -231,7 +253,7 @@ export const CategoriesDataGridWithModal = () => {
                     <IconButton color="primary" size="small" onClick={() => handleOpenFormModal(true, params.row)} aria-label="Editar">
                         <EditIcon />
                     </IconButton>
-                    <IconButton color="error" size="small" onClick={() => handleDelete(params.row.id)} aria-label="Eliminar">
+                    <IconButton color="error" size="small" onClick={() => confirmDelete(params.row.id)} aria-label="Eliminar">
                         <DeleteIcon />
                     </IconButton>
                 </Stack>
@@ -478,6 +500,41 @@ export const CategoriesDataGridWithModal = () => {
                     </Box>
                 </Box>
             </Modal>
+
+            {/* Diálogo de Confirmación de Eliminación */}
+            <Dialog
+                open={isDeleteDialogOpen}
+                onClose={handleCancelDelete}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title" sx={{ color: 'error.main' }}>
+                    Confirmar Eliminación
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        <Typography variant="body1" sx={{mb: 1}}>
+                            ¿Está seguro de eliminar esta categoría?
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Esta acción eliminará la categoría y todas sus relaciones con especialidades y etiquetas.
+                        </Typography>
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancelDelete} variant="outlined" color="primary">
+                        Cancelar
+                    </Button>
+                    <Button 
+                        onClick={executeDelete} 
+                        variant="contained" 
+                        color="error" 
+                        autoFocus 
+                    >
+                        Aceptar
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };
