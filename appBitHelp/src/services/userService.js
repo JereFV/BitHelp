@@ -23,6 +23,14 @@ class UserService {
       return axios.put(`${BASE_URL}/${userId}`, UserData); 
   }
 
+  updatePassword(userId, newPassword) {
+    // La convención de la API es usar un endpoint específico para el cambio de password
+    // El payload debe coincidir con lo que espera tu UserController.php: { contrasenna: 'nuevaPassword' }
+    return axios.put(`${BASE_URL}/${userId}/password`, { 
+        contrasenna: newPassword 
+    });
+ }
+
   // Elimina un usuario
   deleteUser(userId) {
       return axios.delete(`${BASE_URL}/${userId}`);

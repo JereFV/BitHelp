@@ -54,7 +54,9 @@ class RoutesController
                                     } elseif ($action && is_numeric($action) && method_exists($controller, 'get')) {
                                         // Si action es numérico y existe método get, es un ID
                                         $response->get($action);
-                                    } elseif ($param1 && isset($action)) {
+                                    }elseif ($action === 'byUser' && $param1 && method_exists($controller, 'getByUserId')) {
+                                        $response->getByUserId($param1); // <<-- ¡El método correcto!
+                                    }elseif ($param1 && isset($action)) {
                                         $response->$action($param1);
                                     } elseif ($action && method_exists($controller, $action)) {
                                         // Es una acción válida (como getSpecialties)

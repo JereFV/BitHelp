@@ -69,6 +69,12 @@ class TechnicianService
         return axios.get(`${BASE_URL}/getSpecialties`);
     }
     
+    getTechnicianDetailsByUserId(idUsuario)
+    {
+        // Ruta asumida: VITE_BASE_URL + 'technician/byUser/{idUsuario}'
+        return axios.get(`${BASE_URL}/byUser/${idUsuario}`); 
+    }
+
     // Si implementamos la funcionalidad de "despedir" al técnico:
     
     /**

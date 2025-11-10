@@ -189,7 +189,67 @@ class TechnicianModel
             handleException($ex);
         }
     }
-    
+
+
+    public function getTechnicianDetailsByUserId(int $idUsuario)
+    {
+        try {
+            $this->connection->connect();
+            $conn = $this->connection->link;
+
+            // Esta consulta es la clave. Une tecnico, tecnico_especialidad y especialidad.
+            // Utiliza GROUP_CONCAT para obtener todas las especialidades en una sola columna,
+            // separadas por '|||', que luego el frontend dividirá.
+            $stmt = $conn->prepare("
+                SELECT 
+                    t.idTecnico, t.idDisponibilidad, t.cargaTrabajo, t.estado,
+                    GROUP_CONCAT(e.nombre SEPARATOR '|||') as especialidades_nombres
+                FROM 
+                    tecnico t
+                LEFT JOIN 
+                    tecnico_especialidad te ON t.idTecnico = te.idTecnico
+                LEFT JOIN 
+                    especialidad e ON te.idEspecialidad = e.idEspecialidad
+                WHERE 
+                    t.idUsuario = ?
+                GROUP BY
+                    t.idTecnico, t.idDisponibilidad, t.cargaTrabajo, t.estado
+            ");
+            
+            // Asumo que tu base de datos usa 'i' para int
+            $stmt->bind_param("i", $idUsuario);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows === 0) {
+                $stmt->close();
+                return null;
+            }
+
+            $technicianData = $result->fetch_assoc();
+            $stmt->close();
+            
+            // Convertir la cadena de especialidades en un array antes de devolver
+            $technicianData['especialidades'] = $technicianData['especialidades_nombres'] 
+                ? explode('|||', $technicianData['especialidades_nombres']) 
+                : [];
+                
+            unset($technicianData['especialidades_nombres']); // Limpiamos la columna temporal
+
+            return $technicianData;
+
+        } catch (Exception $ex) {
+            // Logear el error o lanzar una excepción personalizada
+            error_log("Error en getTechnicianDetailsByUserId: " . $ex->getMessage());
+            throw new Exception("Error al obtener detalles del técnico por ID de usuario.");
+        } finally {
+             // Es buena práctica cerrar la conexión si no se maneja centralmente
+             if (isset($conn)) {
+                 $conn->close();
+             }
+        }
+    }
+
     /**
      * Crea un nuevo registro de técnico a partir de un usuario existente.
      * Realiza las siguientes acciones en una transacción:

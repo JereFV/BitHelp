@@ -92,6 +92,45 @@ class user
         $response->toJSON($result);
     }
 
+    public function updatePassword($id)
+    {
+        $response = new Response(); // Asume que tienes una clase Response para JSON
+
+        try {
+            // 1. Obtener JSON enviado
+            $request = new Request();
+            // Asume que getJSON() utiliza file_get_contents('php://input') y json_decode
+            $objeto = $request->getJSON(); 
+            
+            // 2. Verificar que la contraseña esté presente (usando la clave del frontend)
+            if (!isset($objeto->contrasenna) || empty($objeto->contrasenna)) {
+                $response->toJSON(['message' => 'Contraseña nueva requerida.'], 400); // Bad Request
+                return;
+            }
+            
+            // 3. Llamar al modelo
+            $model = new UserModel();
+            // Le pasamos el ID de la URL y la contraseña del payload
+            $result = $model->updatePassword($id, $objeto->contrasenna); 
+            
+            // 4. Verificar si el modelo encontró y actualizó el usuario
+            if ($result === null) {
+                $response->toJSON(['message' => "Usuario con ID $id no encontrado."], 404); // Not Found
+                return;
+            }
+
+            // 5. Respuesta de éxito
+            $response->toJSON([
+                'message' => 'Contraseña actualizada correctamente.',
+                'user' => $result // Opcionalmente, puedes retornar el usuario
+            ], 200);
+
+        } catch (Exception $e) {
+            // Captura cualquier excepción lanzada desde el Model (validación o fallo DB)
+            $response->toJSON(['message' => $e->getMessage()], 500); // Internal Server Error
+        }
+    }
+
     public function delete($param) // $param es el ID del usuario
     {
         $response = new Response();
