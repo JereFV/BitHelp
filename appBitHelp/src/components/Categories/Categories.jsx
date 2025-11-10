@@ -3,8 +3,9 @@ import { DataGrid } from '@mui/x-data-grid';
 import { 
     Button, Modal, Box, Typography, Stack, Chip, Divider, Paper, 
     TextField, FormControl, InputLabel, Select, MenuItem, OutlinedInput,
-    FormControlLabel, Switch, Alert, IconButton
+    FormControlLabel, Switch, IconButton
 } from '@mui/material';
+import toast, { Toaster } from 'react-hot-toast';
 import CategorieService from '../../services/CategorieService';
 import { esES } from '@mui/x-data-grid/locales';
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
@@ -13,6 +14,7 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 const getStatusChip = (estado) => {
     const isActive = estado === '1' || estado === 1;
@@ -47,9 +49,6 @@ export const CategoriesDataGridWithModal = () => {
     const [specialties, setSpecialties] = useState([]);
     const [tags, setTags] = useState([]);
     const [slas, setSlas] = useState([]);
-    
-    // Mensajes
-    const [alert, setAlert] = useState({ show: false, type: '', message: '' });
 
     useEffect(() => {
         fetchCategories();
@@ -69,28 +68,21 @@ export const CategoriesDataGridWithModal = () => {
                 apiData = [];
             }
 
-            const categoriesData = apiData.map(item => {
-                const parseConcatenatedData = (dataString) => {
-                    if (!dataString) return [];
-                    return dataString.split('|||').filter(s => s.trim() !== '');
-                };
-
-                return {
-                    id: item.idCategoria || item.id,
-                    nombre: item.nombreCategoria,
-                    estado: item.estadoCategoria,
-                    idSla: item.idSla,
-                    tiempoMaxRespuesta: item.tiempoMaxRespuesta,
-                    tiempoMaxResolucion: item.tiempoMaxResolucion,
-                    especialidades: parseConcatenatedData(item.especialidades_concatenadas),
-                    etiquetas: parseConcatenatedData(item.etiquetas_concatenadas),
-                };
-            });
+            const categoriesData = apiData.map(item => ({
+                id: item.idCategoria || item.id,
+                nombre: item.nombreCategoria,
+                estado: item.estadoCategoria,
+                idSla: item.idSla,
+                tiempoMaxRespuesta: item.tiempoMaxRespuesta,
+                tiempoMaxResolucion: item.tiempoMaxResolucion,
+                especialidades: item.especialidades || [],
+                etiquetas: item.etiquetas || [],
+            }));
 
             setRows(categoriesData);
         } catch (error) {
             console.error("Error al obtener las categorías:", error);
-            showAlert('error', 'Error al cargar las categorías');
+            toast.error('Error al cargar las categorías');
         } finally {
             setLoading(false);
         }
@@ -112,11 +104,6 @@ export const CategoriesDataGridWithModal = () => {
         }
     };
 
-    const showAlert = (type, message) => {
-        setAlert({ show: true, type, message });
-        setTimeout(() => setAlert({ show: false, type: '', message: '' }), 4000);
-    };
-
     const handleOpenModal = (row) => {
         setSelectedRow(row);
         setOpenModal(true);
@@ -133,13 +120,21 @@ export const CategoriesDataGridWithModal = () => {
             // Cargar datos para editar
             CategorieService.getCategoryById(row.id).then(response => {
                 const data = response.data.result || response.data;
+                
+                const especialidadesIds = data.especialidades 
+                    ? data.especialidades.map(e => e.idEspecialidad) 
+                    : [];
+                const etiquetasIds = data.etiquetas 
+                    ? data.etiquetas.map(e => e.idEtiqueta) 
+                    : [];
+                
                 setFormData({
                     id: data.idCategoria,
                     nombre: data.nombreCategoria,
                     idSla: data.idSla,
                     estado: parseInt(data.estadoCategoria),
-                    especialidades: data.especialidades_ids ? data.especialidades_ids.split(',').map(Number) : [],
-                    etiquetas: data.etiquetas_ids ? data.etiquetas_ids.split(',').map(Number) : []
+                    especialidades: especialidadesIds,
+                    etiquetas: etiquetasIds
                 });
             });
         } else {
@@ -172,27 +167,27 @@ export const CategoriesDataGridWithModal = () => {
     const handleSubmit = async () => {
         // Validaciones
         if (!formData.nombre.trim()) {
-            showAlert('error', 'El nombre es requerido');
+            toast.error('El nombre es requerido');
             return;
         }
         if (!formData.idSla) {
-            showAlert('error', 'El SLA es requerido');
+            toast.error('El SLA es requerido');
             return;
         }
 
         try {
             if (isEditMode) {
                 await CategorieService.updateCategory(formData.id, formData);
-                showAlert('success', 'Categoría actualizada exitosamente');
+                toast.success('Categoría actualizada exitosamente');
             } else {
                 await CategorieService.createCategory(formData);
-                showAlert('success', 'Categoría creada exitosamente');
+                toast.success('Categoría creada exitosamente');
             }
             handleCloseFormModal();
             fetchCategories();
         } catch (error) {
             console.error("Error:", error);
-            showAlert('error', 'Error al guardar la categoría');
+            toast.error('Error al guardar la categoría');
         }
     };
 
@@ -200,11 +195,11 @@ export const CategoriesDataGridWithModal = () => {
         if (window.confirm('¿Está seguro de eliminar esta categoría?')) {
             try {
                 await CategorieService.deleteCategory(id);
-                showAlert('success', 'Categoría eliminada exitosamente');
+                toast.success('Categoría eliminada exitosamente');
                 fetchCategories();
             } catch (error) {
                 console.error("Error:", error);
-                showAlert('error', 'Error al eliminar la categoría');
+                toast.error('Error al eliminar la categoría');
             }
         }
     };
@@ -222,28 +217,21 @@ export const CategoriesDataGridWithModal = () => {
         },
         {
             field: 'actions',
-            headerName: 'Detalle',
-            width: 130,
+            headerName: 'Opciones',
+            width: 150,
             headerAlign: 'center',
             align: 'center',
+            sortable: false,
+            filterable: false,
             renderCell: (params) => (
-                <Button variant="outlined" size="small" onClick={() => handleOpenModal(params.row)}>
-                    Ver detalle
-                </Button>
-            ),
-        },
-        {
-            field: 'operations',
-            headerName: 'Acciones',
-            width: 120,
-            headerAlign: 'center',
-            align: 'center',
-            renderCell: (params) => (
-                <Stack direction="row" spacing={1}>
-                    <IconButton color="primary" size="small" onClick={() => handleOpenFormModal(true, params.row)}>
+                <Stack direction="row" spacing={1} justifyContent="center">
+                    <IconButton color="primary" size="small" onClick={() => handleOpenModal(params.row)} aria-label="Ver detalles">
+                        <VisibilityIcon />
+                    </IconButton>
+                    <IconButton color="primary" size="small" onClick={() => handleOpenFormModal(true, params.row)} aria-label="Editar">
                         <EditIcon />
                     </IconButton>
-                    <IconButton color="error" size="small" onClick={() => handleDelete(params.row.id)}>
+                    <IconButton color="error" size="small" onClick={() => handleDelete(params.row.id)} aria-label="Eliminar">
                         <DeleteIcon />
                     </IconButton>
                 </Stack>
@@ -253,11 +241,7 @@ export const CategoriesDataGridWithModal = () => {
 
     return (
         <div style={{ height: 500, width: '100%' }}>
-            {alert.show && (
-                <Alert severity={alert.type} sx={{ mb: 2 }}>
-                    {alert.message}
-                </Alert>
-            )}
+            <Toaster position="top-center" />
 
             <Box sx={{ mb: 2 }}>
                 <Button
@@ -275,11 +259,13 @@ export const CategoriesDataGridWithModal = () => {
                 <DataGrid
                     rows={rows}
                     columns={columns}
-                    pageSize={5}
-                    rowsPerPageOptions={[5]}
-                    disableSelectionOnClick
+                    pageSizeOptions={[5, 10, 20]}
+                    initialState={{
+                        pagination: { paginationModel: { pageSize: 10 } }
+                    }}
+                    disableRowSelectionOnClick
                     localeText={esES.components.MuiDataGrid.defaultProps.localeText}
-                    sx={{ borderRadius: 4, boxShadow: 1 }}
+                    sx={{ borderRadius: 2, boxShadow: 2 }}
                 />
             )}
 
@@ -291,10 +277,9 @@ export const CategoriesDataGridWithModal = () => {
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
                     width: 450,
-                    maxWidth: '90%',
                     bgcolor: 'background.paper',
-                    borderRadius: 3,
-                    boxShadow: 16,
+                    borderRadius: 2,
+                    boxShadow: 12,
                     p: 4,
                 }}>
                     <Typography variant="h5" component="h2" mb={1} fontWeight={600}>
@@ -304,29 +289,28 @@ export const CategoriesDataGridWithModal = () => {
 
                     {selectedRow && (
                         <Box>
-                            <Box display="flex" mb={1}>
-                                <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>
-                                    {selectedRow.nombre} {getStatusChip(selectedRow.estado)}
+                            <Box display="flex" alignItems="center" mb={1}>
+                                <Typography fontWeight="bold" mr={1} fontSize={16}>
+                                    {selectedRow.nombre}
                                 </Typography>
+                                {getStatusChip(selectedRow.estado)}
                             </Box>
 
                             <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                                 <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
                                     MÉTRICAS DE SERVICIO
                                 </Typography>
-                                <Box display="flex" mb={1}>
+                                <Box display="flex" alignItems="center" mb={1}>
                                     <WorkHistoryIcon color="action" sx={{ mr: 1, fontSize: 18 }} />
-                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>
-                                        Tiempo Máximo de Respuesta:
+                                    <Typography fontSize={14}>
+                                        <strong>Tiempo Máximo de Respuesta:</strong> {selectedRow.tiempoMaxRespuesta} h
                                     </Typography>
-                                    <Typography fontSize={16}>{selectedRow.tiempoMaxRespuesta} h</Typography>
                                 </Box>
-                                <Box display="flex">
+                                <Box display="flex" alignItems="center">
                                     <WorkHistoryIcon color="action" sx={{ mr: 1, fontSize: 18 }} />
-                                    <Typography component="span" fontWeight="bold" mr={0.5} fontSize={16}>
-                                        Tiempo Máximo de Resolución:
+                                    <Typography fontSize={14}>
+                                        <strong>Tiempo Máximo de Resolución:</strong> {selectedRow.tiempoMaxResolucion} h
                                     </Typography>
-                                    <Typography fontSize={16}>{selectedRow.tiempoMaxResolucion} h</Typography>
                                 </Box>
                             </Paper>
 
@@ -335,15 +319,17 @@ export const CategoriesDataGridWithModal = () => {
                                     ASIGNACIONES
                                 </Typography>
                                 <Box mb={2}>
-                                    <VerifiedIcon color="action" sx={{ mr: 1, fontSize: 18, verticalAlign: 'middle' }} />
-                                    <Typography component="span" fontWeight="bold" fontSize={16}>Especialidades:</Typography>
-                                    <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
+                                    <Box display="flex" alignItems="center" mb={1}>
+                                        <VerifiedIcon color="action" sx={{ mr: 1, fontSize: 18 }} />
+                                        <Typography fontWeight="bold" fontSize={14}>Especialidades:</Typography>
+                                    </Box>
+                                    <Stack direction="row" flexWrap="wrap" spacing={1}>
                                         {selectedRow.especialidades && selectedRow.especialidades.length > 0 ? (
                                             selectedRow.especialidades.map((esp, index) => (
-                                                <Chip key={index} label={esp} size="small" color="primary" variant="outlined" />
+                                                <Chip key={index} label={esp.nombre} size="small" color="primary" variant="outlined" />
                                             ))
                                         ) : (
-                                            <Typography fontSize={14} color="text.secondary">
+                                            <Typography fontSize={14} color="text.secondary" sx={{ml: 0.5}}>
                                                 No tiene especialidades asignadas.
                                             </Typography>
                                         )}
@@ -351,15 +337,17 @@ export const CategoriesDataGridWithModal = () => {
                                 </Box>
 
                                 <Box>
-                                    <LocalOfferIcon color="action" sx={{ mr: 1, fontSize: 18, verticalAlign: 'middle' }} />
-                                    <Typography component="span" fontWeight="bold" fontSize={16}>Etiquetas:</Typography>
-                                    <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
+                                    <Box display="flex" alignItems="center" mb={1}>
+                                        <LocalOfferIcon color="action" sx={{ mr: 1, fontSize: 18 }} />
+                                        <Typography fontWeight="bold" fontSize={14}>Etiquetas:</Typography>
+                                    </Box>
+                                    <Stack direction="row" flexWrap="wrap" spacing={1}>
                                         {selectedRow.etiquetas && selectedRow.etiquetas.length > 0 ? (
                                             selectedRow.etiquetas.map((eti, index) => (
-                                                <Chip key={index} label={eti} size="small" color="primary" variant="outlined" />
+                                                <Chip key={index} label={eti.nombre} size="small" color="primary" variant="outlined" />
                                             ))
                                         ) : (
-                                            <Typography fontSize={14} color="text.secondary">
+                                            <Typography fontSize={14} color="text.secondary" sx={{ml: 0.5}}>
                                                 No tiene etiquetas asignadas.
                                             </Typography>
                                         )}
@@ -382,18 +370,16 @@ export const CategoriesDataGridWithModal = () => {
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    width: 600,
-                    maxWidth: '90%',
-                    maxHeight: '90vh',
-                    overflow: 'auto',
+                    width: 450,
                     bgcolor: 'background.paper',
-                    borderRadius: 3,
-                    boxShadow: 16,
+                    borderRadius: 2,
+                    boxShadow: 12,
                     p: 4,
                 }}>
-                    <Typography variant="h5" component="h2" mb={3} fontWeight={600}>
+                    <Typography variant="h5" component="h2" mb={1} fontWeight={600}>
                         {isEditMode ? 'Editar Categoría' : 'Crear Categoría'}
                     </Typography>
+                    <Divider sx={{ mb: 2 }} />
 
                     <Stack spacing={3}>
                         <TextField
@@ -426,9 +412,16 @@ export const CategoriesDataGridWithModal = () => {
                                 value={formData.especialidades}
                                 onChange={(e) => handleInputChange('especialidades', e.target.value)}
                                 input={<OutlinedInput label="Especialidades" />}
-                                renderValue={(selected) =>
-                                    selected.map(id => specialties.find(s => s.idEspecialidad === id)?.nombre).join(', ')
-                                }
+                                renderValue={(selected) => (
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                        {selected.map((value) => {
+                                            const specialty = specialties.find(s => s.idEspecialidad === value);
+                                            return (
+                                                <Chip key={value} label={specialty ? specialty.nombre : `ID: ${value}`} size="small" />
+                                            );
+                                        })}
+                                    </Box>
+                                )}
                             >
                                 {specialties.map((spec) => (
                                     <MenuItem key={spec.idEspecialidad} value={spec.idEspecialidad}>
@@ -445,9 +438,16 @@ export const CategoriesDataGridWithModal = () => {
                                 value={formData.etiquetas}
                                 onChange={(e) => handleInputChange('etiquetas', e.target.value)}
                                 input={<OutlinedInput label="Etiquetas" />}
-                                renderValue={(selected) =>
-                                    selected.map(id => tags.find(t => t.idEtiqueta === id)?.nombre).join(', ')
-                                }
+                                renderValue={(selected) => (
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                        {selected.map((value) => {
+                                            const tag = tags.find(t => t.idEtiqueta === value);
+                                            return (
+                                                <Chip key={value} label={tag ? tag.nombre : `ID: ${value}`} size="small" />
+                                            );
+                                        })}
+                                    </Box>
+                                )}
                             >
                                 {tags.map((tag) => (
                                     <MenuItem key={tag.idEtiqueta} value={tag.idEtiqueta}>
@@ -464,18 +464,18 @@ export const CategoriesDataGridWithModal = () => {
                                     onChange={(e) => handleInputChange('estado', e.target.checked ? 1 : 0)}
                                 />
                             }
-                            label="Activo"
+                            label={formData.estado === 1 ? 'Activo' : 'Inactivo'}
                         />
                     </Stack>
 
-                    <Stack direction="row" spacing={2} sx={{ mt: 3, justifyContent: 'flex-end' }}>
-                        <Button onClick={handleCloseFormModal} variant="outlined">
+                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                        <Button onClick={handleCloseFormModal} variant="outlined" color="error">
                             Cancelar
                         </Button>
-                        <Button onClick={handleSubmit} variant="contained">
-                            {isEditMode ? 'Actualizar' : 'Crear'}
+                        <Button onClick={handleSubmit} variant="contained" color="primary">
+                            {isEditMode ? 'Guardar Cambios' : 'Crear Categoría'}
                         </Button>
-                    </Stack>
+                    </Box>
                 </Box>
             </Modal>
         </div>
