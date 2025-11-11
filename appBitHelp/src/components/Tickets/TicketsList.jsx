@@ -13,17 +13,6 @@ function TicketsList() {
   // Estado para saber qué filtro de estado está activo. 'Total' por defecto.
   const [filtroActivo, setFiltroActivo] = useState('Total');
 
-  //Constante temporal para pruebas.
-  const FAKE_USER_DATA = {
-    idUsuario: 1,
-    usuario: 'jfuentes',
-    nombre: 'Jeremy',
-    primerApellido: 'Fuentes',
-    segundoApellido: 'Venegas',
-    idRol: 3
-  };
-
-  localStorage.setItem('userSession', JSON.stringify(FAKE_USER_DATA));
 
   useEffect(() => {
     // Carga inicial de tiquetes

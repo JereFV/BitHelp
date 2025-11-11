@@ -5,7 +5,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import { AppProvider, DashboardLayout, PageContainer } from '@toolpad/core'; 
 import { useLocation, useNavigate } from 'react-router-dom';
 import { extendTheme } from '@mui/material/styles';
-import Header from './Header';
+import Header from './Header.jsx';
 import { useColorScheme } from '@mui/material/styles';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import GroupIcon from '@mui/icons-material/Group';

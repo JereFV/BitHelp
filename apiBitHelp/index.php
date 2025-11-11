@@ -11,8 +11,8 @@ if (file_exists($vendorAutoload)) {
 
 // Encabezados / CORS
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: *");
-header("Access-Control-Allow-Methods: *");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
 header('Content-Type: application/json; charset=UTF-8');
 
 /*--- Requerimientos Clases o librerías*/
@@ -44,6 +44,8 @@ require_once "controllers/UserController.php";
 require_once "controllers/TechnicianController.php";
 require_once "controllers/TicketPriorityController.php";
 require_once "controllers/TicketTagController.php";
+require_once "controllers/core/JWT.php";
+require_once "controllers/AuthController.php";
 
 //Enrutador
 require_once "routes/RoutesController.php";

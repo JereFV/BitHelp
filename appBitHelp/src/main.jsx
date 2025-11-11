@@ -13,67 +13,73 @@ import UserProvider from './components/User/UserProvider';
 import { TicketDetail } from "./components/Tickets/TicketDetail";
 import { CreateTicket } from "./components/Tickets/CreateTicket";
 import UserMaintenance from "./components/User/UserMaintenance.jsx";
-const rutas=createBrowserRouter(
-  [
-    {
-      element: <App />,
-      children:[
-        {
-          path:'/', //Cargado inicial del aplicativo, sin una ruta definida.
-          element: <Home />
-        },
-        {
-          path:'/home',
-          element: <Home />
-        },
-        {
-          path: 'tickets', // path es 'tickets' como padre
-          children: [
-            {
-              // CLAVE: ticketsList ahora es relativo a 'tickets', resultando en '/tickets/ticketsList'
-              path:'ticketsList', 
-              element: <TicketsList/>
-            }, 
-            {
-              // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
-              path:'assignments',
-              element: <Assignments/>
-            },
-            {
-              // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
-              path:'createTicket',
-              element: <CreateTicket/>
-            }            
-          ]
-        },   
-        {
-          path:'categories',
-          element: <CategoriesDataGridWithModal/>
-        },
-        {
-          path:'technician',
-          element: <TechniciansDataGridWithModal/>
-        },
-        {
-          // CLAVE: assignments es relativo a 'tickets', resultando en '/tickets/assignments'
-          path:'ticket/:id',
-          element: <TicketDetail/>
-        },
-        {
-          path:'users',
-          element: <UserMaintenance/>
-        }
+import { AuthProvider } from "./context/AuthContext.jsx";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./components/Login/Login";
 
-      ]
-    }
-  ]
-)
+const rutas = createBrowserRouter([
+  {
+    path: '/login',
+    element: <Login />
+  },
+  {
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: '/',
+        element: <Home />
+      },
+      {
+        path: '/home',
+        element: <Home />
+      },
+      {
+        path: 'tickets',
+        children: [
+          {
+            path: 'ticketsList',
+            element: <TicketsList />
+          },
+          {
+            path: 'assignments',
+            element: <Assignments />
+          },
+          {
+            path: 'createTicket',
+            element: <CreateTicket />
+          }
+        ]
+      },
+      {
+        path: 'categories',
+        element: <CategoriesDataGridWithModal />
+      },
+      {
+        path: 'technician',
+        element: <TechniciansDataGridWithModal />
+      },
+      {
+        path: 'ticket/:id',
+        element: <TicketDetail />
+      },
+      {
+        path: 'users',
+        element: <UserMaintenance />
+      }
+    ]
+  }
+]);
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode> 
-    <UserProvider >
-        <RouterProvider router={rutas} /> 
-    </UserProvider>
-  
-</StrictMode>, 
+  <StrictMode>
+    <AuthProvider>
+      <UserProvider>
+        <RouterProvider router={rutas} />
+      </UserProvider>
+    </AuthProvider>
+  </StrictMode>
 );

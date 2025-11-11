@@ -321,4 +321,18 @@ class UserModel
             handleException($e);
         }
     }
+
+/**
+ * Obtener usuario por username o correo para login
+ */
+public function getUserByCredential($credential) {
+    $sql = "SELECT idUsuario, usuario, nombre, primerApellido, segundoApellido, 
+            correo, contrasenna, estado, idRol 
+            FROM usuario 
+            WHERE (usuario = '$credential' OR correo = '$credential') 
+            AND estado = 1";
+    
+    $result = $this->enlace->executeSQL($sql);
+    return $result ? $result[0] : null;
+}
 }
