@@ -49,7 +49,6 @@ const getStateColor = (estado) => {
       return 'default';
   }
 };
-// --- FIN DE LA MODIFICACIÓN ---
 
 export function ListCardTickets({ data = [] }) {
   return (

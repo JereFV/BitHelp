@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext.jsx';
+import toast, { Toaster } from 'react-hot-toast';
 import {
   Box,
   Card,
@@ -8,8 +9,6 @@ import {
   TextField,
   Button,
   Typography,
-  Alert,
-  CircularProgress,
   InputAdornment,
   IconButton
 } from '@mui/material';
@@ -24,10 +23,8 @@ const Login = () => {
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Redirigir si ya está autenticado
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/');
@@ -39,34 +36,35 @@ const Login = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError(''); // Limpiar error al escribir
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
 
-    // Validaciones
     if (!formData.credential || !formData.password) {
-      setError('Por favor complete todos los campos');
-      setLoading(false);
+      toast.error('Por favor complete todos los campos');
       return;
     }
 
-    try {
-      const result = await login(formData.credential, formData.password);
+    setLoading(true);
 
-      if (result.success) {
-        navigate('/');
-      } else {
-        setError(result.message || 'Credenciales inválidas');
+    const loginPromise = login(formData.credential, formData.password);
+
+    toast.promise(
+      loginPromise,
+      {
+        loading: 'Iniciando sesión...',
+        success: (result) => {
+          if (result.success) {
+            setTimeout(() => navigate('/'), 500);
+            return 'Inicio de sesión exitoso';
+          } else {
+            throw new Error(result.message || 'Credenciales inválidas');
+          }
+        },
+        error: (err) => err.message || 'Error al iniciar sesión'
       }
-    } catch (error) {
-      setError('Error al iniciar sesión. Intente nuevamente.');
-    } finally {
-      setLoading(false);
-    }
+    ).finally(() => setLoading(false));
   };
 
   return (
@@ -80,6 +78,7 @@ const Login = () => {
         padding: 2
       }}
     >
+      <Toaster position="top-center" />
       <Card sx={{ maxWidth: 400, width: '100%' }}>
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ textAlign: 'center', mb: 3 }}>
@@ -91,12 +90,6 @@ const Login = () => {
               Ingrese sus credenciales para acceder
             </Typography>
           </Box>
-
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
 
           <form onSubmit={handleSubmit}>
             <TextField
@@ -143,11 +136,7 @@ const Login = () => {
               disabled={loading}
               sx={{ mt: 3, mb: 2 }}
             >
-              {loading ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                'Iniciar Sesión'
-              )}
+              Iniciar Sesión
             </Button>
           </form>
         </CardContent>

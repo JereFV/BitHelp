@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { 
     Button, Modal, Box, Typography, Stack, Chip, Divider, Paper, 
@@ -17,6 +17,9 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { AuthContext } from '../../context/AuthContext.jsx';
+
+const ROLE_ID_ADMIN = 3;
 
 const getStatusChip = (estado) => {
     const isActive = estado === '1' || estado === 1;
@@ -31,6 +34,9 @@ const getStatusChip = (estado) => {
 };
 
 export const CategoriesDataGridWithModal = () => {
+    const { user } = useContext(AuthContext);
+    const isAdmin = user?.idRol === ROLE_ID_ADMIN || user?.idRol === '3';
+
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(false);
     const [openModal, setOpenModal] = useState(false);
@@ -250,12 +256,16 @@ export const CategoriesDataGridWithModal = () => {
                     <IconButton color="primary" size="small" onClick={() => handleOpenModal(params.row)} aria-label="Ver detalles">
                         <VisibilityIcon />
                     </IconButton>
-                    <IconButton color="primary" size="small" onClick={() => handleOpenFormModal(true, params.row)} aria-label="Editar">
-                        <EditIcon />
-                    </IconButton>
-                    <IconButton color="error" size="small" onClick={() => confirmDelete(params.row.id)} aria-label="Eliminar">
-                        <DeleteIcon />
-                    </IconButton>
+                    {isAdmin && (
+                        <>
+                            <IconButton color="primary" size="small" onClick={() => handleOpenFormModal(true, params.row)} aria-label="Editar">
+                                <EditIcon />
+                            </IconButton>
+                            <IconButton color="error" size="small" onClick={() => confirmDelete(params.row.id)} aria-label="Eliminar">
+                                <DeleteIcon />
+                            </IconButton>
+                        </>
+                    )}
                 </Stack>
             ),
         },
@@ -265,15 +275,17 @@ export const CategoriesDataGridWithModal = () => {
         <div style={{ height: 500, width: '100%' }}>
             <Toaster position="top-center" />
 
-            <Box sx={{ mb: 2 }}>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleOpenFormModal(false)}
-                >
-                    Crear Categoría
-                </Button>
-            </Box>
+            {isAdmin && (
+                <Box sx={{ mb: 2 }}>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => handleOpenFormModal(false)}
+                    >
+                        Crear Categoría
+                    </Button>
+                </Box>
+            )}
 
             {loading ? (
                 <Typography variant="h6">Cargando categorías...</Typography>
@@ -385,156 +397,160 @@ export const CategoriesDataGridWithModal = () => {
                 </Box>
             </Modal>
 
-            {/* Modal de Formulario Crear/Editar */}
-            <Modal open={openFormModal} onClose={handleCloseFormModal}>
-                <Box sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: 450,
-                    bgcolor: 'background.paper',
-                    borderRadius: 2,
-                    boxShadow: 12,
-                    p: 4,
-                }}>
-                    <Typography variant="h5" component="h2" mb={1} fontWeight={600}>
-                        {isEditMode ? 'Editar Categoría' : 'Crear Categoría'}
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
+            {/* Modal de Formulario Crear/Editar - Solo para Admins */}
+            {isAdmin && (
+                <Modal open={openFormModal} onClose={handleCloseFormModal}>
+                    <Box sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 450,
+                        bgcolor: 'background.paper',
+                        borderRadius: 2,
+                        boxShadow: 12,
+                        p: 4,
+                    }}>
+                        <Typography variant="h5" component="h2" mb={1} fontWeight={600}>
+                            {isEditMode ? 'Editar Categoría' : 'Crear Categoría'}
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
 
-                    <Stack spacing={3}>
-                        <TextField
-                            label="Nombre de la Categoría"
-                            fullWidth
-                            required
-                            value={formData.nombre}
-                            onChange={(e) => handleInputChange('nombre', e.target.value)}
-                        />
+                        <Stack spacing={3}>
+                            <TextField
+                                label="Nombre de la Categoría"
+                                fullWidth
+                                required
+                                value={formData.nombre}
+                                onChange={(e) => handleInputChange('nombre', e.target.value)}
+                            />
 
-                        <FormControl fullWidth required>
-                            <InputLabel>SLA</InputLabel>
-                            <Select
-                                value={formData.idSla}
-                                label="SLA"
-                                onChange={(e) => handleInputChange('idSla', e.target.value)}
-                            >
-                                {slas.map((sla) => (
-                                    <MenuItem key={sla.idSla} value={sla.idSla}>
-                                        Respuesta: {sla.tiempoMaxRespuesta} | Resolución: {sla.tiempoMaxResolucion}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                            <FormControl fullWidth required>
+                                <InputLabel>SLA</InputLabel>
+                                <Select
+                                    value={formData.idSla}
+                                    label="SLA"
+                                    onChange={(e) => handleInputChange('idSla', e.target.value)}
+                                >
+                                    {slas.map((sla) => (
+                                        <MenuItem key={sla.idSla} value={sla.idSla}>
+                                            Respuesta: {sla.tiempoMaxRespuesta} | Resolución: {sla.tiempoMaxResolucion}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
 
-                        <FormControl fullWidth>
-                            <InputLabel>Especialidades</InputLabel>
-                            <Select
-                                multiple
-                                value={formData.especialidades}
-                                onChange={(e) => handleInputChange('especialidades', e.target.value)}
-                                input={<OutlinedInput label="Especialidades" />}
-                                renderValue={(selected) => (
-                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                        {selected.map((value) => {
-                                            const specialty = specialties.find(s => s.idEspecialidad === value);
-                                            return (
-                                                <Chip key={value} label={specialty ? specialty.nombre : `ID: ${value}`} size="small" />
-                                            );
-                                        })}
-                                    </Box>
-                                )}
-                            >
-                                {specialties.map((spec) => (
-                                    <MenuItem key={spec.idEspecialidad} value={spec.idEspecialidad}>
-                                        {spec.nombre}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                            <FormControl fullWidth>
+                                <InputLabel>Especialidades</InputLabel>
+                                <Select
+                                    multiple
+                                    value={formData.especialidades}
+                                    onChange={(e) => handleInputChange('especialidades', e.target.value)}
+                                    input={<OutlinedInput label="Especialidades" />}
+                                    renderValue={(selected) => (
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                            {selected.map((value) => {
+                                                const specialty = specialties.find(s => s.idEspecialidad === value);
+                                                return (
+                                                    <Chip key={value} label={specialty ? specialty.nombre : `ID: ${value}`} size="small" />
+                                                );
+                                            })}
+                                        </Box>
+                                    )}
+                                >
+                                    {specialties.map((spec) => (
+                                        <MenuItem key={spec.idEspecialidad} value={spec.idEspecialidad}>
+                                            {spec.nombre}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
 
-                        <FormControl fullWidth>
-                            <InputLabel>Etiquetas</InputLabel>
-                            <Select
-                                multiple
-                                value={formData.etiquetas}
-                                onChange={(e) => handleInputChange('etiquetas', e.target.value)}
-                                input={<OutlinedInput label="Etiquetas" />}
-                                renderValue={(selected) => (
-                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                        {selected.map((value) => {
-                                            const tag = tags.find(t => t.idEtiqueta === value);
-                                            return (
-                                                <Chip key={value} label={tag ? tag.nombre : `ID: ${value}`} size="small" />
-                                            );
-                                        })}
-                                    </Box>
-                                )}
-                            >
-                                {tags.map((tag) => (
-                                    <MenuItem key={tag.idEtiqueta} value={tag.idEtiqueta}>
-                                        {tag.nombre}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                            <FormControl fullWidth>
+                                <InputLabel>Etiquetas</InputLabel>
+                                <Select
+                                    multiple
+                                    value={formData.etiquetas}
+                                    onChange={(e) => handleInputChange('etiquetas', e.target.value)}
+                                    input={<OutlinedInput label="Etiquetas" />}
+                                    renderValue={(selected) => (
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                            {selected.map((value) => {
+                                                const tag = tags.find(t => t.idEtiqueta === value);
+                                                return (
+                                                    <Chip key={value} label={tag ? tag.nombre : `ID: ${value}`} size="small" />
+                                                );
+                                            })}
+                                        </Box>
+                                    )}
+                                >
+                                    {tags.map((tag) => (
+                                        <MenuItem key={tag.idEtiqueta} value={tag.idEtiqueta}>
+                                            {tag.nombre}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
 
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={formData.estado === 1}
-                                    onChange={(e) => handleInputChange('estado', e.target.checked ? 1 : 0)}
-                                />
-                            }
-                            label={formData.estado === 1 ? 'Activo' : 'Inactivo'}
-                        />
-                    </Stack>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={formData.estado === 1}
+                                        onChange={(e) => handleInputChange('estado', e.target.checked ? 1 : 0)}
+                                    />
+                                }
+                                label={formData.estado === 1 ? 'Activo' : 'Inactivo'}
+                            />
+                        </Stack>
 
-                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                        <Button onClick={handleCloseFormModal} variant="outlined" color="error">
+                        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                            <Button onClick={handleCloseFormModal} variant="outlined" color="error">
+                                Cancelar
+                            </Button>
+                            <Button onClick={handleSubmit} variant="contained" color="primary">
+                                {isEditMode ? 'Guardar Cambios' : 'Crear Categoría'}
+                            </Button>
+                        </Box>
+                    </Box>
+                </Modal>
+            )}
+
+            {/* Diálogo de Confirmación de Eliminación - Solo para Admins */}
+            {isAdmin && (
+                <Dialog
+                    open={isDeleteDialogOpen}
+                    onClose={handleCancelDelete}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title" sx={{ color: 'error.main' }}>
+                        Confirmar Eliminación
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            <Typography variant="body1" sx={{mb: 1}}>
+                                ¿Está seguro de eliminar esta categoría?
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Esta acción eliminará la categoría y todas sus relaciones con especialidades y etiquetas.
+                            </Typography>
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCancelDelete} variant="outlined" color="primary">
                             Cancelar
                         </Button>
-                        <Button onClick={handleSubmit} variant="contained" color="primary">
-                            {isEditMode ? 'Guardar Cambios' : 'Crear Categoría'}
+                        <Button 
+                            onClick={executeDelete} 
+                            variant="contained" 
+                            color="error" 
+                            autoFocus 
+                        >
+                            Aceptar
                         </Button>
-                    </Box>
-                </Box>
-            </Modal>
-
-            {/* Diálogo de Confirmación de Eliminación */}
-            <Dialog
-                open={isDeleteDialogOpen}
-                onClose={handleCancelDelete}
-                aria-labelledby="alert-dialog-title"
-                aria-describedby="alert-dialog-description"
-            >
-                <DialogTitle id="alert-dialog-title" sx={{ color: 'error.main' }}>
-                    Confirmar Eliminación
-                </DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="alert-dialog-description">
-                        <Typography variant="body1" sx={{mb: 1}}>
-                            ¿Está seguro de eliminar esta categoría?
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Esta acción eliminará la categoría y todas sus relaciones con especialidades y etiquetas.
-                        </Typography>
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCancelDelete} variant="outlined" color="primary">
-                        Cancelar
-                    </Button>
-                    <Button 
-                        onClick={executeDelete} 
-                        variant="contained" 
-                        color="error" 
-                        autoFocus 
-                    >
-                        Aceptar
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                    </DialogActions>
+                </Dialog>
+            )}
         </div>
     );
 };
