@@ -43,7 +43,7 @@ export function Layout({ children }) {
   const userRoleId = getUserRoleId();
   
   // Determina si el usuario tiene el rol de Técnico
-  const isTechnician = userRoleId === ROLE_ID_TECHNICIAN; 
+  const isTechnician = userRoleId == ROLE_ID_TECHNICIAN; 
 
   // Hooks de React Router
   const location = useLocation();
