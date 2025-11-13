@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { DataGrid } from '@mui/x-data-grid'; 
 import { 
-    Button, Modal, Box, Typography, Chip, Divider, Paper, Stack, Alert,
+    Button, Modal, Box, Typography, Chip, Divider, Paper, Stack,
     TextField, FormControl, InputLabel, Select, MenuItem, OutlinedInput,
     FormControlLabel, Switch, IconButton,
     Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions 
-} from '@mui/material'; 
+} from '@mui/material';
+import toast, { Toaster } from 'react-hot-toast';
 import { esES } from '@mui/x-data-grid/locales'; 
 import TechnicianService from '../../services/TechnicianService'; 
 import { AccountCircle, Mail, Phone, Work, Verified } from '@mui/icons-material';
@@ -13,7 +14,10 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import UserService from '../../services/userService'; 
+import UserService from '../../services/userService';
+import { AuthContext } from '../../context/AuthContext.jsx';
+
+const ROLE_ID_ADMIN = 3;
 
 // Estilo del modal para centrarlo
 const modalStyle = {
@@ -55,6 +59,9 @@ const getAvailabilityChip = (disponibilidad) => {
 };
 
 export const TechniciansDataGridWithModal = () => {
+    const { user } = useContext(AuthContext);
+    const isAdmin = user?.idRol === ROLE_ID_ADMIN || user?.idRol === '3';
+
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(false);
     const [openModal, setOpenModal] = useState(false);
@@ -70,31 +77,21 @@ export const TechniciansDataGridWithModal = () => {
         idTecnico: null, 
         idUsuario: '',
         idDisponibilidad: 1,
-        estado: 1, // 1: Activo, 0: Inactivo
+        estado: 1,
         cargaTrabajo: 0,
         especialidades: [] 
     });
     
-    const [formErrors, setFormErrors] = useState({}); 
-
-    // Mensajes
-    const [alert, setAlert] = useState({ show: false, type: '', message: '' });
-
-    // ESTADO PARA EL DIÁLOGO DE CONFIRMACIÓN DE ELIMINACIÓN
+    const [formErrors, setFormErrors] = useState({});
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [technicianToDeleteId, setTechnicianToDeleteId] = useState(null);
     
-    // Lista de IDs de usuario que ya son técnicos
     const technicianUserIds = useMemo(() => rows.map(r => r.idUsuario), [rows]);
 
-    // Usuarios que no son técnicos (disponibles para ser creados como técnicos)
     const availableUsers = useMemo(() => {
-        // SOLUCIÓN #2: Si el técnico fue eliminado (registro borrado), su idUsuario
-        // ya no estará en technicianUserIds, y volverá a ser un availableUser.
         return usersList.filter(user => !technicianUserIds.includes(user.idUsuario));
     }, [usersList, technicianUserIds]);
 
-    // Usuario que se está editando actualmente
     const currentTechnicianUser = useMemo(() => {
         if (isEditMode && formData.idUsuario && usersList.length > 0) {
             return usersList.find(u => u.idUsuario === formData.idUsuario);
@@ -102,28 +99,23 @@ export const TechniciansDataGridWithModal = () => {
         return null;
     }, [isEditMode, formData.idUsuario, usersList]);
 
-    // Función para obtener datos externos
     const fetchExternalData = async () => {
         try {
-            // OBTENER USUARIOS
             const usersResponse = await UserService.getUsers();
             const usersData = usersResponse.data.result || usersResponse.data;
             setUsersList(Array.isArray(usersData) ? usersData : []); 
 
-            // OBTENER ESPECIALIDADES
             const specialtiesResponse = await TechnicianService.getSpecialties();
             setSpecialtiesList(specialtiesResponse.data.result || specialtiesResponse.data || []);
 
-            // OBTENER DISPONIBILIDAD
             const availabilityResponse = await TechnicianService.getDisponibilities();
             setAvailabilityList(availabilityResponse.data.result || availabilityResponse.data || []);
         } catch (error) {
             console.error("Error al cargar datos externos:", error.response?.data?.message || error.message);
-            showAlert('error', 'Error al cargar listas de selección. Revise la consola.');
+            toast.error('Error al cargar listas de selección. Revise la consola.');
         }
     };
 
-    // Carga inicial de técnicos
     const fetchTechnicians = async () => {
         setLoading(true);
         try {
@@ -136,11 +128,10 @@ export const TechniciansDataGridWithModal = () => {
 
             if (!Array.isArray(apiData)) {
                 console.error("Respuesta de la API no es un array:", apiData);
-                showAlert('error', 'Formato de datos de técnicos inesperado.');
+                toast.error('Formato de datos de técnicos inesperado.');
                 apiData = [];
             }
 
-            // Mapeo de datos (Ajustado para asegurar 'id' y 'disponibilidad' con nombre)
             const techniciansData = apiData.map(item => ({
                 id: item.idTecnico || item.id, 
                 idUsuario: item.idUsuario,
@@ -159,24 +150,17 @@ export const TechniciansDataGridWithModal = () => {
             setRows(techniciansData);
         } catch (error) {
             console.error("Error al obtener los técnicos:", error.response?.data?.message || error.message);
-            showAlert('error', 'Error al cargar los técnicos desde la API.');
+            toast.error('Error al cargar los técnicos desde la API.');
         } finally {
             setLoading(false);
         }
     };
 
-    // Carga inicial
     useEffect(() => {
         fetchTechnicians();
         fetchExternalData();
     }, []);
 
-    const showAlert = (type, message) => {
-        setAlert({ show: true, type, message });
-        setTimeout(() => setAlert({ show: false, type: '', message: '' }), 4000);
-    };
-
-    // Validación del formulario
     const validateForm = () => {
         let errors = {};
         let isValid = true;
@@ -200,7 +184,6 @@ export const TechniciansDataGridWithModal = () => {
         return isValid;
     };
 
-
     const handleOpenModal = (row) => {
         setSelectedRow(row);
         setOpenModal(true);
@@ -220,7 +203,7 @@ export const TechniciansDataGridWithModal = () => {
                 const data = response.data.result || response.data;
                 
                 if (!data || !data.idTecnico) {
-                    showAlert('error', 'No se pudieron cargar los datos del técnico para edición.');
+                    toast.error('No se pudieron cargar los datos del técnico para edición.');
                     return;
                 }
 
@@ -253,11 +236,10 @@ export const TechniciansDataGridWithModal = () => {
 
             }).catch(error => {
                 console.error("Error al obtener el técnico para edición:", error);
-                showAlert('error', 'Error al cargar los detalles del técnico para edición.');
+                toast.error('Error al cargar los detalles del técnico para edición.');
             });
 
         } else {
-            // Modo Creación
             setFormData({
                 idTecnico: null,
                 idUsuario: '',
@@ -284,10 +266,9 @@ export const TechniciansDataGridWithModal = () => {
     };
 
     const handleInputChange = (field, value) => {
-        setFormErrors(prev => ({ ...prev, [field]: undefined })); // Limpiar error al cambiar
+        setFormErrors(prev => ({ ...prev, [field]: undefined }));
 
         if (field === 'estado') {
-            // El switch pasa un booleano, lo convertimos a 1 o 0
             setFormData(prev => ({ ...prev, [field]: value ? 1 : 0 }));
         } else if (field === 'cargaTrabajo') {
             const numValue = parseInt(value, 10);
@@ -299,89 +280,71 @@ export const TechniciansDataGridWithModal = () => {
 
     const handleSubmit = async () => {
         if (!validateForm()) {
-            showAlert('error', 'Por favor, corrija los errores en el formulario.');
+            toast.error('Por favor, corrija los errores en el formulario.');
             return;
         }
         
-        // Creamos una copia de formData para manipularla.
         let payload = { ...formData };
         
         try {
             if (isEditMode) {
-                // **MODO EDICIÓN (PUT) - AJUSTE AL BACKEND PHP**
-                
-                // La función PHP espera estos 4 argumentos en la Petición/Payload:
-                // 1. $idDisponibilidad (int)
-                // 2. $cargaTrabajo (string)
-                // 3. $estado (int)
-                // 4. $especialidades (array)
-
                 const updatePayload = {
-                    idDisponibilidad: Number(payload.idDisponibilidad), // De vuelta a Number/Int
-                    // CRÍTICO: Carga de trabajo como string '00:00:00'. Como no es editable, usaremos '00:00:00'
-                    // Asumimos que la API debe recibir una cadena TIME válida para no fallar.
+                    idDisponibilidad: Number(payload.idDisponibilidad),
                     cargaTrabajo: '00:00:00', 
-                    estado: Number(payload.estado), // De vuelta a Number/Int
-                    especialidades: payload.especialidades, // Ya es un array de IDs
+                    estado: Number(payload.estado),
+                    especialidades: payload.especialidades,
                 };
 
-                // Enviamos el ID en la URL y el Payload exacto en el cuerpo
                 await TechnicianService.updateTechnician(payload.idTecnico, updatePayload);
-                showAlert('success', 'Técnico actualizado exitosamente');
+                toast.success('Técnico actualizado exitosamente');
                 
             } else {
-                // **MODO CREACIÓN (POST)**
-                // Asumimos que la creación espera un objeto JSON diferente (más sencillo) o que la carga de trabajo debe ser '00:00:00'.
                 let creationPayload = {
                     idUsuario: payload.idUsuario,
                     idDisponibilidad: Number(payload.idDisponibilidad),
-                    cargaTrabajo: '00:00:00', // Iniciamos con el formato TIME correcto
+                    cargaTrabajo: '00:00:00',
                     estado: Number(payload.estado),
                     especialidades: payload.especialidades
                 };
 
                 await TechnicianService.createTechnician(creationPayload);
-                showAlert('success', 'Técnico creado exitosamente');
+                toast.success('Técnico creado exitosamente');
             }
             
             handleCloseFormModal();
-            fetchTechnicians(); // Recargar la lista después de la operación
+            fetchTechnicians();
         } catch (error) {
             console.error("Error al guardar (payload enviado):", isEditMode ? updatePayload : creationPayload);
             console.error("Detalles del Error:", error.response?.data?.message || error.message);
-            showAlert('error', `Error al guardar: ${error.response?.data?.message || 'Revisar la consola para el payload enviado.'}`);
+            toast.error(`Error al guardar: ${error.response?.data?.message || 'Revisar la consola para el payload enviado.'}`);
         }
     };
 
-    // FUNCIÓN PARA ABRIR EL DIÁLOGO DE CONFIRMACIÓN
     const confirmDelete = (id) => {
         setTechnicianToDeleteId(id);
         setIsDeleteDialogOpen(true);
     };
 
-    // FUNCIÓN PARA CERRAR EL DIÁLOGO DE CONFIRMACIÓN
     const handleCancelDelete = () => {
         setIsDeleteDialogOpen(false);
         setTechnicianToDeleteId(null);
     };
     
-    // FUNCIÓN QUE EJECUTA LA ELIMINACIÓN (Llamada desde el Dialog)
     const executeDelete = async () => {
         setIsDeleteDialogOpen(false); 
         if (!technicianToDeleteId) return;
 
         try {
             await TechnicianService.deleteTechnician(technicianToDeleteId);
-            showAlert('success', 'Técnico despromovido exitosamente');
-            fetchTechnicians(); // SOLUCIÓN #2: Recarga la lista, limpiando el ID del técnico eliminado.
+            toast.success('Técnico despromovido exitosamente');
+            fetchTechnicians();
         } catch (error) {
             console.error("Error al despromover:", error.response?.data?.message || error.message);
-            showAlert('error', `Error al despromover el técnico: ${error.response?.data?.message || 'Error de conexión'}`);
+            toast.error(`Error al despromover el técnico: ${error.response?.data?.message || 'Error de conexión'}`);
         } finally {
             setTechnicianToDeleteId(null); 
         }
     };
-
 
     const columns = [
         { field: 'nombreCompleto', headerName: 'Técnico', minWidth: 240, headerAlign: 'center', align: 'center', flex: 0.7, },
@@ -419,12 +382,16 @@ export const TechniciansDataGridWithModal = () => {
                     <IconButton color="primary" size="small" onClick={() => handleOpenModal(params.row)} aria-label="Ver detalles">
                         <VisibilityIcon />
                     </IconButton>
-                    <IconButton color="primary" size="small" onClick={() => handleOpenFormModal(true, params.row)} aria-label="Editar">
-                        <EditIcon />
-                    </IconButton>
-                    <IconButton color="error" size="small" onClick={() => confirmDelete(params.row.id)} aria-label="Eliminar/Despromover">
-                        <DeleteIcon />
-                    </IconButton>
+                    {isAdmin && (
+                        <>
+                            <IconButton color="primary" size="small" onClick={() => handleOpenFormModal(true, params.row)} aria-label="Editar">
+                                <EditIcon />
+                            </IconButton>
+                            <IconButton color="error" size="small" onClick={() => confirmDelete(params.row.id)} aria-label="Eliminar/Despromover">
+                                <DeleteIcon />
+                            </IconButton>
+                        </>
+                    )}
                 </Stack>
             ),
         }, 
@@ -432,29 +399,20 @@ export const TechniciansDataGridWithModal = () => {
 
     return (
         <div style={{ height: 600, width: '100%' }}>
-            {/* Alertas */}
-            {alert.show && (
-                <Alert 
-                    severity={alert.type} 
-                    sx={{ mb: 2 }} 
-                    onClose={() => setAlert({ show: false, type: '', message: '' })}
-                >
-                    {alert.message}
-                </Alert>
+            <Toaster position="top-center" />
+            
+            {isAdmin && (
+                <Box sx={{ mb: 2 }}>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => handleOpenFormModal(false)}
+                    >
+                        Crear Técnico
+                    </Button>
+                </Box>
             )}
             
-            {/* Botón de Creación */}
-            <Box sx={{ mb: 2 }}>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleOpenFormModal(false)}
-                >
-                    Crear Técnico
-                </Button>
-            </Box>
-            
-            {/* DataGrid */}
             {loading ? (
                 <Typography variant="h6">Cargando técnicos...</Typography>
             ) : (
@@ -490,17 +448,14 @@ export const TechniciansDataGridWithModal = () => {
                     
                     {selectedRow && (
                         <Box id="modal-modal-description">
-                            {/* Fila de Nombre y ID */}
                             <Box display="flex" alignItems="center" mb={1}>
                                 <AccountCircle color="primary" sx={{ mr: 1 }} />
                                 <Typography variant="subtitle1" fontWeight="bold" mr={1}>
                                     {selectedRow.nombreCompleto}
                                 </Typography>
-                                {/* Estado (con color) */}
                                 {getStatusChip(selectedRow.estado)}
                             </Box>
 
-                            {/* Detalle Contacto */}
                             <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                                 <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
                                     CONTACTO
@@ -515,7 +470,6 @@ export const TechniciansDataGridWithModal = () => {
                                 </Box>
                             </Paper>
                             
-                            {/* Detalle Carga/Disponibilidad */}
                             <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                                 <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
                                     MÉTRICAS DE TRABAJO
@@ -529,7 +483,6 @@ export const TechniciansDataGridWithModal = () => {
                                 </Box>
                             </Paper>
 
-                            {/* Detalle Especialidades */}
                             <Paper variant="outlined" sx={{ p: 2 }}>
                                 <Box mb={1} display="flex" alignItems="center">
                                     <Verified color="action" sx={{ mr: 1, fontSize: 18, verticalAlign: 'middle'}}/>
@@ -561,196 +514,191 @@ export const TechniciansDataGridWithModal = () => {
                 </Box>
             </Modal>
 
-            {/* Modal de Formulario (Crear/Editar) */}
-            <Modal
-                open={openFormModal}
-                onClose={handleCloseFormModal}
-                aria-labelledby="technician-form-modal-title"
-            >
-                <Box sx={modalStyle} component="form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-                    <Typography id="technician-form-modal-title" variant="h5" component="h2" mb={1} color="text.primary" fontWeight={600}>
-                        {isEditMode ? 'Editar Técnico' : 'Crear Nuevo Técnico'}
-                    </Typography>
-                    
-                    <Divider sx={{ mb: 2 }} />
+            {/* Modal de Formulario (Crear/Editar) - Solo para Admins */}
+            {isAdmin && (
+                <Modal
+                    open={openFormModal}
+                    onClose={handleCloseFormModal}
+                    aria-labelledby="technician-form-modal-title"
+                >
+                    <Box sx={modalStyle} component="form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+                        <Typography id="technician-form-modal-title" variant="h5" component="h2" mb={1} color="text.primary" fontWeight={600}>
+                            {isEditMode ? 'Editar Técnico' : 'Crear Nuevo Técnico'}
+                        </Typography>
+                        
+                        <Divider sx={{ mb: 2 }} />
 
-                    <Stack spacing={3}>
-                        {/* Campo: Usuario Asociado */}
-                        <FormControl 
-                            fullWidth 
-                            required 
-                            error={!!formErrors.idUsuario}
-                            disabled={isEditMode}
-                        >
-                            <InputLabel id="user-select-label">Usuario</InputLabel>
-                            <Select
-                                labelId="user-select-label"
-                                id="idUsuario"
-                                value={formData.idUsuario} 
-                                label="Usuario"
-                                onChange={(e) => handleInputChange('idUsuario', e.target.value)}
-                                // Renderiza el nombre completo del usuario si está en modo edición y lo encontró
-                                {...(isEditMode && currentTechnicianUser ? {
-                                    renderValue: () => `${currentTechnicianUser.usuario} - ${currentTechnicianUser.nombre} ${currentTechnicianUser.primerApellido}`
-                                } : {})}
+                        <Stack spacing={3}>
+                            <FormControl 
+                                fullWidth 
+                                required 
+                                error={!!formErrors.idUsuario}
+                                disabled={isEditMode}
                             >
-                                <MenuItem value="">
-                                <em>Seleccione un Usuario</em>
-                                </MenuItem>
-                                
-                                {/* En modo Edición, solo muestra el usuario actual como opción válida */}
-                                {isEditMode && currentTechnicianUser && (
-                                    <MenuItem key={currentTechnicianUser.idUsuario} value={currentTechnicianUser.idUsuario}>
-                                        {`${currentTechnicianUser.usuario} - ${currentTechnicianUser.nombre} ${currentTechnicianUser.primerApellido}`}
-                                    </MenuItem>
-                                )}
-                                
-                                {/* En modo Creación, muestra los usuarios disponibles */}
-                                {!isEditMode && availableUsers.map((user) => (
-                                    <MenuItem key={user.idUsuario} value={user.idUsuario}>
-                                        **{user.usuario}** - {`${user.nombre} ${user.primerApellido}`}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                            {formErrors.idUsuario && <Typography color="error" variant="caption" sx={{ml: 2, mt: 0.5}}>{formErrors.idUsuario}</Typography>}
-                            {isEditMode && <Typography variant="caption" color="text.secondary" sx={{ml: 2, mt: 0.5}}>El usuario asociado no puede cambiarse al editar.</Typography>}
-                        </FormControl>
-
-                        {/* Campo: Disponibilidad */}
-                        <FormControl fullWidth>
-                            <InputLabel id="availability-select-label">Disponibilidad</InputLabel>
-                            <Select
-                                labelId="availability-select-label"
-                                id="idDisponibilidad"
-                                value={formData.idDisponibilidad}
-                                label="Disponibilidad"
-                                onChange={(e) => handleInputChange('idDisponibilidad', e.target.value)}
-                            >
-                                {availabilityList.map((item) => (
-                                <MenuItem key={item.idDisponibilidad} value={item.idDisponibilidad}>
-                                    {item.nombre}
-                                </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        {/* Campo: Carga de Trabajo (Solo editable en Creación) */}
-                        <TextField
-                            fullWidth
-                            label="Carga de Trabajo (Tickets asignados)"
-                            type="number"
-                            value={formData.cargaTrabajo}
-                            onChange={(e) => handleInputChange('cargaTrabajo', e.target.value)}
-                            InputProps={{ inputProps: { min: 0 } }}
-                            disabled={isEditMode}
-                            error={!!formErrors.cargaTrabajo}
-                            helperText={formErrors.cargaTrabajo || (isEditMode ? 'Esta métrica se actualiza automáticamente por el sistema.' : 'Carga de trabajo inicial.')}
-                        />
-
-                        {/* Campo: Especialidades (Select Múltiple) */}
-                        <FormControl 
-                            fullWidth 
-                            required 
-                            error={!!formErrors.especialidades}
-                        >
-                            <InputLabel id="specialty-multiple-label">Especialidades</InputLabel>
-                            <Select
-                                labelId="specialty-multiple-label"
-                                multiple
-                                value={formData.especialidades} 
-                                onChange={(e) => handleInputChange('especialidades', e.target.value)}
-                                input={<OutlinedInput id="select-multiple-chip" label="Especialidades" />}
-                                renderValue={(selected) => (
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                    {selected.map((value) => {
-                                    const specialty = specialtiesList.find(s => s.idEspecialidad === value);
-                                    return (
-                                        <Chip key={value} label={specialty ? specialty.nombre : `ID: ${value}`} size="small" />
-                                    );
-                                    })}
-                                </Box>
-                                )}
-                            >
-                                {specialtiesList.map((specialty) => (
-                                <MenuItem 
-                                    key={specialty.idEspecialidad} 
-                                    value={specialty.idEspecialidad}
+                                <InputLabel id="user-select-label">Usuario</InputLabel>
+                                <Select
+                                    labelId="user-select-label"
+                                    id="idUsuario"
+                                    value={formData.idUsuario} 
+                                    label="Usuario"
+                                    onChange={(e) => handleInputChange('idUsuario', e.target.value)}
+                                    {...(isEditMode && currentTechnicianUser ? {
+                                        renderValue: () => `${currentTechnicianUser.usuario} - ${currentTechnicianUser.nombre} ${currentTechnicianUser.primerApellido}`
+                                    } : {})}
                                 >
-                                    {specialty.nombre}
-                                </MenuItem>
-                                ))}
-                            </Select>
-                            {formErrors.especialidades && <Typography color="error" variant="caption" sx={{ml: 2, mt: 0.5}}>{formErrors.especialidades}</Typography>}
-                        </FormControl>
+                                    <MenuItem value="">
+                                    <em>Seleccione un Usuario</em>
+                                    </MenuItem>
+                                    
+                                    {isEditMode && currentTechnicianUser && (
+                                        <MenuItem key={currentTechnicianUser.idUsuario} value={currentTechnicianUser.idUsuario}>
+                                            {`${currentTechnicianUser.usuario} - ${currentTechnicianUser.nombre} ${currentTechnicianUser.primerApellido}`}
+                                        </MenuItem>
+                                    )}
+                                    
+                                    {!isEditMode && availableUsers.map((user) => (
+                                        <MenuItem key={user.idUsuario} value={user.idUsuario}>
+                                            **{user.usuario}** - {`${user.nombre} ${user.primerApellido}`}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                {formErrors.idUsuario && <Typography color="error" variant="caption" sx={{ml: 2, mt: 0.5}}>{formErrors.idUsuario}</Typography>}
+                                {isEditMode && <Typography variant="caption" color="text.secondary" sx={{ml: 2, mt: 0.5}}>El usuario asociado no puede cambiarse al editar.</Typography>}
+                            </FormControl>
 
-                        {/* Campo: Estado (Switch) - Solución #1 aplicada en handleInputChange y handleSubmit */}
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                checked={formData.estado === 1}
-                                onChange={(e) => handleInputChange('estado', e.target.checked)}
-                                name="estado"
-                                color="primary"
-                                />
-                            }
-                            label={formData.estado === 1 ? 'Activo' : 'Inactivo'}
-                        />
-                    </Stack>
+                            <FormControl fullWidth>
+                                <InputLabel id="availability-select-label">Disponibilidad</InputLabel>
+                                <Select
+                                    labelId="availability-select-label"
+                                    id="idDisponibilidad"
+                                    value={formData.idDisponibilidad}
+                                    label="Disponibilidad"
+                                    onChange={(e) => handleInputChange('idDisponibilidad', e.target.value)}
+                                >
+                                    {availabilityList.map((item) => (
+                                    <MenuItem key={item.idDisponibilidad} value={item.idDisponibilidad}>
+                                        {item.nombre}
+                                    </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
 
-                    {/* Botones de acción */}
-                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                        <Button 
-                        onClick={handleCloseFormModal} 
-                        variant="outlined" 
-                        color="error"
-                        >
-                        Cancelar
-                        </Button>
-                        <Button 
-                        type="submit" 
-                        variant="contained" 
-                        color="primary"
-                        >
-                        {isEditMode ? 'Guardar Cambios' : 'Crear Técnico'}
-                        </Button>
+                            <TextField
+                                fullWidth
+                                label="Carga de Trabajo (Tickets asignados)"
+                                type="number"
+                                value={formData.cargaTrabajo}
+                                onChange={(e) => handleInputChange('cargaTrabajo', e.target.value)}
+                                InputProps={{ inputProps: { min: 0 } }}
+                                disabled={isEditMode}
+                                error={!!formErrors.cargaTrabajo}
+                                helperText={formErrors.cargaTrabajo || (isEditMode ? 'Esta métrica se actualiza automáticamente por el sistema.' : 'Carga de trabajo inicial.')}
+                            />
+
+                            <FormControl 
+                                fullWidth 
+                                required 
+                                error={!!formErrors.especialidades}
+                            >
+                                <InputLabel id="specialty-multiple-label">Especialidades</InputLabel>
+                                <Select
+                                    labelId="specialty-multiple-label"
+                                    multiple
+                                    value={formData.especialidades} 
+                                    onChange={(e) => handleInputChange('especialidades', e.target.value)}
+                                    input={<OutlinedInput id="select-multiple-chip" label="Especialidades" />}
+                                    renderValue={(selected) => (
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                        {selected.map((value) => {
+                                        const specialty = specialtiesList.find(s => s.idEspecialidad === value);
+                                        return (
+                                            <Chip key={value} label={specialty ? specialty.nombre : `ID: ${value}`} size="small" />
+                                        );
+                                        })}
+                                    </Box>
+                                    )}
+                                >
+                                    {specialtiesList.map((specialty) => (
+                                    <MenuItem 
+                                        key={specialty.idEspecialidad} 
+                                        value={specialty.idEspecialidad}
+                                    >
+                                        {specialty.nombre}
+                                    </MenuItem>
+                                    ))}
+                                </Select>
+                                {formErrors.especialidades && <Typography color="error" variant="caption" sx={{ml: 2, mt: 0.5}}>{formErrors.especialidades}</Typography>}
+                            </FormControl>
+
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                    checked={formData.estado === 1}
+                                    onChange={(e) => handleInputChange('estado', e.target.checked)}
+                                    name="estado"
+                                    color="primary"
+                                    />
+                                }
+                                label={formData.estado === 1 ? 'Activo' : 'Inactivo'}
+                            />
+                        </Stack>
+
+                        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                            <Button 
+                            onClick={handleCloseFormModal} 
+                            variant="outlined" 
+                            color="error"
+                            >
+                            Cancelar
+                            </Button>
+                            <Button 
+                            type="submit" 
+                            variant="contained" 
+                            color="primary"
+                            >
+                            {isEditMode ? 'Guardar Cambios' : 'Crear Técnico'}
+                            </Button>
+                        </Box>
                     </Box>
-                </Box>
-            </Modal>
+                </Modal>
+            )}
 
-            {/* Diálogo de Confirmación de Eliminación (MUI Dialog) */}
-            <Dialog
-                open={isDeleteDialogOpen}
-                onClose={handleCancelDelete}
-                aria-labelledby="alert-dialog-title"
-                aria-describedby="alert-dialog-description"
-            >
-                <DialogTitle id="alert-dialog-title" sx={{ color: 'error.main' }}>
-                    {"Confirmar Eliminación"}
-                </DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="alert-dialog-description">
-                        <Typography variant="body1" sx={{mb: 1}}>
-                            ¿Está seguro de eliminar este técnico (despromoverlo)?
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Esta acción es irreversible y el usuario dejará de ser considerado técnico.
-                        </Typography>
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCancelDelete} variant="outlined" color="primary">
-                        Cancelar
-                    </Button>
-                    <Button 
-                        onClick={executeDelete} 
-                        variant="contained" 
-                        color="error" 
-                        autoFocus 
-                    >
-                        Aceptar
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            {/* Diálogo de Confirmación de Eliminación - Solo para Admins */}
+            {isAdmin && (
+                <Dialog
+                    open={isDeleteDialogOpen}
+                    onClose={handleCancelDelete}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title" sx={{ color: 'error.main' }}>
+                        {"Confirmar Eliminación"}
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            <Typography variant="body1" sx={{mb: 1}}>
+                                ¿Está seguro de eliminar este técnico (despromoverlo)?
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Esta acción es irreversible y el usuario dejará de ser considerado técnico.
+                            </Typography>
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCancelDelete} variant="outlined" color="primary">
+                            Cancelar
+                        </Button>
+                        <Button 
+                            onClick={executeDelete} 
+                            variant="contained" 
+                            color="error" 
+                            autoFocus 
+                        >
+                            Aceptar
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            )}
 
         </div>
     );
