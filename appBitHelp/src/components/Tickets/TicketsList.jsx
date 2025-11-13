@@ -1,8 +1,9 @@
+// TicketsList.jsx - Reemplaza el archivo completo
 // eslint-disable-next-line no-unused-vars
 import React, { useEffect, useState, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import TicketService from '../../services/TicketService';
-import { ListCardTickets } from './ListCardTickets.jsx'; // Ojo con esta ruta
+import { ListCardTickets } from './ListCardTickets.jsx';
 import { TicketSummaryDashboard } from './TicketSummaryDashboard.jsx';
 
 function TicketsList() {
@@ -12,7 +13,7 @@ function TicketsList() {
 
   // Estado para saber qué filtro de estado está activo. 'Total' por defecto.
   const [filtroActivo, setFiltroActivo] = useState('Total');
-
+  const [searchId, setSearchId] = useState(''); // Nuevo estado para búsqueda por ID
 
   useEffect(() => {
     // Carga inicial de tiquetes
@@ -30,13 +31,18 @@ function TicketsList() {
   // Usamos useMemo para calcular la lista de tiquetes filtrados.
   // Esto se recalcula solo si la lista 'tickets' o el 'filtroActivo' cambian.
   const tiquetesFiltrados = useMemo(() => {
-    // Si el filtro es 'Total', devolver todos los tiquetes
+    // Si hay búsqueda por ID, tiene prioridad sobre los filtros de estado
+    if (searchId.trim() !== '') {
+      return tickets.filter(ticket => ticket.id.toString() === searchId.trim());
+    }
+    
+    // Si no hay búsqueda, aplica el filtro de estado normal
     if (filtroActivo === 'Total') {
       return tickets;
     }
     // Si no, filtrar por el estado que coincida con el filtro activo
     return tickets.filter(ticket => ticket.estado === filtroActivo);
-  }, [tickets, filtroActivo]);
+  }, [tickets, filtroActivo, searchId]);
 
   return (
     // Contenedor principal de la página
@@ -70,6 +76,8 @@ function TicketsList() {
             tickets={tickets} 
             filtroActivo={filtroActivo}
             onFiltroChange={setFiltroActivo}
+            searchId={searchId}
+            onSearchIdChange={setSearchId}
           />
           {/* Pasamos solo los tiquetes FILTRADOS a la lista de tarjetas */}
           <ListCardTickets data={tiquetesFiltrados} />

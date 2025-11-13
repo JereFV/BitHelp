@@ -8,8 +8,9 @@ import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 // Componentes de Material-UI para el layout y la interacción
-import { Grid, Paper, Typography, Box, ButtonBase, Chip } from '@mui/material';
+import { Grid, Paper, Typography, Box, ButtonBase, Chip, TextField, IconButton } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import { Cancel } from '@mui/icons-material';
 
 // Importamos los iconos de Iconoir que representan cada estado y el total
 import {
@@ -147,7 +148,7 @@ StatCard.propTypes = {
 
 
 // Componente Principal: Recibe todos los tiquetes y el estado de filtro del padre
-export function TicketSummaryDashboard({ tickets = [], filtroActivo, onFiltroChange }) {
+export function TicketSummaryDashboard({ tickets = [], filtroActivo, onFiltroChange, searchId, onSearchIdChange }) {
 
   // useMemo: Calcula los conteos de tiquetes por estado de forma eficiente
   const counts = useMemo(() => {
@@ -180,6 +181,26 @@ export function TicketSummaryDashboard({ tickets = [], filtroActivo, onFiltroCha
 
   return (
     <Box sx={{ mb: 4 }}>
+      {/* Campo de búsqueda por ID */}
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          size="small"
+          label="Buscar por ID"
+          placeholder="Ingrese el ID del ticket"
+          value={searchId}
+          onChange={(e) => onSearchIdChange(e.target.value)}
+          sx={{ maxWidth: 300 }}
+          InputProps={{
+            endAdornment: searchId && (
+              <IconButton size="small" onClick={() => onSearchIdChange('')}>
+                <Cancel />
+              </IconButton>
+            ),
+          }}
+        />
+      </Box>
+
       <Grid container spacing={2}>
         {/* Mapeamos la lista fija de statItems para crear la grilla de tarjetas */}
         {statItems.map((item) => (
@@ -204,4 +225,6 @@ TicketSummaryDashboard.propTypes = {
   tickets: PropTypes.array,
   filtroActivo: PropTypes.string.isRequired,
   onFiltroChange: PropTypes.func.isRequired,
+  searchId: PropTypes.string.isRequired,
+  onSearchIdChange: PropTypes.func.isRequired,
 };
