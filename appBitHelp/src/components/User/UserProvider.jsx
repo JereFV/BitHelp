@@ -15,15 +15,7 @@ export const useUser = () => {
 
 const LOCAL_STORAGE_KEY = 'userSession';
 
-// 💡 DATOS DE USUARIO QUEMADOS BASADOS EN TU DB
-const FAKE_USER_DATA = {
-    idUsuario: 1,
-    usuario: 'jfuentes',
-    nombre: 'Jeremy', // <-- Clave para mostrar el nombre
-    primerApellido: 'Fuentes',
-    segundoApellido: 'Venegas',
-    idRol: 1
-};
+
 
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState([]);
