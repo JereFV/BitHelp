@@ -28,9 +28,7 @@ export const UserProvider = ({ children }) => {
         return { nombre: 'Usuario Token Simulado' }; 
     };
 
-    // ----------------------------------------------------
     // LÓGICA DE SIMULACIÓN DE SESIÓN EN useEffect
-    // ----------------------------------------------------
     useEffect(() => {
         // 1. INTENTAR CARGAR DATOS DEL LOCAL STORAGE
         const storedUser = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -49,19 +47,18 @@ export const UserProvider = ({ children }) => {
             // 2. SI NO HAY DATOS (PRIMERA CARGA), QUEMAMOS EL USUARIO DE PRUEBA
             
             // Guardar en localStorage
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(FAKE_USER_DATA));
+          
 
             // Establecer el estado
-            setUser(FAKE_USER_DATA);
+          
             setIsAuthenticated(true);
 
             console.log("✅ Usuario de prueba 'Jeremy' cargado y quemado en localStorage.");
         }
     }, []); 
 
-    // ----------------------------------------------------
-    // FUNCIONES DE MANEJO DE ESTADO (Adaptadas)
-    // ----------------------------------------------------
+
+    // FUNCIONES DE MANEJO DE ESTADO
     const saveUser = (userData) => {
         // Esta función se usaría para un login real (guardaría el JWT o el objeto)
         // Aquí solo la adaptamos para guardar el objeto si se llama.
@@ -76,9 +73,8 @@ export const UserProvider = ({ children }) => {
         setIsAuthenticated(false);
     };
 
-    // ----------------------------------------------------
-    // FUNCIÓN CRÍTICA PARA MOSTRAR EL NOMBRE
-    // ----------------------------------------------------
+
+    // FUNCIÓN PARA MOSTRAR EL NOMBRE
     const getUserName = () => {
         if (!user) {
             // Esto solo debería ocurrir muy brevemente durante la inicialización

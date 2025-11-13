@@ -167,7 +167,7 @@ function LogoSwitcher() {
 
   const logoSrc = mode === 'dark'
     ? '/src/assets/BitHelpSinFondoDarkmode2.png'
-    : '/src/assets/BitHelpSinFondo.png';
+    : '/src/assets/BitHelpSinFondoDarkmode2.png';
 
   return (
     <img
