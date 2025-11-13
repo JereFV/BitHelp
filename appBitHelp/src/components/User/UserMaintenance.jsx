@@ -351,7 +351,7 @@ export default function UserMaintenance() {
             >
                 <Box sx={modalStyle}>
                     <Typography id="user-details-modal-title" variant="h5" component="h2" mb={1} sx={{ color: '#00796b', fontWeight: 'bold' }}>
-                        👀 Detalles del Usuario
+                         Detalles del Usuario
                     </Typography>
                     
                     <Divider sx={{ mb: 2 }} />

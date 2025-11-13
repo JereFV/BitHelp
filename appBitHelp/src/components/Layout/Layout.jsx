@@ -60,7 +60,7 @@ export function Layout({ children }) {
     ];
 
     // Lógica Condicional: Agregar 'Asignaciones' solo si es Técnico
-    if (isTechnician) {
+    if (isTechnician || userRoleId == ROLE_ID_ADMIN) {
       ticketChildren.push({
         segment: 'assignments',
         title: 'Asignaciones',    
