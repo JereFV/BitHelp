@@ -74,22 +74,37 @@ class user
         $response->toJSON($result);
     }
 
-    public function update($param) // $param es el ID del usuario
+   // UserModel.php - Método update
+    public function update($param) 
     {
         $response = new Response();
         $request = new Request();
         
-        // Obtener JSON enviado (datos actualizados del frontend)
+        // Obtener JSON enviado
         $inputJSON = $request->getJSON();
         
-        // Asignar el ID de la URL al objeto de datos para que el Modelo sepa qué fila actualizar
+        // Asignar el ID de la URL al objeto de datos
         $inputJSON->idUsuario = $param; 
         
         $usuario = new UserModel();
-        $result = $usuario->update($inputJSON);
         
-        // Dar respuesta
-        $response->toJSON($result);
+        try {
+            // Ejecutar la actualización en el Modelo
+            $result = $usuario->update($inputJSON);
+            
+            // Verificar si se encontró y actualizó el usuario
+            if (is_null($result)) {
+                // Si el Modelo devuelve null (ej: el ID no existe en DB)
+                $response->error(404, "Usuario no encontrado para el ID: " . $param);
+            } else {
+                // Dar respuesta con éxito (200 OK)
+                $response->toJSON($result);
+            }
+        } catch (\Exception $e) {
+            // Capturar cualquier error lanzado desde el Modelo (ej: duplicidad de correo)
+            // handleException debería devolver un código 400 o 500
+            handleException($e); 
+        }
     }
 
     public function updatePassword($id)

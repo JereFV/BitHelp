@@ -242,13 +242,13 @@ class UserModel
 	public function update($objeto)
     {
         try {
-           
+			$telefono = (is_null($objeto->telefono) || $objeto->telefono === '') ? 'NULL' : "'" . $objeto->telefono . "'";
+        	$segundoApellido = (is_null($objeto->segundoApellido) || $objeto->segundoApellido === '') ? 'NULL' : "'" . $objeto->segundoApellido . "'";
             // Consulta SQL usando los nombres de columna exactos de tu DB y idUsuario para WHERE:
-            $vSql = "UPDATE usuario SET 
-                        usuario = '$objeto->usuario',
+            $vSql = "UPDATE usuario SET                         
                         nombre = '$objeto->nombre', 
-                        primer_apellido = '$objeto->primerApellido',
-                        segundo_apellido = '$objeto->segundoApellido',
+                        primerApellido = '$objeto->primerApellido',
+                        segundoApellido = '$objeto->segundoApellido',
                         correo = '$objeto->correo', 
                         telefono = '$objeto->telefono',
                         estado = $objeto->estado, 

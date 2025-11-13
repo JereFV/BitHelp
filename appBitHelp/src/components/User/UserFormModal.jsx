@@ -1,9 +1,32 @@
 import React, { useEffect } from 'react';
 import { Modal, Box, TextField, Button, Typography, Select, MenuItem, FormControl, InputLabel, Alert, CircularProgress } from '@mui/material';
-import { useForm, Controller } from 'react-hook-form'; // ⬅️ Nuevos imports
-import { yupResolver } from '@hookform/resolvers/yup'; // ⬅️ Nuevo import para conectar Yup
-import { userSchema } from '../../Utilities/validationSchemas'; // ⬅️ Importamos el schema de Yup
+import { useForm, Controller } from 'react-hook-form'; 
+import { yupResolver } from '@hookform/resolvers/yup'; 
+import { userSchema } from '../../Utilities/validationSchemas'; 
 import UserService from '../../services/userService';
+import { use } from 'react';
+import PropTypes from 'prop-types';
+
+
+
+UserFormModal.propTypes = {
+    // Estas son las props que recibe tu componente:
+    open: PropTypes.bool.isRequired, 
+    handleClose: PropTypes.func.isRequired,
+    
+    userToEdit: PropTypes.shape({
+        idUsuario: PropTypes.number,
+        nombre: PropTypes.string,
+        primerApellido: PropTypes.string,
+        segundoApellido: PropTypes.string,
+        correo: PropTypes.string,
+        telefono: PropTypes.string,
+        idRol: PropTypes.number, // o number, dependiendo de cómo lo manejes
+        estado: PropTypes.number,
+        // ... incluye todas las propiedades que accedes dentro de reset({})
+    }), // Si no usas shape, solo usa PropTypes.object, pero shape es mejor
+    
+};
 
 const style = {
     position: 'absolute',
@@ -25,7 +48,8 @@ const defaultValues = {
     correo: '', 
     contrasenna: '', 
     idRol: '1', 
-    telefono: '', 
+    telefono: '',
+    estado: 1, 
 };
 
 export default function UserFormModal({ open, handleClose, userToEdit }) {
@@ -33,7 +57,6 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState(null);
 
-    // ⬅️ CONFIGURACIÓN DE REACT HOOK FORM
     const { 
         handleSubmit, 
         control, 
@@ -58,6 +81,7 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                     telefono: userToEdit.telefono || '',
                     idRol: userToEdit.idRol || '1',
                     contrasenna: '', // Siempre vacío
+                    estado: userToEdit.estado || 1,
                 });
             } else {
                 reset(defaultValues); // Reset a valores por defecto para crear
@@ -72,9 +96,13 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
         setLoading(true);
         setError(null);
 
-        const dataToSend = { ...data };
+        const dataToSend = { ...data 
+            ,...(isEditing && {
+                idUsuario: userToEdit.idUsuario,
+                estado:userToEdit.estado })
+        };
+       
         
-
         try {
             let message = '';
             if (isEditing) {
@@ -99,7 +127,7 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
             {/* RHF maneja el onSubmit */}
             <Box sx={style} component="form" onSubmit={handleSubmit(onSubmit)}>
                 <Typography variant="h5" component="h2" gutterBottom>
-                    {isEditing ? '✏️ Editar Usuario' : '➕ Crear Nuevo Usuario'}
+                    {isEditing ? ' Editar Usuario' : '➕ Crear Nuevo Usuario'}
                 </Typography>
                 
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -191,6 +219,26 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                     )}
                 />
                 
+                {/* --- CAMPO CONTRASEÑA --- */}
+                {!isEditing && ( // <--- SOLO AL CREAR (¡NO AL EDITAR!)
+                    <Controller
+                        name="contrasenna"
+                        control={control}
+                        render={({ field }) => (
+                            <TextField
+                                {...field}
+                                label="Contraseña"
+                                type="password"
+                                fullWidth
+                                required={!isEditing} // Condicionalmente requerido
+                                margin="normal"
+                                error={!!errors.contrasenna}
+                                helperText={errors.contrasenna?.message}
+                            />
+                        )}
+                    />
+                )}
+
                 {/* --- CAMPO ROL (SELECT) --- */}
                 <Controller
                     name="idRol"
@@ -212,6 +260,8 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                         </FormControl>
                     )}
                 />
+
+                
 
                 <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
                     <Button 
