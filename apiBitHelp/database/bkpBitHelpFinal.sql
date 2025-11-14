@@ -621,7 +621,7 @@ CREATE TABLE `usuario` (
   UNIQUE KEY `usuario_UNIQUE` (`usuario`),
   KEY `fkRolUsuario_Usuario_idx` (`idRol`),
   CONSTRAINT `fkRolUsuario_Usuario` FOREIGN KEY (`idRol`) REFERENCES `rol_usuario` (`idRolUsuario`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -630,7 +630,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
-INSERT INTO `usuario` VALUES (1,'jfuentes','Jeremy','Fuentes','Venegas','jeremyfvcr15@gmail.com','85197237','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(2,'rherrera','Rodrigo','Herrera','Castillo','rrhc1606@gmail.com','85848621','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(3,'jalfaro','Jeyson','Alfaro','Ríos','jeysonalfaro83@gmail.com','72501418','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(4,'jvazquez','Jaime','Vazquez','Ríos','jeisonv83@gmail.com','72051418','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(5,'msoto','María','Soto','Soto','msoto.soto@techpro.com','6011-2022','pass123',1,1),(6,'lchavez','Luis','Chávez','Arias','lchavez@protool.com','6033-4044','pass123',1,1),(7,'aflores','Andrés','Flores','Vargas','aflores.vargas@rugama.com','6055-6066','pass123',1,1),(8,'crojas','Carla','Rojas','Mora','crojas.mora@tonypan.com','6077-8088','pass123',1,1),(9,'pmendez','Pablo','Méndez','Castro','pmendez@techpro.com','6099-0100','pass123',1,1),(10,'gquiros','Gabriela','Quirós','León','gquiros.leon@protool.com','6111-2122','pass123',1,1);
+INSERT INTO `usuario` VALUES (1,'jfuentes','Jeremy','Fuentes','Venegas','jeremyfvcr15@gmail.com','85197237','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(2,'rherrera','Rodrigo','Herrera','Castillo','rrhc1606@gmail.com','85848621','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,3),(3,'jalfaro','Jeyson','Alfaro','Ríos','jeysonalfaro83@gmail.com','72501418','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(4,'jvazquez','Jaime','Vazquez','Ríos','jeisonv83@gmail.com','72051418','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(5,'msoto','María','Soto','Soto','msoto.soto@techpro.com','6011-2022','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,1),(6,'lchavez','Luis','Chávez','Arias','lchavez@protool.com','6033-4044','pass123',1,1),(7,'aflores','Andrés','Flores','Vargas','aflores.vargas@rugama.com','6055-6066','pass123',1,1),(8,'crojas','Carla','Rojas','Mora','crojas.mora@tonypan.com','6077-8088','pass123',1,1),(9,'pmendez','Pablo','Méndez','Castro','pmendez@techpro.com','6099-0100','$2y$10$vyP8TuUha7La33xDK5fVyOL9/FFuHfSAEHMtsVZFBhaIYQR394Iuq',1,1),(10,'gquiros','Gabriela','Quirós','León','gquiros.leon@protool.com','6111-2122','pass123',1,1),(11,'cdossantos','Cristiano Ronaldo','Dos Santos','Aveiro','elbicho@goles.com','20090607','$2y$10$weCpsoJjF5vfQJcj6ynJZOTBB9opbw1n61k6njOUeoYedUMQQxiCy',1,1),(13,'lmessi','Lionel','Messi','','barca@robo.com','20221218','$2y$10$nxWweFppQ4FmlomR43CO0.0MiBKIQCb/vN9lwDKEnvJGB53QKw.Su',1,1);
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -643,5 +643,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-09  3:10:26
-
+-- Dump completed on 2025-11-13 18:27:47
