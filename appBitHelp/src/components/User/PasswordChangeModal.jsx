@@ -102,7 +102,7 @@ export default function PasswordChangeModal({ open, handleClose, userId, userNam
             <Box component="form" onSubmit={handleSubmit}>
                 <DialogContent>
                     <Typography variant="body2" mb={2}>
-                        Estableciendo nueva contraseña para **{userName} (ID: {userId})**.
+                        Estableciendo nueva contraseña para {userName}.
                     </Typography>
 
                     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
