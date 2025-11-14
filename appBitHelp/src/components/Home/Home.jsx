@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useContext} from 'react';
 import Container from '@mui/material/Container'; 
 import Typography from '@mui/material/Typography'; 
 import { useUser } from '../User/UserProvider';
@@ -8,7 +8,7 @@ import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
 import ListSubheader from '@mui/material/ListSubheader';
-
+import { AuthContext } from '../../context/AuthContext.jsx';
 
 
 const itemData = [
@@ -73,9 +73,11 @@ function ImageGrid() {
 
 
 export function Home() { 
-  // Valor por defecto mientras se realiza el login
-  const { getUserName } = useUser();
-  const username = getUserName(); // Obtiene el nombre del token decodificado o 'Invitado'.
+  const { user } = useContext(AuthContext); 
+  
+  // Se determina el nombre del usuario de la propiedad 'user'
+  // El nombre de la propiedad podría ser 'nombre', 'username', etc., basado en la estructura que guardas.
+  const username = user ? user.nombre || user.usuario : 'Invitado';
   return ( 
     <Container sx={{ p: 1 }} maxWidth="lg"> 
       <Typography 
