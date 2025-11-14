@@ -558,7 +558,7 @@ export const TechniciansDataGridWithModal = () => {
                                     
                                     {!isEditMode && availableUsers.map((user) => (
                                         <MenuItem key={user.idUsuario} value={user.idUsuario}>
-                                            **{user.usuario}** - {`${user.nombre} ${user.primerApellido}`}
+                                            {user.usuario} - {`${user.nombre} ${user.primerApellido}`}
                                         </MenuItem>
                                     ))}
                                 </Select>
@@ -590,7 +590,7 @@ export const TechniciansDataGridWithModal = () => {
                                 value={formData.cargaTrabajo}
                                 onChange={(e) => handleInputChange('cargaTrabajo', e.target.value)}
                                 InputProps={{ inputProps: { min: 0 } }}
-                                disabled={isEditMode}
+                                disabled={true}
                                 error={!!formErrors.cargaTrabajo}
                                 helperText={formErrors.cargaTrabajo || (isEditMode ? 'Esta métrica se actualiza automáticamente por el sistema.' : 'Carga de trabajo inicial.')}
                             />
