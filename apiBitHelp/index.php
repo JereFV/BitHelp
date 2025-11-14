@@ -24,7 +24,6 @@ require_once "controllers/core/Request.php";
 require_once "controllers/core/Response.php";
 
 /***--- Agregar todos los modelos*/
-require_once "models/ActorModel.php";
 require_once "models/RolModel.php";
 require_once "models/CategorieModel.php";
 require_once "models/TicketModel.php";
@@ -37,7 +36,6 @@ require_once "models/TicketPriorityModel.php";
 require_once "models/TicketTagModel.php";
 
 /***--- Agregar todos los controladores*/
-require_once "controllers/ActorController.php";
 require_once "controllers/CategorieController.php";
 require_once "controllers/TicketController.php";
 require_once "controllers/UserController.php";

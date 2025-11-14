@@ -19,9 +19,14 @@ class TicketService
 
     return tickets;
   }
-    //Obtiene los detalles del SLA por ID de ticket
+
+  //Obtiene los detalles del SLA por ID de ticket
   getSlaDetailsById(id) {
     return axios.get(`${BASE_URL}/getSlaDetails/${id}`); 
+  }
+
+  createTicket(ticket) {
+    return axios.post(BASE_URL, JSON.stringify(ticket));
   }
 
 }

@@ -72,4 +72,25 @@ class Ticket
             handleException($ex);
         }
     }
+
+    //Creación de un nuevo tiquete.
+    public function create()
+    {
+        try 
+        { 
+            $response = new Response();
+            //Aramado de la estructura de entrada
+            $request = json_decode(file_get_contents('php://input'), true);
+
+            $ticketModel = new TicketModel();
+
+            //Agrega el tiquete y obtiene el id creado.
+            $ticket = $ticketModel->create($request);
+            
+            $response->toJson($ticket);           
+        }
+        catch (Exception $ex) {
+            handleException($ex);
+        }
+    }
 }

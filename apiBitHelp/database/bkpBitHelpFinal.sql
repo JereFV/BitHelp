@@ -272,7 +272,7 @@ DROP TABLE IF EXISTS `historial_tiquete`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `historial_tiquete` (
-  `idHistorialTiquete` int(11) NOT NULL,
+  `idHistorialTiquete` int(11) NOT NULL AUTO_INCREMENT,
   `idTiquete` int(11) NOT NULL,
   `fecha` datetime NOT NULL,
   `idUsuario` int(11) NOT NULL,
@@ -283,7 +283,7 @@ CREATE TABLE `historial_tiquete` (
   KEY `fk_EstadoTiquete_HistorialTiquete_idx` (`idEstado`),
   CONSTRAINT `fk_EstadoTiquete_HistorialTiquete` FOREIGN KEY (`idEstado`) REFERENCES `estado_tiquete` (`idEstadoTiquete`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_Usuario_HistorialTiquete` FOREIGN KEY (`idUsuario`) REFERENCES `usuario` (`idUsuario`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -558,7 +558,8 @@ CREATE TABLE `tiquete` (
   `descripcion` varchar(300) NOT NULL,
   `idEstado` int(11) NOT NULL,
   `idPrioridad` int(11) NOT NULL,
-  `idEspecialidad` int(11) NOT NULL,
+  `idCategoria` int(11) DEFAULT NULL,
+  `idEspecialidad` int(11) DEFAULT NULL,
   `fechaCreacion` datetime NOT NULL,
   `fechaCierre` datetime DEFAULT NULL,
   `tiempoResolucion` datetime DEFAULT NULL,
@@ -578,7 +579,8 @@ CREATE TABLE `tiquete` (
   KEY `fk_EstadoTiquete_Tiquete_idx` (`idEstado`),
   KEY `fk_Tecnico_Tiquete_idx` (`idTecnicoAsignado`),
   KEY `fk_MetodoAsignacion_Tiquete` (`idMetodoAsignacion`),
-  CONSTRAINT `fk_Especialidad_Tiquete` FOREIGN KEY (`idEspecialidad`) REFERENCES `especialidad` (`idEspecialidad`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  KEY `fk_Categoria_Tiquete_idx` (`idCategoria`),
+  CONSTRAINT `fk_Categoria_Tiquete` FOREIGN KEY (`idCategoria`) REFERENCES `categoria` (`idCategoria`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_EstadoTiquete_Tiquete` FOREIGN KEY (`idEstado`) REFERENCES `estado_tiquete` (`idEstadoTiquete`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_MetodoAsignacion_Tiquete` FOREIGN KEY (`idMetodoAsignacion`) REFERENCES `metodo_asignacion` (`idMetodoAsignacion`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_PrioridadTiquete_Tiquete` FOREIGN KEY (`idPrioridad`) REFERENCES `prioridad_tiquete` (`idPrioridadTiquete`) ON DELETE NO ACTION ON UPDATE NO ACTION,
@@ -594,7 +596,7 @@ CREATE TABLE `tiquete` (
 
 LOCK TABLES `tiquete` WRITE;
 /*!40000 ALTER TABLE `tiquete` DISABLE KEYS */;
-INSERT INTO `tiquete` VALUES (1,5,5,'Servidor de Correo Caído','Nadie puede enviar o recibir correos electrónicos, impacto crítico en la operación.',5,1,13,'2025-11-04 09:00:00','2025-11-04 13:10:00','2025-11-04 04:10:00','2025-11-04 09:15:00','2025-11-04 13:00:00',1,1,3,1,'Resolvieron un problema muy serio en tiempo récord.',5),(2,6,6,'Solicitud de mouse ergonómico','Necesito un mouse vertical para prevenir el dolor de muñeca.',5,4,3,'2025-11-03 14:00:00','2025-11-04 11:30:00','2025-11-04 21:30:00','2025-11-03 14:30:00','2025-11-04 10:00:00',1,1,4,2,'El equipo fue entregado al día siguiente sin problemas.',4),(3,7,NULL,'Problema con Excel en equipo nuevo','Al abrir archivos grandes, Excel se cierra inesperadamente.',4,3,5,'2025-11-15 13:30:00',NULL,NULL,NULL,NULL,NULL,NULL,1,2,NULL,NULL),(4,8,NULL,'Mi cuenta de VPN no funciona','No puedo conectarme a la red de la oficina desde casa.',3,2,12,'2025-11-14 11:00:00',NULL,NULL,'2025-11-14 11:10:00',NULL,1,NULL,2,2,NULL,NULL),(5,9,NULL,'Petición de software de diseño','Solicito la instalación del programa AutoCAD en mi estación.',2,4,7,'2025-11-09 16:00:00',NULL,NULL,'2025-11-09 16:30:00','2025-11-10 14:00:00',1,1,3,1,NULL,NULL),(6,10,10,'Impresora del 3er piso imprime lento','El trabajo de impresión tarda más de 5 minutos en salir.',5,3,2,'2025-10-30 08:00:00','2025-11-01 11:00:00','2025-11-06 03:00:00','2025-10-30 08:50:00','2025-11-01 09:30:00',0,0,1,2,'Demoró más de lo esperado en resolverse.',2),(7,9,NULL,'No puedo acceder a recursos compartidos','Error de permisos al intentar abrir la carpeta del departamento de marketing.',1,1,14,'2025-11-06 15:30:00',NULL,NULL,'2025-11-06 15:58:00','2025-11-06 16:30:00',1,1,2,2,'Excelente atención me ayudaron muy rápido',5),(8,8,8,'Mi PC se reinicia constantemente','Fallo de hardware intermitente. Urgente para poder trabajar.',5,2,1,'2025-11-01 10:00:00','2025-11-01 13:00:00','2025-11-04 03:00:00','2025-11-01 10:28:30','2025-11-01 12:46:00',1,1,2,1,'El técnico fue muy profesional y cambió la memoria en menos de 3 horas.',5),(9,7,NULL,'Solicitud de acceso a base de datos','Necesito permisos de lectura para la DB de producción.',3,3,10,'2025-11-20 07:10:00',NULL,NULL,'2025-11-20 07:29:00','2025-11-20 10:09:00',1,1,4,2,NULL,NULL),(10,6,6,'Restablecer mi contraseña de dominio','Olvidé mi contraseña después de las vacaciones.',5,3,8,'2025-10-27 08:00:00','2025-10-27 15:35:00','2025-11-04 07:35:00','2025-10-27 08:23:07','2025-10-27 14:50:45',1,1,3,2,'Fue una resolución del mismo día, excelente servicio.',5);
+INSERT INTO `tiquete` VALUES (1,5,5,'Servidor de Correo Caído','Nadie puede enviar o recibir correos electrónicos, impacto crítico en la operación.',5,1,NULL,13,'2025-11-04 09:00:00','2025-11-04 13:10:00','2025-11-04 04:10:00','2025-11-04 09:15:00','2025-11-04 13:00:00',1,1,3,1,'Resolvieron un problema muy serio en tiempo récord.',5),(2,6,6,'Solicitud de mouse ergonómico','Necesito un mouse vertical para prevenir el dolor de muñeca.',5,4,NULL,3,'2025-11-03 14:00:00','2025-11-04 11:30:00','2025-11-04 21:30:00','2025-11-03 14:30:00','2025-11-04 10:00:00',1,1,4,2,'El equipo fue entregado al día siguiente sin problemas.',4),(3,7,NULL,'Problema con Excel en equipo nuevo','Al abrir archivos grandes, Excel se cierra inesperadamente.',4,3,NULL,5,'2025-11-15 13:30:00',NULL,NULL,NULL,NULL,NULL,NULL,1,2,NULL,NULL),(4,8,NULL,'Mi cuenta de VPN no funciona','No puedo conectarme a la red de la oficina desde casa.',3,2,NULL,12,'2025-11-14 11:00:00',NULL,NULL,'2025-11-14 11:10:00',NULL,1,NULL,2,2,NULL,NULL),(5,9,NULL,'Petición de software de diseño','Solicito la instalación del programa AutoCAD en mi estación.',2,4,NULL,7,'2025-11-09 16:00:00',NULL,NULL,'2025-11-09 16:30:00','2025-11-10 14:00:00',1,1,3,1,NULL,NULL),(6,10,10,'Impresora del 3er piso imprime lento','El trabajo de impresión tarda más de 5 minutos en salir.',5,3,NULL,2,'2025-10-30 08:00:00','2025-11-01 11:00:00','2025-11-06 03:00:00','2025-10-30 08:50:00','2025-11-01 09:30:00',0,0,1,2,'Demoró más de lo esperado en resolverse.',2),(7,9,NULL,'No puedo acceder a recursos compartidos','Error de permisos al intentar abrir la carpeta del departamento de marketing.',1,1,NULL,14,'2025-11-06 15:30:00',NULL,NULL,'2025-11-06 15:58:00','2025-11-06 16:30:00',1,1,2,2,'Excelente atención me ayudaron muy rápido',5),(8,8,8,'Mi PC se reinicia constantemente','Fallo de hardware intermitente. Urgente para poder trabajar.',5,2,NULL,1,'2025-11-01 10:00:00','2025-11-01 13:00:00','2025-11-04 03:00:00','2025-11-01 10:28:30','2025-11-01 12:46:00',1,1,2,1,'El técnico fue muy profesional y cambió la memoria en menos de 3 horas.',5),(9,7,NULL,'Solicitud de acceso a base de datos','Necesito permisos de lectura para la DB de producción.',3,3,NULL,10,'2025-11-20 07:10:00',NULL,NULL,'2025-11-20 07:29:00','2025-11-20 10:09:00',1,1,4,2,NULL,NULL),(10,6,6,'Restablecer mi contraseña de dominio','Olvidé mi contraseña después de las vacaciones.',5,3,NULL,8,'2025-10-27 08:00:00','2025-10-27 15:35:00','2025-11-04 07:35:00','2025-10-27 08:23:07','2025-10-27 14:50:45',1,1,3,2,'Fue una resolución del mismo día, excelente servicio.',5);
 /*!40000 ALTER TABLE `tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -643,4 +645,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-13 19:00:11
+-- Dump completed on 2025-11-14  2:15:41

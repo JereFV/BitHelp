@@ -46,57 +46,57 @@ class TicketModel
     // Rol 2-Técnico: Tiquetes que le han sido asignados.
     // Rol 3-Administrador: Todos los tiquetes existentes sin filtro alguno.
     public function getAllByRolUser($idRole, $idUser)
-{
-    try 
-    {            
-        $query = "
-            SELECT 
-                t.idTiquete AS id,
-                t.idTiquete AS numero,
-                COALESCE(t.titulo, '') AS titulo,
-                COALESCE(t.descripcion, '') AS descripcion,
-                COALESCE(e.nombre, 'Sin estado') AS estado,
-                COALESCE(p.nombre, 'Sin prioridad') AS prioridad,
-                CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.primerApellido,''), ' ', COALESCE(u.segundoApellido,'')) AS tecnico,
-                TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante,
-                (SELECT h.fecha FROM historial_tiquete h 
-                 WHERE h.idTiquete = t.idTiquete AND h.idEstado = 2 
-                 ORDER BY h.fecha ASC LIMIT 1) as fechaAsignacion,
-                (SELECT c.nombre FROM categoria c 
-                 INNER JOIN categoria_especialidad ce ON c.idCategoria = ce.idCategoria
-                 WHERE ce.idEspecialidad = t.idEspecialidad LIMIT 1) as categoria,
-                t.slaResolucion
-            FROM tiquete t
-            LEFT JOIN estado_tiquete e ON t.idEstado = e.idEstadoTiquete
-            LEFT JOIN prioridad_tiquete p ON t.idPrioridad = p.idPrioridadTiquete
-            LEFT JOIN tecnico tec ON t.idTecnicoAsignado = tec.idTecnico
-            LEFT JOIN usuario u ON tec.idUsuario = u.idUsuario
-        ";
+    {
+        try 
+        {            
+            $query = "
+                SELECT 
+                    t.idTiquete AS id,
+                    t.idTiquete AS numero,
+                    COALESCE(t.titulo, '') AS titulo,
+                    COALESCE(t.descripcion, '') AS descripcion,
+                    COALESCE(e.nombre, 'Sin estado') AS estado,
+                    COALESCE(p.nombre, 'Sin prioridad') AS prioridad,
+                    CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.primerApellido,''), ' ', COALESCE(u.segundoApellido,'')) AS tecnico,
+                    TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante,
+                    (SELECT h.fecha FROM historial_tiquete h 
+                    WHERE h.idTiquete = t.idTiquete AND h.idEstado = 2 
+                    ORDER BY h.fecha ASC LIMIT 1) as fechaAsignacion,
+                    (SELECT c.nombre FROM categoria c 
+                    INNER JOIN categoria_especialidad ce ON c.idCategoria = ce.idCategoria
+                    WHERE ce.idEspecialidad = t.idEspecialidad LIMIT 1) as categoria,
+                    t.slaResolucion
+                FROM tiquete t
+                LEFT JOIN estado_tiquete e ON t.idEstado = e.idEstadoTiquete
+                LEFT JOIN prioridad_tiquete p ON t.idPrioridad = p.idPrioridadTiquete
+                LEFT JOIN tecnico tec ON t.idTecnicoAsignado = tec.idTecnico
+                LEFT JOIN usuario u ON tec.idUsuario = u.idUsuario
+            ";
 
-        $whereClause = "";
+            $whereClause = "";
 
-        if ($idRole == 1) 
-        {
-            $whereClause = "WHERE t.idUsuarioSolicita = $idUser";
+            if ($idRole == 1) 
+            {
+                $whereClause = "WHERE t.idUsuarioSolicita = $idUser";
+            }
+            else if ($idRole == 2) 
+            {
+                $idTecnicoQuery = "SELECT idTecnico FROM tecnico WHERE idUsuario = $idUser LIMIT 1";
+                $result = $this->connection->ExecuteSQL($idTecnicoQuery);
+                $idTecnico = $result[0]->idTecnico ?? 0;
+                $whereClause = "WHERE t.idTecnicoAsignado = $idTecnico";
+            }
+
+            $query .= " " . $whereClause . " ORDER BY t.idTiquete DESC";
+
+            $tickets = $this->connection->executeSQL($query);
+
+            return $tickets ?? [];
+        } 
+        catch (Exception $ex) {
+            handleException($ex);
         }
-        else if ($idRole == 2) 
-        {
-            $idTecnicoQuery = "SELECT idTecnico FROM tecnico WHERE idUsuario = $idUser LIMIT 1";
-            $result = $this->connection->ExecuteSQL($idTecnicoQuery);
-            $idTecnico = $result[0]->idTecnico ?? 0;
-            $whereClause = "WHERE t.idTecnicoAsignado = $idTecnico";
-        }
-
-        $query .= " " . $whereClause . " ORDER BY t.idTiquete DESC";
-
-        $tickets = $this->connection->executeSQL($query);
-
-        return $tickets ?? [];
-    } 
-    catch (Exception $ex) {
-        handleException($ex);
     }
-}
 
     public function get( $id )
     {
@@ -106,8 +106,7 @@ class TicketModel
             $ticketStatusModel = new TicketStatusModel();
             $ticketPriorityModel = new TicketPriorityModel();
             $specialtyModel = new SpecialtyModel();
-            $ticketHistoryModel = new TicketHistoryModel();
-            $log = new Logger();
+            $ticketHistoryModel = new TicketHistoryModel();           
 
             $query = "SELECT * FROM tiquete
                       WHERE idTiquete = $id";
@@ -193,6 +192,63 @@ class TicketModel
         } catch (Exception $ex) {
             handleException($ex);
             return null;
+        }
+    }
+
+    public function create( $ticket )
+    {
+        try
+        {
+            // $categorieModel = new CategorieModel();
+            // $responseSLA = new DateTime();
+            // $resolutionSLA = new DateTime();
+
+            // $categorie = $categorieModel->get($ticket->idCategorie);
+
+            // $responseIntervalSLA = DateInterval::createFromDateString($categorie->tiempoMaxRespuesta);
+            // $resolutionIntervalSLA = DateInterval::createFromDateString($categorie->tiempoMaxResolucion);
+            
+            // $responseSLA->add($responseIntervalSLA);
+            // $resolutionSLA->add($resolutionIntervalSLA);
+            
+            //Inicialmente inserta el tiquete en la entidad respectiva.
+            $query = "INSERT INTO tiquete (idUsuarioSolicita, 
+                                           titulo, 
+                                           descripcion, 
+                                           idEstado, 
+                                           idPrioridad, 
+                                           idCategoria,
+                                           fechaCreacion)
+                                   VALUES ($ticket->idUsuarioSolicitante,
+                                           $ticket->titulo,
+                                           $ticket->descripcion,
+                                           1, -- Pendiente
+                                           $ticket->idPrioridad,
+                                           $ticket->idCategoria,
+                                           NOW())";
+
+            //Ejecuta la instrucción y obtiene el id de registro insertado.
+            $idTicket = $this->connection->executeSQL_DML_last($query);
+
+            //Sobreescribe el query para la inserción de un registro en el historial de tiquetes.
+            $query = "INSERT INTO historial_tiquete (idTiquete,
+                                                    fecha,
+                                                    idUsuario,
+                                                    observacion,
+                                                    idEstado)
+                                            VALUES ($idTicket,
+                                                    NOW(),
+                                                    $ticket->idUsuarioSolicitante,
+                                                    'Tiquete registrado con un estado de Pendiente a la espera de ser asignado al personal técnico.',
+                                                    1)";
+                                                    
+            $this->connection->executeSQL($query);
+
+            //Retorna el código de tiquete registrado con el objetivo de mostrarlo en pantalla.
+            return $idTicket;
+        }
+        catch (Exception $ex) {
+            handleException($ex);
         }
     }
 }

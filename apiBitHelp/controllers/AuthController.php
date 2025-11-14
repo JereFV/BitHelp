@@ -51,7 +51,8 @@ public function login() {
             'nombre' => $user->nombre,
             'primerApellido' => $user->primerApellido,
             'segundoApellido' => $user->segundoApellido,
-            'idRol' => $user->idRol
+            'idRol' => $user->idRol,
+            'correo'=> $user->correo,
         ];
 
         $token = JWT::encode($payload);
