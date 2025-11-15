@@ -79,13 +79,14 @@ class Ticket
         try 
         { 
             $response = new Response();
-            //Aramado de la estructura de entrada
-            $request = json_decode(file_get_contents('php://input'), true);
-
+            $request = new Request();
             $ticketModel = new TicketModel();
 
+            //Armado de la estructura de entrada, decodificando la estructura JSON enviada como un objeto.
+            $decodedRequest = $request->getJson();
+
             //Agrega el tiquete y obtiene el id creado.
-            $ticket = $ticketModel->create($request);
+            $ticket = $ticketModel->create($decodedRequest);
             
             $response->toJson($ticket);           
         }

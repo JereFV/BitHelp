@@ -14,6 +14,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { AuthContext } from '../../context/AuthContext.jsx';
+import { Toaster } from 'react-hot-toast';
 
 Layout.propTypes = { children: PropTypes.node.isRequired }; 
 
@@ -131,6 +132,9 @@ export function Layout({ children }) {
         title: '', 
       }}
     >
+      {/*Se implementa la librería hot-toast sobre el layout con el objetivo de ser accesible desde cualquier parte del sistema.*/}
+      <Toaster/>
+
       <DashboardLayout>
         {/* Botón de Logout */}
         <Box sx={{ 

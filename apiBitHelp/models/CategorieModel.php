@@ -195,8 +195,7 @@ class CategorieModel
     {
         try 
         {
-            $query = "SELECT c.nombre
-                      FROM categoria c
+            $query = "SELECT * FROM categoria c
                       INNER JOIN etiqueta_categoria ec 
                       ON c.idCategoria = ec.idCategoria          
                       WHERE ec.idEtiqueta = $idTag";

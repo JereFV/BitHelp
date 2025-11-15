@@ -58,20 +58,19 @@ class TicketModel
                     COALESCE(e.nombre, 'Sin estado') AS estado,
                     COALESCE(p.nombre, 'Sin prioridad') AS prioridad,
                     CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.primerApellido,''), ' ', COALESCE(u.segundoApellido,'')) AS tecnico,
-                    TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante,
+                    TIMESTAMPDIFF(HOUR, NOW(), DATE_ADD(T.fechaCreacion, INTERVAL TIME_TO_SEC(s.tiempoMaxResolucion) SECOND)) AS tiempoRestante,
                     (SELECT h.fecha FROM historial_tiquete h 
                     WHERE h.idTiquete = t.idTiquete AND h.idEstado = 2 
                     ORDER BY h.fecha ASC LIMIT 1) as fechaAsignacion,
-                    (SELECT c.nombre FROM categoria c 
-                    INNER JOIN categoria_especialidad ce ON c.idCategoria = ce.idCategoria
-                    WHERE ce.idEspecialidad = t.idEspecialidad LIMIT 1) as categoria,
+                    c.nombre as categoria,
                     t.slaResolucion
                 FROM tiquete t
                 LEFT JOIN estado_tiquete e ON t.idEstado = e.idEstadoTiquete
                 LEFT JOIN prioridad_tiquete p ON t.idPrioridad = p.idPrioridadTiquete
                 LEFT JOIN tecnico tec ON t.idTecnicoAsignado = tec.idTecnico
                 LEFT JOIN usuario u ON tec.idUsuario = u.idUsuario
-            ";
+                INNER JOIN categoria c ON t.idCategoria = c.idCategoria
+                INNER JOIN sla s ON c.idSla = s.idSla";
 
             $whereClause = "";
 
@@ -126,10 +125,12 @@ class TicketModel
             $ticket->prioridad = $ticketPriorityModel->get($ticket->idPrioridad)[0];
 
             //Técnico asignado al tiquete.
-            $ticket->tecnicoAsignado = $userModel->get($ticket->idTecnicoAsignado);
+            if($ticket->idTecnicoAsignado)
+                $ticket->tecnicoAsignado = $userModel->get($ticket->idTecnicoAsignado);
 
             //Especilidad del tiquete a partir del catálogo.
-            $ticket->especialidad = $specialtyModel->get($ticket->idEspecialidad)[0];
+            if($ticket->idEspecialidad)
+                $ticket->especialidad = $specialtyModel->get($ticket->idEspecialidad)[0];
 
             //Historial o movimientos del tiquete.
             $ticket->historialTiquete = $ticketHistoryModel->get($ticket->idTiquete);
@@ -195,7 +196,7 @@ class TicketModel
         }
     }
 
-    public function create( $ticket )
+    public function create($ticket)
     {
         try
         {
@@ -219,12 +220,12 @@ class TicketModel
                                            idPrioridad, 
                                            idCategoria,
                                            fechaCreacion)
-                                   VALUES ($ticket->idUsuarioSolicitante,
-                                           $ticket->titulo,
-                                           $ticket->descripcion,
+                                   VALUES ($ticket->idRequestUser,
+                                           '$ticket->title',
+                                           '$ticket->description',
                                            1, -- Pendiente
-                                           $ticket->idPrioridad,
-                                           $ticket->idCategoria,
+                                           $ticket->idPriority,
+                                           $ticket->idCategorie,
                                            NOW())";
 
             //Ejecuta la instrucción y obtiene el id de registro insertado.
@@ -238,11 +239,11 @@ class TicketModel
                                                     idEstado)
                                             VALUES ($idTicket,
                                                     NOW(),
-                                                    $ticket->idUsuarioSolicitante,
+                                                    $ticket->idRequestUser,
                                                     'Tiquete registrado con un estado de Pendiente a la espera de ser asignado al personal técnico.',
                                                     1)";
                                                     
-            $this->connection->executeSQL($query);
+            $this->connection->executeSQL_DML($query);
 
             //Retorna el código de tiquete registrado con el objetivo de mostrarlo en pantalla.
             return $idTicket;

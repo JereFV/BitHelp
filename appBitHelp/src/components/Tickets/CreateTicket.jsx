@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect} from "react";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -41,9 +41,14 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import SendIcon from "@mui/icons-material/Send";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import FaceIcon from '@mui/icons-material/Face';
+import * as yup from 'yup';
+import { Controller, useForm } from "react-hook-form";
+import { yupResolver } from '@hookform/resolvers/yup';
+import TicketService from "../../services/TicketService";
+import toast from 'react-hot-toast'; 
 
 export function CreateTicket() {
-  //Obtiene el usuario en sesión a partir del valor almacenado en localStorage.
+  //Almacena los datos del usuario en sesión a partir de la información de localStorage.
   const userSession = JSON.parse(localStorage.getItem("userSession"));
 
   //Estilos definidos para el contenedor padre.
@@ -70,11 +75,51 @@ export function CreateTicket() {
     pr: 1,
   };
 
+  // Esquema de validación de los campos de entrada del formulario.
+  const ticketSchema = yup.object({
+    title: yup
+          .string()
+          .required("El título es requerido.")
+          .max(45, "El título debe tener un máximo de 45 caractereres."),
+    description: yup
+          .string()
+          .required("La descripción es requerida.")
+          .min(30, "La descripción debe tener un mínimo de 30 caracteres.")
+          .max(300, "La descripción debe tener un máximo de 300 caracteres."),
+    idPriority: yup
+          .number()
+          .typeError("La prioridad del caso es requerida."),
+    idTag: yup
+          .number()        
+          .typeError("La etiqueta es requerida para la categorización del caso."),         
+    categorie: yup
+          .string()
+          .required("La categoría es requerida, por favor seleccione alguna etiqueta."),
+  });
+
+  //Incializacióm del formulario junto con el valor predefinido de los campos.
+  const {
+    control,
+    setValue,
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    defaultValues: { 
+      title: "",
+      description: "",
+      idPriority: "",
+      idTag: "",
+      idRequestUser: "",
+      idCategorie: "",
+      categorie: ""
+    },
+    // Asignación de validaciones haciendo uso del esquema de tiquetes yup.
+    resolver: yupResolver(ticketSchema),
+  });
+
   //Obtiene los parámetros de enrutamiento contenidos en la dirección.
   const routeParams = useParams();
-
-  //Constante auxiliar para controlar la apertura del modal.
-  const [open, setOpen] = React.useState(true);
 
   //Constante para el manejo de navegación y ruteo.
   const navigate = useNavigate();
@@ -90,31 +135,70 @@ export function CreateTicket() {
   const [ticketpriorities, setTicketPriorities] = useState([]);
   const [ticketTags, setTicketTags] = useState([]);
 
-  //Constantes para el manejo de valores seleccionados sobre las listas desplegables.
-  const [selectedPriority, setSelectedPriority] = useState("");
-  const [selectedTag, setSelectedTag] = useState("");
+  //Constante auxiliar para controlar la apertura del modal.
+  const [open, setOpen] = React.useState(true);
 
-  //Almacena la categoría a mostrar según la etiqueta seleccionada.
-  const [categorie, setCategorie] = useState("");
+  //Almacena los datos del usuarios en sesión.
+  //const [userSession, setUserSession] = useState({});
 
-  //Funciones de control de eventos OnChange sobre las listas desplegables.
-  const handlePriorityChange = (event) => {
-    setSelectedPriority(event.target.value);
-  };
-
-  const handleTagChange = (event) => {
-    setSelectedTag(event.target.value);
+  //Evento OnCahnge personalizado para el select de etiquetas.
+  const handleTagChange = (event, fieldOnChange) => {
+    //Ejecuta el evento OnChange precargado por el hook UseController.
+    fieldOnChange(event);
 
     //Al cambiar la etiqueta seleccionada, obtiene la categoría relacionada.
     CategorieService.getCategoryByTag(event.target.value)
       .then((response) => {
-        //Almacena la categoría obtenida en la constante auxiliar de renderización.
-        setCategorie(response.data.nombre);
+        //Almacena los datos de la categoria en los campos del formulario respectivos.
+        setValue("idCategorie", response.data.idCategoria);
+        setValue("categorie", response.data.nombre, {shouldValidate: true});
+
+        toast.success("Categoría obtenida automáticamente a partir de la etiqueta seleccionada.", {duration: 3500});
       })
       .catch((error) => {
         console.log(error);
+        toast.error("Ha ocurrido un error al intentar obtener la categoría asociada a la etiqueta seleccionada. Por favor seleccione otra o contacte al administrador del sistema.", {duration: 3500});
       });
+  }; 
+
+  //Evento submit del formulario
+  const onSubmit = (DataForm) => {
+    try 
+    {
+      //Valida que los campos del formulario cumplan con las especificaciones requeridas.
+      if(ticketSchema.isValid())
+      {
+        //Creación del tiquete
+        TicketService.createTicket(DataForm)
+        .then((response) => {          
+            toast.success(
+              `Se ha creado correctamente el tiquete #${response.data} - ${DataForm.title}`,
+              {
+                duration: 4000,
+                position:'top-center'
+              }
+            );
+
+            //Al haber agregado el registro exitosamente, redirreciona hacia el listado.
+            return navigate('/tickets/ticketsList')
+        })
+        .catch((error) => {
+          toast.error("Ha ocurrido un error al intentar crear el tiquete.");
+          console.error(error);
+        })
+      } 
+    } 
+    catch (error) {
+      toast.error("Ha ocurrido un error al intentar crear el tiquete.");
+      console.error(error);
+    }
   };
+
+  //Evento error del formulario.
+  const onError = (errors, e) => {
+    toast.error("Ha ocurrido un error al intentar crear el tiquete.");
+    console.log(errors, e);
+  }    
 
   // const [form, setForm] = useState({
   //   descripcion: "",
@@ -133,6 +217,7 @@ export function CreateTicket() {
         setTicketPriorities(response.data);
       })
       .catch((error) => {
+        toast.error("Ha ocurrido un error al obtener el catálogo de prioridades. Por favor contacte al administrador del sistema.", {duration: 3500});
         console.log(error);
       });
 
@@ -143,20 +228,30 @@ export function CreateTicket() {
         setTicketTags(response.data);
       })
       .catch((error) => {
+        toast.error("Ha ocurrido un error al obtener el catálogo de etiquetas. Por favor contacte al administrador del sistema.", {duration: 3500});
         console.log(error);
       });
+
+    try 
+    {
+      //Asigna el id del usuario al campo del formulario respectivo.
+      setValue("idRequestUser", userSession.idUsuario);
+    } 
+    catch (error) {
+      toast.error("Ha ocurrido un error al intentar obtener los datos del usuario en sesión. Por favor contacte al administrador del sistema.", { duration: 3500 });
+      console.error(error);
+    }
   }, [routeParams.id]);
 
   return (
-    <div>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-        style={{}}
-      >
-        <Box sx={styleParentBox}>
+    <Modal
+      open={open}
+      onClose={handleClose}
+      aria-labelledby="modal-modal-title"
+      aria-describedby="modal-modal-description"
+    >
+      <Box sx={styleParentBox}>
+        <form onSubmit={handleSubmit(onSubmit, onError)} noValidate >
           <Box sx={{ mb: 3, flexShrink: 0 }}>
             <Typography
               id="modal-modal-title"
@@ -198,22 +293,31 @@ export function CreateTicket() {
                 />
                 Información General
               </Stack>
-            </Typography>    
+            </Typography>
 
             <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
-              <TextField
-                id="standard-basic"
-                label="Título"
-                fullWidth
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <TitleIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
+              <Controller
+                name="title"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    id="title"
+                    label="Título"
+                    fullWidth
+                    error={Boolean(errors.title)}
+                    helperText={errors.title ? errors.title.message : ""}
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <TitleIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                )}
               />
 
               <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -241,25 +345,24 @@ export function CreateTicket() {
             {/*Stack padre con dos stack hijos, cada uno con distribuciones diferentes en pantalla.*/}
             <Stack direction="row" spacing={"10%"} paddingBottom="1.5rem">
               <Stack width={"50%"} alignSelf={"center"}>
-                <TextField
-                  id="standard-basic"
-                  label="Descripción"
-                  fullWidth
-                  multiline
-                  maxRows={4}
-                  minRows={4}
-                  // slotProps={{
-                  //     input: {
-                  //         style: {
-                  //         //fontSize: "0.9rem",
-                  //         },
-                  //         startAdornment: (
-                  //         <InputAdornment position="start">
-                  //             <DescriptionIcon color="primary" />
-                  //         </InputAdornment>
-                  //         ),
-                  //     },
-                  // }}
+                <Controller
+                  name="description"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      id="description"
+                      label="Descripción"
+                      fullWidth
+                      multiline
+                      maxRows={4}
+                      minRows={4}
+                      error={Boolean(errors.description)}
+                      helperText={
+                        errors.description ? errors.description.message : ""
+                      }
+                    />
+                  )}
                 />
               </Stack>
 
@@ -282,25 +385,37 @@ export function CreateTicket() {
                 />
 
                 <FormControl fullWidth>
-                  <InputLabel>Prioridad</InputLabel>
-                  <Select
-                    labelId="demo-simple-select-helper-label"
-                    id="demo-simple-select-helper"
-                    value={selectedPriority}
-                    label="Prioridad"
-                    onChange={handlePriorityChange}
-                    fullWidth
-                  >
-                    {ticketpriorities &&
-                      ticketpriorities.map((priority) => (
-                        <MenuItem
-                          key={priority.idPrioridadTiquete}
-                          value={priority.nombre}
+                  <Controller
+                    name="idPriority"
+                    control={control}
+                    render={({ field }) => (
+                      <>
+                        <InputLabel id="id">Prioridad</InputLabel>
+                        <Select
+                          {...field}
+                          labelId="idPriority"
+                          value={field.value}
+                          label="Prioridad"
+                          //onChange={handlePriorityChange}
+                          fullWidth
+                          error={Boolean(errors.idPriority)}
                         >
-                          {priority.nombre}
-                        </MenuItem>
-                      ))}
-                  </Select>
+                          {ticketpriorities &&
+                            ticketpriorities.map((priority) => (
+                              <MenuItem
+                                key={priority.idPrioridadTiquete}
+                                value={priority.idPrioridadTiquete}
+                              >
+                                {priority.nombre}
+                              </MenuItem>
+                            ))}
+                        </Select>
+                        <FormHelperText error>
+                          {errors.idPriority ? errors.idPriority.message : ""}
+                        </FormHelperText>
+                      </>
+                    )}
+                  />
                 </FormControl>
               </Stack>
             </Stack>
@@ -328,9 +443,12 @@ export function CreateTicket() {
               spacing={{ xs: 1, sm: 2, md: 3 }}
               paddingBottom="1.5rem"
             >
+              {/*Código de usuario almacenado en un campo hidden.*/}
+              <input type="hidden" {...register("idRequestUser")} />
+
               <Chip
                 icon={<FaceIcon fontSize="medium" />}
-                label={`${userSession?.nombre} ${userSession?.primerApellido} ${userSession?.segundoApellido}`}
+                label={`${userSession?.nombre} ${userSession?.primerApellido} ${userSession?.segundoApellido}`}                
                 size="medium"
                 color="primary"
                 sx={{
@@ -371,71 +489,100 @@ export function CreateTicket() {
 
             <Stack direction="row" spacing="10%">
               <FormControl fullWidth>
-                <InputLabel>Etiqueta</InputLabel>
-                <Select
-                  labelId="demo-simple-select-helper-label"
-                  id="demo-simple-select-helper"
-                  value={selectedTag}
-                  label="Etiqueta"
-                  onChange={handleTagChange}
-                >
-                  {ticketTags &&
-                    ticketTags.map((tag) => (
-                      <MenuItem key={tag.idEtiqueta} value={tag.idEtiqueta}>
-                        {tag.nombre}
-                      </MenuItem>
-                    ))}
-                </Select>
-                <FormHelperText>
-                  Seleccione la etiqueta más adecuada según su problema.
-                </FormHelperText>
+                <Controller
+                  name="idTag"
+                  control={control}
+                  render={({ field }) => (
+                    <>
+                      <InputLabel id="id">Etiqueta</InputLabel>
+                      <Select
+                        {...field}
+                        labelId="idTag"
+                        value={field.value}
+                        label="Etiqueta"
+                        onChange={(event) =>
+                          handleTagChange(event, field.onChange)
+                        }
+                        fullWidth
+                        error={Boolean(errors.idTag)}
+                      >
+                        {ticketTags &&
+                          ticketTags.map((tag) => (
+                            <MenuItem
+                              key={tag.idEtiqueta}
+                              value={tag.idEtiqueta}
+                            >
+                              {tag.nombre}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                      <FormHelperText error={errors.idTag}>
+                        {errors.idTag
+                          ? errors.idTag.message
+                          : "Seleccione la etiqueta más adecuada según su problema."}
+                      </FormHelperText>
+                    </>
+                  )}
+                />
               </FormControl>
 
+              {/*Código de categoría almacenado en un campo hidden.*/}
+              <input type="hidden" {...register("idCategorie")} />
+
               <FormControl fullWidth>
-                <TextField
-                  id="outlined-read-only-input"
-                  label="Categoría"
-                  value={categorie}
-                  fullWidth
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <LocalOfferIcon color="primary" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
+                <Controller
+                  name="categorie"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      id="categorie"
+                      label="Categoría" 
+                      fullWidth
+                      error={Boolean(errors.categorie)}
+                      slotProps={{
+                        input: {
+                          readOnly: true,
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <LocalOfferIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        },
+                      }}
+                    />
+                  )}
                 />
-                <FormHelperText>
-                  Obtenida a partir de la etiqueta seleccionada.
+                <FormHelperText error={errors.categorie}>
+                  {errors.categorie 
+                  ? errors.categorie.message
+                  : "Obtenida a partir de la etiqueta seleccionada."}
                 </FormHelperText>
               </FormControl>
             </Stack>
           </Box>
 
           <Divider sx={{ mb: 3 }} />
-                  
-          <ImagesSelector onChange={""} />
 
-          <IconButton
-            onClick={() => handleClose()}
-            //to={`/tickets/ticketsList`}
-            //component={Link}
-            sx={{
-              position: "absolute",
-              top: 1,
-              right: 1,
-              color: "black",
-              zIndex: 10,
-            }}
-          >
-            <Close />
-          </IconButton>
-        </Box>
-      </Modal>
-    </div>
+          <ImagesSelector onChange={""} />
+        </form>
+
+        <IconButton
+          onClick={() => handleClose()}
+          //to={`/tickets/ticketsList`}
+          //component={Link}
+          sx={{
+            position: "absolute",
+            top: 1,
+            right: 1,
+            color: "black",
+            zIndex: 10,
+          }}
+        >
+          <Close />
+        </IconButton>
+      </Box>
+    </Modal>
   );
 }
 
@@ -579,9 +726,13 @@ export default function ImagesSelector({ onChange }) {
           />
         </Button>
 
-        <Button variant="contained" startIcon={<SendIcon />} color="success">
+        <Button 
+          type="submit"
+          variant="contained" 
+          startIcon={<SendIcon />} 
+          color="success">
           Crear Tiquete
-        </Button>
+        </Button> 
       </Box>
 
       {/* Ventana desplegable de vista ampliada de imágenes adjuntas.*/}
