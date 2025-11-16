@@ -34,6 +34,7 @@ require_once "models/TechnicianModel.php";
 require_once "models/SpecialtyModel.php";
 require_once "models/TicketPriorityModel.php";
 require_once "models/TicketTagModel.php";
+require_once "models/TicketImageModel.php";
 
 /***--- Agregar todos los controladores*/
 require_once "controllers/CategorieController.php";
@@ -44,6 +45,7 @@ require_once "controllers/TicketPriorityController.php";
 require_once "controllers/TicketTagController.php";
 require_once "controllers/core/JWT.php";
 require_once "controllers/AuthController.php";
+require_once "controllers/TicketImageController.php";
 
 //Enrutador
 require_once "routes/RoutesController.php";

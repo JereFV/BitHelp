@@ -18,6 +18,10 @@ class Request
             return '';
         }
 
+        $log = new Logger();
+        $log->info((json_encode(($_POST))));
+        $log->info((json_encode($_FILES)));
+
         $body = [];
 
         // Obtiene los datos de $_POST

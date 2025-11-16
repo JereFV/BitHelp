@@ -205,18 +205,6 @@ class TicketModel
     {
         try
         {
-            // $categorieModel = new CategorieModel();
-            // $responseSLA = new DateTime();
-            // $resolutionSLA = new DateTime();
-
-            // $categorie = $categorieModel->get($ticket->idCategorie);
-
-            // $responseIntervalSLA = DateInterval::createFromDateString($categorie->tiempoMaxRespuesta);
-            // $resolutionIntervalSLA = DateInterval::createFromDateString($categorie->tiempoMaxResolucion);
-            
-            // $responseSLA->add($responseIntervalSLA);
-            // $resolutionSLA->add($resolutionIntervalSLA);
-            
             //Inicialmente inserta el tiquete en la entidad respectiva.
             $query = "INSERT INTO tiquete (idUsuarioSolicita, 
                                            titulo, 
@@ -237,12 +225,14 @@ class TicketModel
             $idTicket = $this->connection->executeSQL_DML_last($query);
 
             //Sobreescribe el query para la inserción de un registro en el historial de tiquetes.
-            $query = "INSERT INTO historial_tiquete (idTiquete,
+            $query = "INSERT INTO historial_tiquete (idHistorialTiquete,
+                                                    idTiquete,
                                                     fecha,
                                                     idUsuario,
                                                     observacion,
                                                     idEstado)
-                                            VALUES ($idTicket,
+                                            VALUES (1, -- Es el primer movimiento del tiquete
+                                                    $idTicket,
                                                     NOW(),
                                                     $ticket->idRequestUser,
                                                     'Tiquete registrado con un estado de Pendiente a la espera de ser asignado al personal técnico.',

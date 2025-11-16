@@ -45,9 +45,13 @@ import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import TicketService from "../../services/TicketService";
-import toast from 'react-hot-toast'; 
+import toast from 'react-hot-toast';
+import TicketImageService from "../../services/TicketImageService"; 
 
 export function CreateTicket() {
+  //Variable que contiene los campos del formulario en un formato de llave -> valor.
+  let formData = new FormData();
+
   //Almacena los datos del usuario en sesión a partir de la información de localStorage.
   const userSession = JSON.parse(localStorage.getItem("userSession"));
 
@@ -138,8 +142,8 @@ export function CreateTicket() {
   //Constante auxiliar para controlar la apertura del modal.
   const [open, setOpen] = React.useState(true);
 
-  //Almacena los datos del usuarios en sesión.
-  //const [userSession, setUserSession] = useState({});
+  //Almacena las imágenes adjuntas.
+  const [images, setImages] = useState(null);
 
   //Evento OnCahnge personalizado para el select de etiquetas.
   const handleTagChange = (event, fieldOnChange) => {
@@ -166,27 +170,44 @@ export function CreateTicket() {
     try 
     {
       //Valida que los campos del formulario cumplan con las especificaciones requeridas.
-      if(ticketSchema.isValid())
+      if (ticketSchema.isValid()) 
       {
         //Creación del tiquete
         TicketService.createTicket(DataForm)
-        .then((response) => {          
-            toast.success(
-              `Se ha creado correctamente el tiquete #${response.data} - ${DataForm.title}`,
-              {
-                duration: 4000,
-                position:'top-center'
-              }
-            );
+          .then((response) => {
+            //Valida que exista algún valor en la respuesta.
+            if (response.data != null) {
+              //Arma la estructura de entrada para el almacenamiento de imágenes.
+              formData.append("file", images);
+              formData.append("idTicket", response.data);
 
-            //Al haber agregado el registro exitosamente, redirreciona hacia el listado.
-            return navigate('/tickets/ticketsList')
-        })
-        .catch((error) => {
-          toast.error("Ha ocurrido un error al intentar crear el tiquete.");
-          console.error(error);
-        })
-      } 
+              //Almacenamiento de imágenes, una vez creado el tiquete.
+              TicketImageService.uploadImages(formData)
+                .then(() => {
+                  toast.success(
+                    `Se ha creado correctamente el tiquete #${response.data} - ${DataForm.title}`,
+                    {
+                      duration: 4000,
+                      position: "top-center",
+                    }
+                  );
+
+                  //Al haber agregado el registro exitosamente, redirreciona hacia el listado.
+                  return navigate("/tickets/ticketsList");
+                })
+                .catch((error) => {
+                  toast.error(
+                    "Ha ocurrido un error al intentar crear el tiquete."
+                  );
+                  console.error(error);
+                });
+            }
+          })
+          .catch((error) => {
+            toast.error("Ha ocurrido un error al intentar crear el tiquete.");
+            console.error(error);
+          });
+      }
     } 
     catch (error) {
       toast.error("Ha ocurrido un error al intentar crear el tiquete.");
@@ -205,9 +226,11 @@ export function CreateTicket() {
   //   imagenes: [],
   // });
 
-  // const handleImagenes = (imagenesSeleccionadas) => {
-  //   setForm({ ...form, imagenes: imagenesSeleccionadas });
-  // };
+  //Evento auxiliar para la obtención de imágenes. 
+  const handleImagenes = (images) => {
+    // setImages(images.map((i) => (i.file, i.file.name)));
+    setImages(images[0], images[0].name)
+  };
 
   useEffect(() => {
     //Consulta el catálogo interno de prioridades de tiquetes.
@@ -246,7 +269,12 @@ export function CreateTicket() {
   return (
     <Modal
       open={open}
-      onClose={handleClose}
+      onClose={(reason) => {
+        //Previene el cerrado del modal al clickear el backdrop autogenerado.
+        if (reason === "backdropClick") return;
+
+        handleClose;
+      }}
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
@@ -564,14 +592,13 @@ export function CreateTicket() {
 
           <Divider sx={{ mb: 3 }} />
 
-          <ImagesSelector onChange={""} />
+          <ImagesSelector onChange={handleImagenes} />
         </form>
 
         <IconButton
           onClick={() => handleClose()}
           size="large"
           color="primary"
-          
           sx={{
             position: "absolute",
             top: 5,
@@ -607,16 +634,20 @@ export default function ImagesSelector({ onChange }) {
     //Crea una estructura con las imagenes existentes y los nuevos adjuntos para renderización en pantalla.
     const updateImages = [...images, ...newImages];
     setImages(updateImages);
-    //onChange && onChange(actualizadas.map((i) => i.file));
+
+    //Invoca la actualización de imágenes a partir del evento proporcionado como parámetro. (envío de imágenes adjuntas hacia otra función) 
+    onChange && onChange(updateImages.map((i) => i.file));
   };
 
   const handleEliminar = (index) => {
     //Filtra el arreglo de imágenes adjuntas, excluyendo el elemento seleccionado para eliminación.
-    const actualizadas = images.filter((_, i) => i !== index);
+    const updateImages = images.filter((_, i) => i !== index);
 
     //Renderizado de imágenes luego de la eliminación del elemento.
-    setImages(actualizadas);
-    //onChange && onChange(actualizadas.map((i) => i.file));
+    setImages(updateImages);
+
+    //Invoca la actualización de imágenes a partir del evento proporcionado como parámetro. (envío de imágenes adjuntas hacia otra función) 
+    onChange && onChange(updateImages.map((i) => i.file));
   };
 
   //Componente input personalizado de MUI.

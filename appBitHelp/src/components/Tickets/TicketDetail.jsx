@@ -28,6 +28,9 @@ import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
+//URL de imágenes de tiquetes guardadas.
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 //Validación de propiedades para el historial del tiquete
 TicketHistory.propTypes = {
   movements: PropTypes.array
@@ -69,287 +72,292 @@ export function TicketDetail()
   //Constante para el manejo de navegación y ruteo.
   const navigate = useNavigate();
 
-    //Estilos definidos para el contenedor padre.
-    const styleParentBox = {
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: {
-          xs: "90%", // 90% width on extra-small screens
-          sm: "80%", // 80% width on small screens
-          md: "70%", // 70% width on medium screens
-          lg: "60%", // 60% width on large screens
-          xl: "50%", // 50% width on extra-large screens
-        },
-        maxHeight: "90vh",
-        bgcolor: "background.paper",
-        border: "2px solid #000",
-        boxShadow: 24,
-        p: 4,
-        display: "flex",
-        flexDirection: "column",
-        overflowY: "auto",
-        pr: 1,
-    };
+  //Estilos definidos para el contenedor padre.
+  const styleParentBox = {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: {
+      xs: "90%", // 90% width on extra-small screens
+      sm: "80%", // 80% width on small screens
+      md: "70%", // 70% width on medium screens
+      lg: "60%", // 60% width on large screens
+      xl: "50%", // 50% width on extra-large screens
+    },
+    maxHeight: "90vh",
+    bgcolor: "background.paper",
+    border: "2px solid #000",
+    boxShadow: 24,
+    p: 4,
+    display: "flex",
+    flexDirection: "column",
+    overflowY: "auto",
+    pr: 1,
+  };
 
-    const labelsTicketRating = {      
-      1: 'Deficiente',
-      2: 'Malo',    
-      3: 'Regular',
-      4: 'Bueno',     
-      5: 'Excelente',
-    }
+  const labelsTicketRating = {
+    1: "Deficiente",
+    2: "Malo",
+    3: "Regular",
+    4: "Bueno",
+    5: "Excelente",
+  };
 
-    //Obtiene los parámetros de enrutamiento contenidos en la dirección.
-    const routeParams = useParams();
+  //Obtiene los parámetros de enrutamiento contenidos en la dirección.
+  const routeParams = useParams();
 
-    //Constante auxiliar para controlar la apertura del modal.
-    const [open, setOpen] = React.useState(true);
+  //Constante auxiliar para controlar la apertura del modal.
+  const [open, setOpen] = React.useState(true);
 
-    //Función de cerrado del modal.
-    const handleClose = () => {
-       setOpen(false);
-       //Redirrecionamiento a la pestaña de navegación anterior.
-       navigate(-1);
-    }
+  //Función de cerrado del modal.
+  const handleClose = () => {
+    setOpen(false);
 
-    //Constantes que almacena el detalle del tiquete y sus movimientos.
-    const [ticket, setTicket] = useState({});
-    const [movements, setMovements] = useState([]);
-    const [slaDetails, setSlaDetails] = useState({});
+    //Redirrecionamiento a la pestaña de navegación anterior.
+    navigate(-1);
+  };
 
-    useEffect(() => {
-      const idTiquete = routeParams.id;
-        //Obtiene el detalle del tiquete a partir del valor enviado.
-        TicketService.getTicketById(idTiquete)
-          .then((response) => {
-            //Seteo del tiquete e historial de movimientos en las constantes de renderización.  
-            setTicket(response.data);
-            setMovements(response.data.historialTiquete)
-          })
-          .catch((error) => {      
-            console.log(error);      
-          });
-        TicketService.getSlaDetailsById(idTiquete) 
-          .then((response) => {
-            setSlaDetails(response.data); // Almacena los límites y fechas reales del backend
-          })
-          .catch((error) => {
-            console.error("Error al obtener detalles de SLA:", error);
-            // Opcional: setSlaDetails({}) o un valor para evitar errores de null checking
-          });
-      }, [routeParams.id]);
-    let slaRespuestaDisplay = null;
-    let slaResolucionDisplay = null;
+  //Constantes que almacena el detalle del tiquete y sus movimientos.
+  const [ticket, setTicket] = useState({});
+  const [movements, setMovements] = useState([]);
+  const [slaDetails, setSlaDetails] = useState({});
 
-    if (slaDetails) {
-        // Uso de la función importada  para calcular el estado de respuesta
-        slaRespuestaDisplay = getSLAStatus(
-            slaDetails.SLARespuestaLimite,
-            slaDetails.FechaRespuestaReal,
-            slaDetails.cumplimientoSlaRespuesta
-        );
-        
-        // Uso de la función importada para calcular el estado de resolución
-        slaResolucionDisplay = getSLAStatus(
-            slaDetails.SLAResolucionLimite,
-            slaDetails.FechaResolucionReal,
-            slaDetails.cumplimientoSlaResolucion
-        );
-    }
+  useEffect(() => {
+    const idTiquete = routeParams.id;
+    //Obtiene el detalle del tiquete a partir del valor enviado.
+    TicketService.getTicketById(idTiquete)
+      .then((response) => {
+        //Seteo del tiquete e historial de movimientos en las constantes de renderización.
+        setTicket(response.data);
+        setMovements(response.data.historialTiquete);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    TicketService.getSlaDetailsById(idTiquete)
+      .then((response) => {
+        setSlaDetails(response.data); // Almacena los límites y fechas reales del backend
+      })
+      .catch((error) => {
+        console.error("Error al obtener detalles de SLA:", error);
+        // Opcional: setSlaDetails({}) o un valor para evitar errores de null checking
+      });
+  }, [routeParams.id]);
+  let slaRespuestaDisplay = null;
+  let slaResolucionDisplay = null;
 
-    return (
-      <div>
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-          style={{}}
-        >
-          <Box sx={styleParentBox}>
-            <Box sx={{ mb: 3, flexShrink: 0 }}>
-              <Typography
-                id="modal-modal-title"
-                variant="h5"
-                component="h2"
-                sx={{
-                  fontSize: "2rem",
-                  textAlign: "center",
-                  //Sombra sútil para resaltar el texto
-                  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
-                  fontWeight: "bold",
-                  marginBottom: "1.5rem",
-                }}
-              >
-                Tiquete N.° {ticket.idTiquete} - {ticket.titulo}
-              </Typography>
+  if (slaDetails) {
+    // Uso de la función importada  para calcular el estado de respuesta
+    slaRespuestaDisplay = getSLAStatus(
+      slaDetails.SLARespuestaLimite,
+      slaDetails.FechaRespuestaReal,
+      slaDetails.cumplimientoSlaRespuesta
+    );
 
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                gutterBottom
-                marginBottom="2rem"
-              >
-                <Stack alignItems={"center"} direction={"row"}>
-                  <ConfirmationNumberIcon
-                    fontSize="large"
-                    color="primary"
-                    style={{ marginRight: "1%" }}
-                  />
-                  Información General
-                </Stack>
-              </Typography>
+    // Uso de la función importada para calcular el estado de resolución
+    slaResolucionDisplay = getSLAStatus(
+      slaDetails.SLAResolucionLimite,
+      slaDetails.FechaResolucionReal,
+      slaDetails.cumplimientoSlaResolucion
+    );
+  }
 
+  return (
+    <div>
+      <Modal
+        open={open}
+        onClose={(reason) => {
+          //Previene el cerrado del modal al clickear el backdrop autogenerado.
+          if (reason === "backdropClick") return;
+
+          handleClose;
+        }}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={styleParentBox}>
+          <Box sx={{ mb: 3, flexShrink: 0 }}>
+            <Typography
+              id="modal-modal-title"
+              variant="h5"
+              component="h2"
+              sx={{
+                fontSize: "2rem",
+                textAlign: "center",
+                //Sombra sútil para resaltar el texto
+                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
+                fontWeight: "bold",
+                marginBottom: "1.5rem",
+              }}
+            >
+              Tiquete N.° {ticket.idTiquete} - {ticket.titulo}
+            </Typography>
+
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              gutterBottom
+              marginBottom="2rem"
+            >
+              <Stack alignItems={"center"} direction={"row"}>
+                <ConfirmationNumberIcon
+                  fontSize="large"
+                  color="primary"
+                  style={{ marginRight: "1%" }}
+                />
+                Información General
+              </Stack>
+            </Typography>
+
+            <TextField
+              id="standard-basic"
+              label="Descripción"
+              value={ticket.descripcion ?? ""}
+              fullWidth
+              multiline
+              maxRows={3}
+              slotProps={{
+                input: {
+                  readOnly: true,
+                  style: {
+                    fontSize: "0.9rem",
+                    marginBottom: "1.5rem",
+                  },
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <DescriptionIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+
+            <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
               <TextField
-                id="standard-basic"
-                label="Descripción"
-                value={ticket.descripcion ?? ""}
+                id="outlined-read-only-input"
+                label="Usuario Solicitante"
+                value={
+                  ticket.usuarioSolicita
+                    ? `${ticket.usuarioSolicita?.nombre} ${ticket.usuarioSolicita?.primerApellido} ${ticket.usuarioSolicita?.segundoApellido}`
+                    : ""
+                }
                 fullWidth
-                multiline
-                maxRows={3}
                 slotProps={{
                   input: {
                     readOnly: true,
-                    style: {
-                      fontSize: "0.9rem",
-                      marginBottom: "1.5rem",
-                    },
                     startAdornment: (
                       <InputAdornment position="start">
-                        <DescriptionIcon color="primary" />
+                        <AccountCircle color="primary" />
                       </InputAdornment>
                     ),
                   },
                 }}
               />
 
-              <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
-                <TextField
-                  id="outlined-read-only-input"
-                  label="Usuario Solicitante"
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DateTimeField
+                  label="Fecha de Creación"
                   value={
-                    ticket.usuarioSolicita
-                      ? `${ticket.usuarioSolicita?.nombre} ${ticket.usuarioSolicita?.primerApellido} ${ticket.usuarioSolicita?.segundoApellido}`
-                      : ""
+                    ticket.fechaCreacion ? dayjs(ticket.fechaCreacion) : null
                   }
+                  readOnly={true}
+                  format="DD/MM/YYYY hh:mm:ss a"
                   fullWidth
                   slotProps={{
-                    input: {
-                      readOnly: true,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <AccountCircle color="primary" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DateTimeField
-                    label="Fecha de Creación"
-                    value={
-                      ticket.fechaCreacion ? dayjs(ticket.fechaCreacion) : null
-                    }
-                    readOnly={true}
-                    format="DD/MM/YYYY hh:mm:ss a"
-                    fullWidth
-                    slotProps={{
-                      textField: {
-                        InputProps: {
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <CalendarIcon color="primary" />
-                            </InputAdornment>
-                          ),
-                        },
+                    textField: {
+                      InputProps: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <CalendarIcon color="primary" />
+                          </InputAdornment>
+                        ),
                       },
-                    }}
-                  />
-                </LocalizationProvider>
-              </Stack>
-
-              <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
-                <TextField
-                  id="outlined-read-only-input"
-                  label="Estado"
-                  fullWidth
-                  value={ticket.estadoTiquete?.nombre ?? ""}
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <NotificationsIcon color="primary" />
-                        </InputAdornment>
-                      ),
                     },
                   }}
                 />
+              </LocalizationProvider>
+            </Stack>
 
-                <TextField
-                  id="outlined-read-only-input"
-                  label="Prioridad"
-                  fullWidth
-                  value={ticket.prioridad?.nombre ?? ""}
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <PriorityHighIcon color="primary" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-              </Stack>
+            <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
+              <TextField
+                id="outlined-read-only-input"
+                label="Estado"
+                fullWidth
+                value={ticket.estadoTiquete?.nombre ?? ""}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <NotificationsIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
 
-              <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
-                <TextField
-                  id="outlined-read-only-input"
-                  label="Técnico Asignado"
-                  fullWidth
-                  value={
-                    ticket.tecnicoAsignado
-                      ? `${ticket.tecnicoAsignado?.nombre} ${ticket.tecnicoAsignado?.primerApellido} ${ticket.tecnicoAsignado?.segundoApellido}`
-                      : "Sin Asignar"
-                  }
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SupportAgentIcon color="primary" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
+              <TextField
+                id="outlined-read-only-input"
+                label="Prioridad"
+                fullWidth
+                value={ticket.prioridad?.nombre ?? ""}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PriorityHighIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Stack>
 
-                <TextField
-                  id="outlined-read-only-input"
-                  label="Categoría"
-                  fullWidth
-                  value={ticket.categoria?.nombreCategoria ?? ""}
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <CategoryIcon color="primary" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-              </Stack>
+            <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
+              <TextField
+                id="outlined-read-only-input"
+                label="Técnico Asignado"
+                fullWidth
+                value={
+                  ticket.tecnicoAsignado
+                    ? `${ticket.tecnicoAsignado?.nombre} ${ticket.tecnicoAsignado?.primerApellido} ${ticket.tecnicoAsignado?.segundoApellido}`
+                    : "Sin Asignar"
+                }
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SupportAgentIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
 
-              <Divider sx={{ mb: 3 }} />
+              <TextField
+                id="outlined-read-only-input"
+                label="Categoría"
+                fullWidth
+                value={ticket.categoria?.nombreCategoria ?? ""}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <CategoryIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Stack>
 
-              {/* <Typography
+            <Divider sx={{ mb: 3 }} />
+
+            {/* <Typography
                 variant="subtitle1"
                 component="p"
                 paddingBottom={"20px"}
@@ -360,325 +368,319 @@ export function TicketDetail()
                 />{" "}
                 Métricas de SLA y cumplimiento
               </Typography> */}
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                gutterBottom
-                marginBottom="2rem"
-              >
-                <Stack alignItems={"center"} direction={"row"}>
-                  <AccessAlarmIcon
-                    fontSize="large"
-                    color="primary"
-                    style={{ marginRight: "1%" }}
-                  />
-                  Métricas de SLA y Cumplimiento
-                </Stack>
-              </Typography>
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              gutterBottom
+              marginBottom="2rem"
+            >
+              <Stack alignItems={"center"} direction={"row"}>
+                <AccessAlarmIcon
+                  fontSize="large"
+                  color="primary"
+                  style={{ marginRight: "1%" }}
+                />
+                Métricas de SLA y Cumplimiento
+              </Stack>
+            </Typography>
 
-              {slaDetails ? (
-                <>
-                  {/*SLA Respuesta*/}
+            {slaDetails ? (
+              <>
+                {/*SLA Respuesta*/}
+                <Stack
+                  direction={{ md: "row" }}
+                  spacing="10%"
+                  paddingBottom={{ xs: "3.5rem", md: "1.5rem" }}
+                >
                   <Stack
-                    direction={{ md: "row" }}
-                    spacing="10%"
-                    paddingBottom={{xs: "3.5rem", md: "1.5rem" }}
+                    width={{ xs: "100%", sm: "50%" }}
+                    paddingBottom={{ xs: "1.5rem", md: "0rem" }}
+                    alignSelf={{ md: "center" }}
                   >
-                    <Stack
-                      width={{xs: "100%", sm: "50%"}}
-                      paddingBottom={{xs: "1.5rem", md: "0rem" }}
-                      alignSelf={{md: "center"}}
-                    >
-                      <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DateTimeField
-                          label="SLA Respuesta Límite"
-                          value={
-                            slaDetails.SLARespuestaLimite
-                              ? dayjs(slaDetails.SLARespuestaLimite)
-                              : null
-                          }
-                          readOnly={true}
-                          fullWidth
-                          format="DD/MM/YYYY hh:mm:ss a"
-                          slotProps={{
-                            textField: {
-                              InputProps: {
-                                startAdornment: (
-                                  <InputAdornment position="start">
-                                    <CalendarIcon color="primary" />
-                                  </InputAdornment>
-                                ),
-                              },
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DateTimeField
+                        label="SLA Respuesta Límite"
+                        value={
+                          slaDetails.SLARespuestaLimite
+                            ? dayjs(slaDetails.SLARespuestaLimite)
+                            : null
+                        }
+                        readOnly={true}
+                        fullWidth
+                        format="DD/MM/YYYY hh:mm:ss a"
+                        slotProps={{
+                          textField: {
+                            InputProps: {
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <CalendarIcon color="primary" />
+                                </InputAdornment>
+                              ),
                             },
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </Stack>
+
+                  <Stack width={{ xs: "100%", sm: "50%" }}>
+                    {/* Obtener colores basados en el estado (usando slaRespuestaDisplay.color) */}
+                    {/* Asumo que slaRespuestaDisplay.color devuelve 'success', 'error', etc. */}
+                    {(() => {
+                      const { backgroundColor, iconColor, textColor } =
+                        getColorMap(theme, slaRespuestaDisplay.color);
+                      return (
+                        <Box
+                          sx={{
+                            backgroundColor: backgroundColor,
+                            borderRadius: 2, // Bordes redondeados
+                            p: 0.8, // Padding interno
+                            display: "flex",
+                            alignItems: "center",
+                            textAlign: "left",
+                            gap: 1, // Espacio entre ícono y texto
                           }}
-                        />
-                      </LocalizationProvider>
-                    </Stack>
+                        >
+                          {/* Ícono de Alarma */}
+                          <AccessAlarmIcon
+                            sx={{ color: iconColor }}
+                            fontSize="large"
+                          />
 
-                    <Stack width={{xs: "100%", sm: "50%"}}>
-                      {/* Obtener colores basados en el estado (usando slaRespuestaDisplay.color) */}
-                      {/* Asumo que slaRespuestaDisplay.color devuelve 'success', 'error', etc. */}
-                      {(() => {
-                        const { backgroundColor, iconColor, textColor } =
-                          getColorMap(theme, slaRespuestaDisplay.color);
-                        return (
-                          <Box
-                            sx={{
-                              backgroundColor: backgroundColor,
-                              borderRadius: 2, // Bordes redondeados
-                              p: 0.8, // Padding interno
-                              display: "flex",
-                              alignItems: "center",
-                              textAlign: "left",
-                              gap: 1, // Espacio entre ícono y texto
-                            }}
-                          >
-                            {/* Ícono de Alarma */}
-                            <AccessAlarmIcon
-                              sx={{ color: iconColor }}
-                              fontSize="large"
-                            />
-
-                            {/* Stack con el Contenido */}
-                            <Stack sx={{ color: textColor }}>
-                              <Typography
-                                variant="body2"
-                                fontWeight="bold"
-                                fontSize="1rem"
-                              >
-                                Estado: {slaRespuestaDisplay.estado}
-                              </Typography>
+                          {/* Stack con el Contenido */}
+                          <Stack sx={{ color: textColor }}>
+                            <Typography
+                              variant="body2"
+                              fontWeight="bold"
+                              fontSize="1rem"
+                            >
+                              Estado: {slaRespuestaDisplay.estado}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              display="block"
+                              fontSize="0.9rem"
+                            >
+                              {slaRespuestaDisplay.tiempoRestante}
+                            </Typography>
+                            {slaDetails.FechaRespuestaReal && (
                               <Typography
                                 variant="caption"
                                 display="block"
-                                fontSize="0.9rem"
+                                fontSize="0.8rem"
                               >
-                                {slaRespuestaDisplay.tiempoRestante}
+                                Respondido:{" "}
+                                {dayjs(slaDetails.FechaRespuestaReal).format(
+                                  "DD/MM/YYYY hh:mm:ss a"
+                                )}
                               </Typography>
-                              {slaDetails.FechaRespuestaReal && (
-                                <Typography
-                                  variant="caption"
-                                  display="block"
-                                  fontSize="0.8rem"
-                                >
-                                  Respondido:{" "}
-                                  {dayjs(slaDetails.FechaRespuestaReal).format(
-                                    "DD/MM/YYYY hh:mm:ss a"
-                                  )}
-                                </Typography>
-                              )}
-                            </Stack>
-                          </Box>
-                        );
-                      })()}
-                    </Stack>
+                            )}
+                          </Stack>
+                        </Box>
+                      );
+                    })()}
+                  </Stack>
+                </Stack>
+
+                {/*SLA Resolución*/}
+                <Stack direction={{ md: "row" }} spacing="10%">
+                  <Stack
+                    width={{ xs: "100%", sm: "50%" }}
+                    paddingBottom={{ xs: "1.5rem", md: "0rem" }}
+                    alignSelf={{ md: "center" }}
+                  >
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DateTimeField
+                        label="SLA Resolución Límite"
+                        value={
+                          slaDetails.SLAResolucionLimite
+                            ? dayjs(slaDetails.SLAResolucionLimite)
+                            : null
+                        }
+                        readOnly={true}
+                        // Aseguramos que se vean los segundos
+                        format="DD/MM/YYYY hh:mm:ss a"
+                        slotProps={{
+                          textField: {
+                            InputProps: {
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <CalendarIcon color="primary" />
+                                </InputAdornment>
+                              ),
+                            },
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
                   </Stack>
 
-                  {/*SLA Resolución*/}    
-                  <Stack
-                    direction={{ md: "row" }}
-                    spacing="10%"
-                  >
-                    <Stack
-                      width={{xs: "100%", sm: "50%"}}
-                      paddingBottom={{ xs: "1.5rem", md: "0rem" }}
-                      alignSelf={{md: "center"}}
-                    >
-                      <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DateTimeField
-                          label="SLA Resolución Límite"
-                          value={
-                            slaDetails.SLAResolucionLimite
-                              ? dayjs(slaDetails.SLAResolucionLimite)
-                              : null
-                          }
-                          readOnly={true}
-                          // Aseguramos que se vean los segundos
-                          format="DD/MM/YYYY hh:mm:ss a"
-                          slotProps={{
-                            textField: {
-                              InputProps: {
-                                startAdornment: (
-                                  <InputAdornment position="start">
-                                    <CalendarIcon color="primary" />
-                                  </InputAdornment>
-                                ),
-                              },
-                            },
+                  <Stack width={{ xs: "100%", sm: "50%" }}>
+                    {(() => {
+                      const { backgroundColor, iconColor, textColor } =
+                        getColorMap(theme, slaResolucionDisplay.color);
+                      return (
+                        <Box
+                          sx={{
+                            backgroundColor: backgroundColor,
+                            borderRadius: 2,
+                            p: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
                           }}
-                        />
-                      </LocalizationProvider>
-                    </Stack>
+                        >
+                          <AccessAlarmIcon
+                            sx={{ color: iconColor }}
+                            fontSize="large"
+                          />
 
-                    <Stack width={{xs: "100%", sm: "50%"}}>
-                      {(() => {
-                        const { backgroundColor, iconColor, textColor } =
-                          getColorMap(theme, slaResolucionDisplay.color);
-                        return (
-                          <Box
-                            sx={{
-                              backgroundColor: backgroundColor,
-                              borderRadius: 2,
-                              p: 1,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <AccessAlarmIcon
-                              sx={{ color: iconColor }}
-                              fontSize="large"
-                            />
-
-                            <Stack sx={{ color: textColor }}>
-                              <Typography
-                                variant="body2"
-                                fontWeight="bold"
-                                fontSize="1rem"
-                              >
-                                Estado: {slaResolucionDisplay.estado}
-                              </Typography>
+                          <Stack sx={{ color: textColor }}>
+                            <Typography
+                              variant="body2"
+                              fontWeight="bold"
+                              fontSize="1rem"
+                            >
+                              Estado: {slaResolucionDisplay.estado}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              display="block"
+                              fontSize="0.9rem"
+                            >
+                              {slaResolucionDisplay.tiempoRestante}
+                            </Typography>
+                            {slaDetails.FechaResolucionReal && (
                               <Typography
                                 variant="caption"
                                 display="block"
-                                fontSize="0.9rem"
+                                fontSize="0.8rem"
                               >
-                                {slaResolucionDisplay.tiempoRestante}
+                                Resuelto:{" "}
+                                {dayjs(slaDetails.FechaResolucionReal).format(
+                                  "DD/MM/YYYY hh:mm:ss a"
+                                )}
                               </Typography>
-                              {slaDetails.FechaResolucionReal && (
-                                <Typography
-                                  variant="caption"
-                                  display="block"
-                                  fontSize="0.8rem"
-                                >
-                                  Resuelto:{" "}
-                                  {dayjs(slaDetails.FechaResolucionReal).format(
-                                    "DD/MM/YYYY hh:mm:ss a"
-                                  )}
-                                </Typography>
-                              )}
-                            </Stack>
-                          </Box>
-                        );
-                      })()}
-                    </Stack>
+                            )}
+                          </Stack>
+                        </Box>
+                      );
+                    })()}
                   </Stack>
-                </>
-              ) : (
-                <Alert severity="info">Cargando métricas de SLA...</Alert>
-              )}
-            </Box>
-
-            <TicketHistory movements={movements}></TicketHistory>
-
-            <Divider sx={{ mb: 3 }} />
-
-            <Box>
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                gutterBottom
-                marginBottom="2rem"
-              >
-                <Stack alignItems={"center"} direction={"row"}>
-                  <StarsIcon
-                    fontSize="large"
-                    color="primary"
-                    style={{ marginRight: "1%" }}
-                  />
-                  Valoración del Tiquete
                 </Stack>
-              </Typography>
+              </>
+            ) : (
+              <Alert severity="info">Cargando métricas de SLA...</Alert>
+            )}
+          </Box>
 
-              {/*Si el tiquete ya ha sido calificado por el cliente muestra los valores registrados, de lo contrario muestra un mensaje informativo.*/}
-              {ticket.valoracion ? (
-                <Box>
+          <TicketHistory movements={movements}></TicketHistory>
+
+          <Divider sx={{ mb: 3 }} />
+
+          <Box>
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              gutterBottom
+              marginBottom="2rem"
+            >
+              <Stack alignItems={"center"} direction={"row"}>
+                <StarsIcon
+                  fontSize="large"
+                  color="primary"
+                  style={{ marginRight: "1%" }}
+                />
+                Valoración del Tiquete
+              </Stack>
+            </Typography>
+
+            {/*Si el tiquete ya ha sido calificado por el cliente muestra los valores registrados, de lo contrario muestra un mensaje informativo.*/}
+            {ticket.valoracion ? (
+              <Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    paddingBottom: "2rem",
+                  }}
+                >
+                  <Rating
+                    name="hover-feedback"
+                    value={parseInt(ticket.valoracion ?? 0)} //ticket.valoracion}
+                    //getLabelText={labelsTicketRating[ticket.valoracion]}
+                    // onChange={(event, newValue) => {
+                    //   setValue(newValue);
+                    // }}
+                    // onChangeActive={(event, newHover) => {
+                    //   setHover(newHover);
+                    // }}
+                    emptyIcon={
+                      <StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />
+                    }
+                    readOnly
+                    size="large"
+                  />
+                  {/* {value !== null && ( */}
                   <Box
                     sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      paddingBottom: "2rem",
+                      ml: 1,
+                      fontSize: "1rem",
+                      fontWeight: "bold",
+                      alignSelf: "center",
                     }}
                   >
-                    <Rating
-                      name="hover-feedback"
-                      value={parseInt(ticket.valoracion ?? 0)} //ticket.valoracion}
-                      //getLabelText={labelsTicketRating[ticket.valoracion]}
-                      // onChange={(event, newValue) => {
-                      //   setValue(newValue);
-                      // }}
-                      // onChangeActive={(event, newHover) => {
-                      //   setHover(newHover);
-                      // }}
-                      emptyIcon={
-                        <StarIcon
-                          style={{ opacity: 0.55 }}
-                          fontSize="inherit"
-                        />
-                      }
-                      readOnly
-                      size="large"
-                    />
-                    {/* {value !== null && ( */}
-                    <Box
-                      sx={{
-                        ml: 1,
-                        fontSize: "1rem",
-                        fontWeight: "bold",
-                        alignSelf: "center",
-                      }}
-                    >
-                      {labelsTicketRating[ticket.valoracion]}
-                    </Box>
-                    {/* )} */}
+                    {labelsTicketRating[ticket.valoracion]}
                   </Box>
-
-                  <TextField
-                    id="standard-basic"
-                    label="Comentario Valoración"
-                    value={ticket.comentarioValoracionServicio ?? ""}
-                    fullWidth
-                    multiline
-                    slotProps={{
-                      input: {
-                        readOnly: true,
-                        style: {
-                          fontSize: "0.9rem",
-                        },
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <CommentIcon color="primary" />
-                          </InputAdornment>
-                        ),
-                      },
-                    }}
-                  />
+                  {/* )} */}
                 </Box>
-              ) : (
-                <Alert severity="info">
-                  No existe valoración registrada para el tiquete seleccionado
-                  hasta que haya sido cerrado.
-                </Alert>
-              )}
-            </Box>
 
-            <IconButton
-              onClick={() => handleClose()}
-              size="large"
-              color="primary"
-              sx={{
-                position: "absolute",
-                top: 5,
-                right: 10,
-                zIndex: 10,
-              }}
-            >
-              <Close fontSize="large"/>
-            </IconButton>
+                <TextField
+                  id="standard-basic"
+                  label="Comentario Valoración"
+                  value={ticket.comentarioValoracionServicio ?? ""}
+                  fullWidth
+                  multiline
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      style: {
+                        fontSize: "0.9rem",
+                      },
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <CommentIcon color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </Box>
+            ) : (
+              <Alert severity="info">
+                No existe valoración registrada para el tiquete seleccionado
+                hasta que haya sido cerrado.
+              </Alert>
+            )}
           </Box>
-        </Modal>
-      </div>
-    );
+
+          <IconButton
+            onClick={() => handleClose()}
+            size="large"
+            color="primary"
+            sx={{
+              position: "absolute",
+              top: 5,
+              right: 10,
+              zIndex: 10,
+            }}
+          >
+            <Close fontSize="large" />
+          </IconButton>
+        </Box>
+      </Modal>
+    </div>
+  );
 }
 
 function TicketHistory({ movements }) {
@@ -829,10 +831,10 @@ function TicketHistory({ movements }) {
                             cursor: "pointer",
                             "&:hover": { opacity: 0.85 },
                           }}
-                          onClick={() => setSelectedImage(img.imagen)}
+                          onClick={() => setSelectedImage(`${BASE_URL}/${img.imagen}`)}
                         >
                           <img
-                            src={img.imagen}
+                            src={`${BASE_URL}/${img.imagen}`}
                             alt={`Evidencia ${idx + 1}`}
                             style={{
                               width: "100%",
