@@ -70,7 +70,7 @@ export function CreateTicket() {
     },
     maxHeight: "90vh",
     bgcolor: "background.paper",
-    border: "2px solid #000",
+    borderRadius: 2,
     boxShadow: 24,
     p: 4,
     display: "flex",
