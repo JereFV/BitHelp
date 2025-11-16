@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 
 
 UserFormModal.propTypes = {
-    // Estas son las props que recibe tu componente:
+
     open: PropTypes.bool.isRequired, 
     handleClose: PropTypes.func.isRequired,
     
@@ -21,10 +21,10 @@ UserFormModal.propTypes = {
         segundoApellido: PropTypes.string,
         correo: PropTypes.string,
         telefono: PropTypes.string,
-        idRol: PropTypes.number, // o number, dependiendo de cómo lo manejes
+        idRol: PropTypes.number, 
         estado: PropTypes.number,
-        // ... incluye todas las propiedades que accedes dentro de reset({})
-    }), // Si no usas shape, solo usa PropTypes.object, pero shape es mejor
+       
+    }), 
     
 };
 
@@ -61,17 +61,17 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
         handleSubmit, 
         control, 
         reset, 
-        formState: { errors, isSubmitting } // isSubmitting reemplaza el state 'loading' local para el botón
+        formState: { errors, isSubmitting } 
     } = useForm({
         defaultValues,
         resolver: yupResolver(userSchema), // Conexión  al Yup
         context: { isEditing } // Contexto para validación condicional (contraseña)
     });
 
-    // --- Efecto para cargar datos y resetear ---
+    // Efecto para cargar datos y resetear 
     useEffect(() => {
         if (open) {
-            // 1. Prepara los datos del usuario para RHF
+            // Prepara los datos del usuario para RHF
             if (isEditing) {
                 reset({
                     nombre: userToEdit.nombre || '',
@@ -91,12 +91,12 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
     }, [userToEdit, isEditing, open, reset]);
 
 
-    // --- Lógica de envío (ahora manejada por RHF) ---
+    //  Lógica de envío (ahora manejada por RHF) 
     const onSubmit = async (data) => {
         setLoading(true);
         setError(null);
 
-        // 1. Crear el objeto base (contiene strings para idRol y estado)
+        // Crear el objeto base (contiene strings para idRol y estado)
         let dataToSend = { ...data };
 
         // Ambas propiedades deben ser números para la API (SQL)
@@ -110,13 +110,13 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
 
 
         if (isEditing) {
-            // 3. LIMPIEZA DE CONTRASEÑA (CRÍTICO)
+            // LIMPIEZA DE CONTRASEÑA 
             // Elimina 'contrasenna' si viene vacía (como está oculto, siempre estará vacía)
             if (dataToSend.contrasenna === '' || dataToSend.contrasenna === null) {
                 delete dataToSend.contrasenna;
             }
             
-            // 4. INCLUIR idUsuario (Necesario para el SQL UPDATE)
+            // INCLUIR idUsuario (Necesario para el SQL UPDATE)
             dataToSend.idUsuario = userToEdit.idUsuario;
         }
 
@@ -133,7 +133,7 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
             
             handleClose(true, message);
         } catch (err) {
-            // Revisa la consola: el error de la API (err.response?.data) te dirá la razón exacta.
+            // Revisa la consola: el error de la API (err.response?.data)  dirá la razón exacta.
             console.error("Error de API:", err.response?.data);
             console.error("Payload enviado:", dataToSend);
             const apiError = err.response?.data?.message || err.response?.data?.error || 'Verifica la conexión o los datos.';
