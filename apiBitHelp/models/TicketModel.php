@@ -105,7 +105,8 @@ class TicketModel
             $ticketStatusModel = new TicketStatusModel();
             $ticketPriorityModel = new TicketPriorityModel();
             $specialtyModel = new SpecialtyModel();
-            $ticketHistoryModel = new TicketHistoryModel();           
+            $ticketHistoryModel = new TicketHistoryModel();
+            $categorieModel = new CategorieModel();      
 
             $query = "SELECT * FROM tiquete
                       WHERE idTiquete = $id";
@@ -121,14 +122,17 @@ class TicketModel
             //Estado del tiquete a partir del catálogo.
             $ticket->estadoTiquete = $ticketStatusModel->get($ticket->idEstado)[0];  
 
-            //Estado del tiquete a partir del catálogo.
+            //Prioridad del tiquete a partir del catálogo.
             $ticket->prioridad = $ticketPriorityModel->get($ticket->idPrioridad)[0];
+
+            //Categoría del tiquete a partir del catálogo.
+            $ticket->categoria = $categorieModel->getById($ticket->idCategoria);
 
             //Técnico asignado al tiquete.
             if($ticket->idTecnicoAsignado)
                 $ticket->tecnicoAsignado = $userModel->get($ticket->idTecnicoAsignado);
 
-            //Especilidad del tiquete a partir del catálogo.
+            //Especialidad del tiquete a partir del catálogo.
             if($ticket->idEspecialidad)
                 $ticket->especialidad = $specialtyModel->get($ticket->idEspecialidad)[0];
 
@@ -141,6 +145,7 @@ class TicketModel
             unset($ticket->idPrioridad);
             unset($ticket->idTecnicoAsignado);
             unset($ticket->idEspecialidad);
+            unset($ticket->idCategoria);
 
             return $ticket;
         }
@@ -178,9 +183,9 @@ class TicketModel
                     DATE_ADD(T.fechaCreacion, INTERVAL TIME_TO_SEC(S.tiempoMaxResolucion) SECOND) AS SLAResolucionLimite
                 FROM
                     tiquete AS T
-                INNER JOIN especialidad AS E ON T.idEspecialidad = E.idEspecialidad
-                INNER JOIN categoria_especialidad AS CE ON E.idEspecialidad = CE.idEspecialidad
-                INNER JOIN categoria AS C ON CE.idCategoria = C.idCategoria
+                -- INNER JOIN especialidad AS E ON T.idEspecialidad = E.idEspecialidad
+                -- INNER JOIN categoria_especialidad AS CE ON E.idEspecialidad = CE.idEspecialidad
+                INNER JOIN categoria AS C ON T.idCategoria = C.idCategoria
                 INNER JOIN sla AS S ON C.idSla = S.idSla
                 WHERE
                     T.idTiquete = $id

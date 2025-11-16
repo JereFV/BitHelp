@@ -251,7 +251,7 @@ export function CreateTicket() {
       aria-describedby="modal-modal-description"
     >
       <Box sx={styleParentBox}>
-        <form onSubmit={handleSubmit(onSubmit, onError)} noValidate >
+        <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
           <Box sx={{ mb: 3, flexShrink: 0 }}>
             <Typography
               id="modal-modal-title"
@@ -448,7 +448,7 @@ export function CreateTicket() {
 
               <Chip
                 icon={<FaceIcon fontSize="medium" />}
-                label={`${userSession?.nombre} ${userSession?.primerApellido} ${userSession?.segundoApellido}`}                
+                label={`${userSession?.nombre} ${userSession?.primerApellido} ${userSession?.segundoApellido}`}
                 size="medium"
                 color="primary"
                 sx={{
@@ -537,7 +537,7 @@ export function CreateTicket() {
                     <TextField
                       {...field}
                       id="categorie"
-                      label="Categoría" 
+                      label="Categoría"
                       fullWidth
                       error={Boolean(errors.categorie)}
                       slotProps={{
@@ -554,9 +554,9 @@ export function CreateTicket() {
                   )}
                 />
                 <FormHelperText error={errors.categorie}>
-                  {errors.categorie 
-                  ? errors.categorie.message
-                  : "Obtenida a partir de la etiqueta seleccionada."}
+                  {errors.categorie
+                    ? errors.categorie.message
+                    : "Obtenida a partir de la etiqueta seleccionada."}
                 </FormHelperText>
               </FormControl>
             </Stack>
@@ -569,17 +569,17 @@ export function CreateTicket() {
 
         <IconButton
           onClick={() => handleClose()}
-          //to={`/tickets/ticketsList`}
-          //component={Link}
+          size="large"
+          color="primary"
+          
           sx={{
             position: "absolute",
-            top: 1,
-            right: 1,
-            color: "black",
+            top: 5,
+            right: 10,
             zIndex: 10,
           }}
         >
-          <Close />
+          <Close fontSize="large" />
         </IconButton>
       </Box>
     </Modal>
@@ -747,6 +747,10 @@ export default function ImagesSelector({ onChange }) {
             boxShadow: 24,
             borderRadius: 2,
             p: 2,
+            width: {
+              xs: "100%",
+              sm: "auto",
+            },
           }}
         >
           {selectedImage && (
@@ -755,7 +759,7 @@ export default function ImagesSelector({ onChange }) {
               alt="Vista ampliada"
               style={{
                 width: "100%",
-                height: "auto",
+                maxHeight: "90vh",
                 display: "block",
                 borderRadius: "4px",
                 marginBottom: "1rem",
