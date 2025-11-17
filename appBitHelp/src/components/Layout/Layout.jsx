@@ -61,7 +61,7 @@ export function Layout({ children }) {
     ];
 
     // Lógica Condicional para 'Tiquetes'
-    if (isTechnician || userRoleId == ROLE_ID_ADMIN) {
+    if (isTechnician) {
       // Agrega 'Asignaciones' para Técnicos y Administradores
       ticketChildren.push({
         segment: 'assignments',

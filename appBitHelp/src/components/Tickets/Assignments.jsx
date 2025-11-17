@@ -80,7 +80,7 @@ export function Assignments()
 
   //**ASIGNACIÓN TEMPORAL DE USUARIO EN SESIÓN PARA PRUEBAS*/
 
-  localStorage.setItem('userSession', JSON.stringify({idRol: 2, idUsuario: 1}))
+  //localStorage.setItem('userSession', JSON.stringify({idRol: 2, idUsuario: 1}))
 
   useEffect(() => {
     //Agregar eventos al calendario a partir de la obtención de tiquetes para el técnico en sesión.
