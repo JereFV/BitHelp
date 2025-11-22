@@ -353,6 +353,28 @@ export function TicketDetail()
                   },
                 }}
               />
+
+              <TextField
+            id="outlined-read-only-input-asignation-method"
+            label="Método de Asignación"
+            fullWidth
+            value={
+                // Accede al objeto 'metodoAsignacion' y extrae la propiedad 'nombre'
+                ticket.metodoAsignacion
+                    ? ticket.metodoAsignacion?.nombre
+                    : "No asignado"
+            }
+            slotProps={{
+                input: {
+                    readOnly: true,
+                    startAdornment: (
+                        <InputAdornment position="start">
+                            <StarsIcon color="primary" />
+                        </InputAdornment>
+                    ),
+                },
+            }}
+        />
             </Stack>
 
             <Divider sx={{ mb: 3 }} />
