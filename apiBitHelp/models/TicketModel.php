@@ -1,4 +1,5 @@
 <?php
+require_once 'TicketAsignationModel.php';
 class TicketModel
 {
     public $connection;
@@ -107,7 +108,7 @@ class TicketModel
             $specialtyModel = new SpecialtyModel();
             $ticketHistoryModel = new TicketHistoryModel();
             $categorieModel = new CategorieModel();      
-
+            $ticketAsignationModel = new TicketAsignationModel();
             $query = "SELECT * FROM tiquete
                       WHERE idTiquete = $id";
 
@@ -127,6 +128,10 @@ class TicketModel
 
             //Categoría del tiquete a partir del catálogo.
             $ticket->categoria = $categorieModel->getById($ticket->idCategoria);
+
+            //Método de asignación del tiquete a partir del catálogo.
+             if($ticket->idMetodoAsignacion)
+                $ticket->metodoAsignacion = $ticketAsignationModel->get($ticket->idMetodoAsignacion)[0];
 
             //Técnico asignado al tiquete.
             if($ticket->idTecnicoAsignado)
