@@ -58,6 +58,7 @@ class TicketPriorityModel
 
             $result = $this->connection->executeSQL($query);
 
+            $result = $result ?: [];
             return $result[0]->puntaje ?? 1;
         }
         catch (Exception $ex){

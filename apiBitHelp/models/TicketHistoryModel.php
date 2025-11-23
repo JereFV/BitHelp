@@ -65,12 +65,13 @@ class TicketHistoryModel
     /**
      * Obtiene el siguiente ID consecutivo para un nuevo movimiento de historial para un ticket.
      */
-    public function getNextId($idTicket)
+   /* public function getNextId($id, $conn = null) 
     {
         try {
-            $query = "SELECT COALESCE(MAX(idHistorialTiquete), 0) + 1 AS nextId FROM historial_tiquete WHERE idTiquete = $idTicket";
-            $result = $this->connection->executeSQL($query, [$idTicket]);
-    
+            $query = "SELECT MAX(idHistorialTiquete) AS maxId FROM historial_tiquete WHERE idTiquete = ?";
+            $result = $this->connection->executeSQL_prepared($query, [$idTicket]);
+            
+            $result = $result ?: [];
             // 1. Si el resultado es un array no vacío y contiene un objeto:
             if (is_array($result) && count($result) > 0) {
                 $historyObject = $result[0]; // Extrae el primer (y único) objeto/fila
@@ -86,6 +87,55 @@ class TicketHistoryModel
         } catch (Exception $ex) {
             handleException($ex);
             return 1;
+        }
+    } */
+    public function getNextId($id, $conn = null) 
+    {
+        try 
+        {
+            // 1. Determinar la conexión a usar
+            $isTransaction = ($conn !== null);
+            
+            if (!$isTransaction) {
+                // Si no estamos en una transacción, abrimos la conexión de forma normal
+                $this->connection->connect();
+                $conn = $this->connection->link;
+            }
+
+            // Esta consulta no necesita Prepared Statements si el $id se maneja correctamente,
+            // pero vamos a usar la conexión $conn para la ejecución.
+            $query = "SELECT MAX(idHistorialTiquete) AS maxId FROM historial_tiquete WHERE idTiquete = ?";
+            
+            // Usar Prepared Statements con la conexión pasada/abierta
+            if (!$stmt = $conn->prepare($query)) { // ⬅️ Usar $conn
+                throw new \Exception('Error al preparar la sentencia en HistoryModel: ' . $conn->error);
+            }
+
+            $stmt->bind_param("i", $id);
+            
+            if (!$stmt->execute()) {
+                throw new \Exception('Error al ejecutar la sentencia en HistoryModel: ' . $stmt->error);
+            }
+
+            $result = $stmt->get_result();
+            $lista = $result->fetch_all(MYSQLI_ASSOC); // Obtenemos el resultado como array asociativo
+            
+            $stmt->close();
+
+            // Devolver el resultado (la función que lo llama espera un array de objetos o un objeto)
+            // Convertimos el resultado a objeto para compatibilidad con el Handler
+            $resultObject = (object) $lista[0];
+            
+            return [$resultObject] ?? null; // Devolver un array que contiene el objeto, como antes.
+
+        } catch (Exception $ex) {
+            handleException($ex);
+            return null;
+        } finally {
+            // Solo cerramos la conexión si NO estamos dentro de una transacción (si $isTransaction es false)
+            if (!$isTransaction && isset($conn)) {
+                $conn->close();
+            }
         }
     }
 

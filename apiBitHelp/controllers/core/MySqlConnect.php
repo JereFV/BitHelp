@@ -117,4 +117,75 @@ class MySqlConnect {
 			handleException($e);
 		}
 	}
+
+	/**
+	 * Ejecutar una setencia SQL tipo SELECT con Prepared Statements.
+	 * @param string $sql - sentencia SQL con marcadores '?'
+	 * @param array $params - array de valores para reemplazar los '?'
+	 * @param string $resultType - formato del resultado (obj, asoc, num)
+	 * @return array|null
+	 */
+	public function executeSQL_prepared($sql, $params, $resultType = "obj") {
+		$lista = NULL;
+		$types = '';
+		
+		// Generar la cadena de tipos (asumiendo que todos los parámetros son enteros 'i' o strings 's' para simplificar)
+		foreach ($params as $param) {
+			if (is_int($param)) {
+				$types .= 'i';
+			} elseif (is_float($param)) {
+				$types .= 'd';
+			} else {
+				$types .= 's';
+			}
+		}
+
+		try {
+			$this->connect();
+			
+			// 1. Preparar la sentencia
+			if (!$stmt = $this->link->prepare($sql)) {
+				throw new \Exception('Error al preparar la sentencia: ' . $this->link->error);
+			}
+			
+			// 2. Vincular los parámetros
+			// Necesitamos referenciar los parámetros para bind_param
+			$bind_names[] = $types;
+			for ($i = 0; $i < count($params); $i++) {
+				$bind_name = 'bind' . $i;
+				$$bind_name = $params[$i];
+				$bind_names[] = &$$bind_name;
+			}
+
+			// Llamar a bind_param dinámicamente
+			if (!empty($params) && !call_user_func_array([$stmt, 'bind_param'], $bind_names)) {
+				throw new \Exception('Error al vincular parámetros: ' . $stmt->error);
+			}
+			
+			// 3. Ejecutar
+			if (!$stmt->execute()) {
+				throw new \Exception('Error al ejecutar la sentencia: ' . $stmt->error);
+			}
+
+			// 4. Obtener el resultado
+			$result = $stmt->get_result();
+
+			if ($result && $result->num_rows > 0) {
+				while ($row = ($resultType == "obj") ? $result->fetch_object() : $result->fetch_assoc()) {
+					$lista[] = $row;
+				}
+			}
+			
+			$stmt->close();
+			$this->link->close();
+			return $lista;
+
+		} catch (Exception $e) {
+			handleException($e);
+			// Si hay una excepción, asegurar que la conexión se cierre o se propague.
+			if (isset($stmt) && $stmt) $stmt->close();
+			if (isset($this->link) && $this->link) $this->link->close();
+			return null;
+		}
+	}
 }

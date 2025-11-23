@@ -11,7 +11,7 @@ class TicketAssignmentHandler
     const ID_METODO_ASIGNACION_AUTOMATICO = 2; 
     const ID_ESTADO_PENDIENTE = 1; 
     const ID_ESTADO_ASIGNADO = 2;  
-    const ID_USUARIO_SISTEMA = 0;  // ID de Usuario para acciones automáticas
+    const ID_USUARIO_SISTEMA = 11;  // ID de Usuario para acciones automáticas
 
     public function __construct()
     {
@@ -32,6 +32,7 @@ class TicketAssignmentHandler
     public function handlePostCreationAssignment($idTicket, $idPrioridad, $idCategoria, TicketModel $ticketModel)
     {
         try {
+            error_log("DEBUG: Iniciando asignación.");
             // 1. Obtener la lista de especialidades requeridas por la categoría (N:M)
             // Se asume que TicketModel::getSpecialtiesByCategorieId existe y retorna IDs de especialidad
             $specialtyObjects = $ticketModel->getSpecialtiesByCategorieId($idCategoria);
@@ -51,19 +52,18 @@ class TicketAssignmentHandler
             // Se asume que TicketModel::getDetails retorna un array con el SLA (slaResolucion)
             $ticketData = $ticketModel->getSlaDetails($idTicket);
             if (!$ticketData) throw new Exception("Detalles del tiquete no encontrados para cálculo de SLA.");
-            $ticketData = $ticketData[0];
-
+            
             // 3. Cálculo de Puntaje de Urgencia (Autotriage)
-            // Se asume que TicketPriorityModel::getScore retorna el valor numérico de la prioridad
+          
             $puntajePrioridad = $this->priorityModel->getScore($idPrioridad); 
-            $tiempoRestanteSLA = $this->calculateSlaRemainingHours($ticketData->slaResolucion); 
+            $tiempoRestanteSLA = $this->calculateSlaRemainingHours($ticketData->SLAResolucionLimite);
             // Fórmula de Autotriage (se favorece la urgencia y el tiempo restante negativo/bajo)
             $puntajeFinal = ($puntajePrioridad * 1000) - $tiempoRestanteSLA; 
 
             // 4. Búsqueda del Técnico más Adecuado (Filtrado por ESPECIALIDAD y menor CARGA)
             // Se asume que TechnicianModel::getAvailableTechnicianBySpecialties existe
             $bestTechnician = $this->technicianModel->getAvailableTechnicianBySpecialties($idEspecialidades); 
-
+            error_log("DEBUG: Técnico encontrado o nulo. Pasando a transacción.");
             if ($bestTechnician) {
                 // 5. Asignación Automática Exitosa (Transacción)
                 $idTecnico = $bestTechnician->idTecnico;
@@ -128,50 +128,58 @@ class TicketAssignmentHandler
             
             // Iniciar transacción
             $conn->begin_transaction();
-
+            error_log("DEBUG: Transacción Iniciada para Ticket $idTicket.");
             // 1. Aumentar la carga de trabajo del Técnico (+1)
-            $nuevaCarga = $cargaActual + 1;
+            $nuevaCarga = (int)$cargaActual + 1;
             $stmtTec = $conn->prepare("UPDATE tecnico SET cargaTrabajo = ? WHERE idTecnico = ?");
             $stmtTec->bind_param("ii", $nuevaCarga, $idTecnico);
             if (!$stmtTec->execute()) throw new Exception("Error al actualizar la carga del técnico.");
             $stmtTec->close();
+            error_log("DEBUG: 1. Carga de Técnico $idTecnico actualizada a $nuevaCarga.");
 
             // 2. Actualizar el Tiquete (idEstado e idTecnicoAsignado)
             $stmtTicket = $conn->prepare("UPDATE tiquete SET idEstado = ?, idTecnicoAsignado = ? WHERE idTiquete = ?");
             $stmtTicket->bind_param("iii", $idNuevoEstado, $idTecnico, $idTicket);
             if (!$stmtTicket->execute()) throw new Exception("Error al actualizar el tiquete.");
             $stmtTicket->close();
+            error_log("DEBUG: 2. Tiquete $idTicket actualizado a Estado $idNuevoEstado.");
+
+           // 3. Registrar el movimiento en el Historial del Tiquete
+            // CORREGIDO: Pasar $conn para que getNextId use la conexión de la transacción
+            $result = $this->historyModel->getNextId($idTicket, $conn);
             
-            // 3. Registrar el movimiento en el Historial del Tiquete
-            // Se asume la función getNextId en TicketHistoryModel
-            $result = $this->historyModel->getNextId($idTicket);
-            $nextHistoryId = $this->historyModel->getNextId($idTicket); 
-            if (is_array($result) && count($result) > 0) {
-                $nextHistoryId = is_object($result[0]) ? $result[0]->idHistorialTiquete : $result[0]['idHistorialTiquete'];
+            if (is_array($result) && count($result) > 0 && is_object($result[0])) {
+                $nextHistoryId = (int)$result[0]->maxId + 1;
             } else {
-                // Manejar caso donde no hay historial previo (ej: id = 1)
                 $nextHistoryId = 1; 
             }
+            error_log("DEBUG: 3. Siguiente ID de Historial determinado: $nextHistoryId.");
+            $idUsuarioSistema = self::ID_USUARIO_SISTEMA;
+            $observacionHistorial = $justificacion;
+            
             $stmtHist = $conn->prepare("INSERT INTO historial_tiquete (idHistorialTiquete, idTiquete, fecha, idUsuario, observacion, idEstado) 
-                                        VALUES (?, ?, NOW(), ?, ?, ?)");
-            $stmtHist->bind_param("iissi", $nextHistoryId, $idTicket, self::ID_USUARIO_SISTEMA, $justificacion, $idNuevoEstado);
+                                         VALUES (?, ?, NOW(), ?, ?, ?)");
+            $stmtHist->bind_param("iissi", $nextHistoryId, $idTicket, $idUsuarioSistema, $observacionHistorial, $idNuevoEstado);
             if (!$stmtHist->execute()) throw new Exception("Error al registrar el historial.");
             $stmtHist->close();
-
+            error_log("DEBUG: 4. Historial Insertado correctamente.");
             // Confirmar transacción
             $conn->commit();
+            error_log("DEBUG: COMMIT exitoso. Transacción finalizada.");
             
         } catch (Exception $ex) {
             if ($conn) {
                 $conn->rollback();
             }
+            error_log("ERROR CRÍTICO (ROLLBACK): Transacción de asignación fallida para Ticket $idTicket. Detalle: " . $ex->getMessage());
             // Propagar la excepción para que sea logueada y el tiquete quede en Pendiente
             throw new Exception("Transacción de asignación fallida: " . $ex->getMessage());
         } finally {
             if ($conn) {
                 // Se cierra la conexión si fue abierta
                 // En tu estructura, esto podría variar. Asegúrate de cerrar la conexión correctamente.
-                // $conn->close(); 
+                 $conn->close(); 
+                 error_log("DEBUG: Conexión cerrada.");
             }
         }
     }
@@ -185,20 +193,31 @@ class TicketAssignmentHandler
         try {
             $this->connection->connect();
             $conn = $this->connection->link;
+
+            $conn->begin_transaction();
+
+            $result = $this->historyModel->getNextId($idTicket, $conn); 
             
-            $nextHistoryId = $this->historyModel->getNextId($idTicket); 
+            if (is_array($result) && count($result) > 0 && is_object($result[0])) {
+                $nextHistoryId = (int)$result[0]->maxId + 1;
+            } else {
+                $nextHistoryId = 1; 
+            }
             
-            // Usar Prepared Statements para seguridad
             $stmt = $conn->prepare("INSERT INTO historial_tiquete (idHistorialTiquete, idTiquete, fecha, idUsuario, observacion, idEstado) 
-                                    VALUES (?, ?, NOW(), ?, ?, ?)");
+                                     VALUES (?, ?, NOW(), ?, ?, ?)");
             $stmt->bind_param("iissi", $nextHistoryId, $idTicket, $idUsuario, $observation, $idEstado);
             $stmt->execute();
             $stmt->close();
+
+            $conn->commit(); // Confirmar el registro de historial
         } catch (Exception $ex) {
-            // Manejar un posible fallo en el registro de log, no es crítico.
+            if ($conn) {
+                $conn->rollback(); // Revertir el log si falla
+            }
         } finally {
             if ($conn) {
-                // $conn->close();
+                 $conn->close();
             }
         }
     }
