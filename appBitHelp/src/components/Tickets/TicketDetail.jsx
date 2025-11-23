@@ -29,6 +29,7 @@ import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import AddIcon from '@mui/icons-material/Add';
 import { Controller, useForm } from "react-hook-form";
+import ImagesSelector from './ImagesSelector';
 
 //URL de imágenes de tiquetes guardadas.
 const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -250,7 +251,10 @@ export function TicketDetail()
                     marginBottom: "1.5rem",
                   },
                   startAdornment: (
-                    <InputAdornment sx={{alignSelf: "start", marginRight: "8px"}}>
+                    <InputAdornment
+                      position="start"
+                      sx={{alignSelf: "start", marginRight: "8px"}}
+                    >
                       <DescriptionIcon color="primary" />
                     </InputAdornment>
                   ),
@@ -305,70 +309,74 @@ export function TicketDetail()
             </Stack>
 
             <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
-            {/* Campo 1: ESTADO (Ocupa la mitad de la fila) */}
-            <TextField
-              id="outlined-read-only-input"
-              label="Estado"
-              fullWidth
-              value={ticket.estadoTiquete?.nombre ?? ""}              
-              sx={{ flex: 1 }} 
-              slotProps={{
-                input: {
-                  readOnly: true,
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <NotificationsIcon color="primary" />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
-
-            {/* Contenedor de Prioridad y Método de Asignación (Ocupa la otra mitad de la fila) */}
-            <Stack 
-              direction="row" 
-              spacing={2} 
-              sx={{ flex: 1 }} // El flex: 1 asegura que este Stack ocupe el otro 50%
-            >
-              {/* Prioridad (Ocupa 25% del total, 50% de su contenedor padre) */}
+              {/* Campo 1: ESTADO (Ocupa la mitad de la fila) */}
               <TextField
                 id="outlined-read-only-input"
-                label="Prioridad"
+                label="Estado"
                 fullWidth
-                value={ticket.prioridad?.nombre ?? ""}
-                sx={{ flex: 1 }} // Asegura 50% del Stack padre
+                value={ticket.estadoTiquete?.nombre ?? ""}
+                sx={{ flex: 1 }}
                 slotProps={{
                   input: {
                     readOnly: true,
                     startAdornment: (
                       <InputAdornment position="start">
-                        <PriorityHighIcon color="primary" />
+                        <NotificationsIcon color="primary" />
                       </InputAdornment>
                     ),
                   },
                 }}
               />
 
-              {/* Método de Asignación (Ocupa 25% del total, 50% de su contenedor padre) */}
-              <TextField
-                id="outlined-read-only-input-asignation-method"
-                label="Método de Asignación"
-                fullWidth
-                value={ticket.metodoAsignacion ? ticket.metodoAsignacion?.nombre : "No asignado"}
-                sx={{ flex: 1 }} // Asegura 50% del Stack padre
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <StarsIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
+              {/* Contenedor de Prioridad y Método de Asignación (Ocupa la otra mitad de la fila) */}
+              <Stack
+                direction="row"
+                spacing={2}
+                sx={{ flex: 1 }} // El flex: 1 asegura que este Stack ocupe el otro 50%
+              >
+                {/* Prioridad (Ocupa 25% del total, 50% de su contenedor padre) */}
+                <TextField
+                  id="outlined-read-only-input"
+                  label="Prioridad"
+                  fullWidth
+                  value={ticket.prioridad?.nombre ?? ""}
+                  sx={{ flex: 1 }} // Asegura 50% del Stack padre
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <PriorityHighIcon color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+
+                {/* Método de Asignación (Ocupa 25% del total, 50% de su contenedor padre) */}
+                <TextField
+                  id="outlined-read-only-input-asignation-method"
+                  label="Método de Asignación"
+                  fullWidth
+                  value={
+                    ticket.metodoAsignacion
+                      ? ticket.metodoAsignacion?.nombre
+                      : "No asignado"
+                  }
+                  sx={{ flex: 1 }} // Asegura 50% del Stack padre
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <StarsIcon color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </Stack>
             </Stack>
-          </Stack>
 
             <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
               <TextField
@@ -408,22 +416,10 @@ export function TicketDetail()
                   },
                 }}
               />
-
             </Stack>
 
             <Divider sx={{ mb: 3 }} />
 
-            {/* <Typography
-                variant="subtitle1"
-                component="p"
-                paddingBottom={"20px"}
-              >
-                <AccessAlarmIcon
-                  color="primary"
-                  sx={{ verticalAlign: "top" }}
-                />{" "}
-                Métricas de SLA y cumplimiento
-              </Typography> */}
             <Typography
               variant="h6"
               fontWeight="bold"
@@ -632,27 +628,30 @@ export function TicketDetail()
 
           <TicketHistory movements={movements}></TicketHistory>
 
-          <Divider sx={{ mb: 3 }} />
+          {/*Valoración Tiquete*/}
+          {/*Renderiza únicamente si el estado del tiquete es cerrado.*/}
+          {ticket.estadoTiquete?.idEstadoTiquete == 5 ? (
+            <Box marginBottom={"1.5rem"}>
+              <Divider sx={{ mb: 3 }} />
 
-          <Box marginBottom={"1.5rem"}>
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              gutterBottom
-              marginBottom="2rem"
-            >
-              <Stack alignItems={"center"} direction={"row"}>
-                <StarsIcon
-                  fontSize="large"
-                  color="primary"
-                  style={{ marginRight: "1%" }}
-                />
-                Valoración del Tiquete
-              </Stack>
-            </Typography>
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                gutterBottom
+                marginBottom="2rem"
+              >
+                <Stack alignItems={"center"} direction={"row"}>
+                  <StarsIcon
+                    fontSize="large"
+                    color="primary"
+                    style={{ marginRight: "1%" }}
+                  />
+                  Valoración del Tiquete
+                </Stack>
+              </Typography>
 
-            {/*Si el tiquete ya ha sido calificado por el cliente muestra los valores registrados, de lo contrario muestra un mensaje informativo.*/}
-            {ticket.valoracion ? (
+              {/*Si el tiquete ya ha sido calificado por el cliente muestra los valores registrados, de lo contrario muestra un mensaje informativo.*/}
+              {/*{ticket.valoracion ? (*/}
               <Box>
                 <Box
                   sx={{
@@ -712,88 +711,99 @@ export function TicketDetail()
                   }}
                 />
               </Box>
-            ) : (
+              {/*) : (
               <Alert severity="info">
                 No existe valoración registrada para el tiquete seleccionado
                 hasta que haya sido cerrado.
               </Alert>
-            )}
-          </Box>
-
-          <Divider sx={{ mb: 3 }} />
+            )}*/}
+            </Box>
+          ) : null}
 
           {/*Nuevo Movimiento Tiquete */}
-          <Box>
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              gutterBottom
-              marginBottom="2rem"
-            >
-              <Stack alignItems={"center"} direction={"row"}>
-                <AddIcon
-                  fontSize="large"
-                  color="primary"
-                  style={{ marginRight: "1%" }}
-                />
-                Nuevo Movimiento Tiquete
+          {/*Renderiza únicamente si el estado del tiquete no es Pendiente ni Cerrado.*/}
+          {ticket.estadoTiquete?.idEstadoTiquete != 1 &&  ticket.estadoTiquete?.idEstadoTiquete != 5 ? (
+            <Box>
+              <Divider sx={{ mb: 3 }} />
+
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                gutterBottom
+                marginBottom="2rem"
+              >
+                <Stack alignItems={"center"} direction={"row"}>
+                  <AddIcon
+                    fontSize="large"
+                    color="primary"
+                    style={{ marginRight: "1%" }}
+                  />
+                  Nuevo Movimiento Tiquete
+                </Stack>
+              </Typography>
+
+              <Stack width={{ sm: "50%", lg: "35%" }} paddingBottom={"1.5rem"}>
+                <FormControl fullWidth>
+                  <Controller
+                    name="idPriority"
+                    control={control}
+                    render={({ field }) => (
+                      <>
+                        <InputLabel id="id">Nuevo Estado</InputLabel>
+                        <Select
+                          {...field}
+                          labelId="idPriority"
+                          value={field.value}
+                          label="Nuevo Estado"
+                          //onChange={handlePriorityChange}
+                          fullWidth
+                          error={Boolean(errors.idPriority)}
+                        >
+                          {/* {ticketpriorities &&
+                              ticketpriorities.map((priority) => (
+                                <MenuItem
+                                  key={priority.idPrioridadTiquete}
+                                  value={priority.idPrioridadTiquete}
+                                >
+                                  {priority.nombre}
+                                </MenuItem>
+                              ))} */}
+                        </Select>
+                        <FormHelperText error>
+                          {errors.idPriority ? errors.idPriority.message : ""}
+                        </FormHelperText>
+                      </>
+                    )}
+                  />
+                </FormControl>
               </Stack>
-            </Typography>
 
-            <Stack width={{ sm: "50%", lg: "35%" }} paddingBottom={"1.5rem"}>
-              <FormControl fullWidth>
-                <Controller
-                  name="idPriority"
-                  control={control}
-                  render={({ field }) => (
-                    <>
-                      <InputLabel id="id">Nuevo Estado</InputLabel>
-                      <Select
-                        {...field}
-                        labelId="idPriority"
-                        value={field.value}
-                        label="Nuevo Estado"
-                        //onChange={handlePriorityChange}
-                        fullWidth
-                        error={Boolean(errors.idPriority)}
+              <TextField
+                id="standard-basic"
+                label="Comentario"
+                fullWidth
+                multiline
+                minRows={3}
+                maxRows={3}
+                sx={{ paddingBottom: "1.5rem" }}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment
+                        position="start"
+                        sx={{ alignSelf: "start", marginRight: "8px" }}
                       >
-                        {/* {ticketpriorities &&
-                            ticketpriorities.map((priority) => (
-                              <MenuItem
-                                key={priority.idPrioridadTiquete}
-                                value={priority.idPrioridadTiquete}
-                              >
-                                {priority.nombre}
-                              </MenuItem>
-                            ))} */}
-                      </Select>
-                      <FormHelperText error>
-                        {errors.idPriority ? errors.idPriority.message : ""}
-                      </FormHelperText>
-                    </>
-                  )}
-                />
-              </FormControl>
-            </Stack>
+                        <CommentIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
 
-            <TextField
-              id="standard-basic"
-              label="Comentario"
-              fullWidth
-              multiline
-              minRows={3}
-              maxRows={3}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment  sx={{alignSelf: "start", marginRight: "8px"}}>
-                      <CommentIcon color="primary" />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
-          </Box>
+              {/*Sección de imágenes adjuntas y botones de acción.*/}
+              <ImagesSelector />
+            </Box>
+          ) : null}
 
           <IconButton
             onClick={() => handleClose()}
