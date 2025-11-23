@@ -8,6 +8,7 @@ class TicketAssignmentHandler
     public $historyModel;
     
     // Constantes de IDs basadas en la estructura de BitHelp
+    const ID_METODO_ASIGNACION_MANUAL = 1;
     const ID_METODO_ASIGNACION_AUTOMATICO = 2; 
     const ID_ESTADO_PENDIENTE = 1; 
     const ID_ESTADO_ASIGNADO = 2;  
@@ -56,7 +57,7 @@ class TicketAssignmentHandler
             // 3. Cálculo de Puntaje de Urgencia (Autotriage)
           
             $puntajePrioridad = $this->priorityModel->getScore($idPrioridad); 
-            $tiempoRestanteSLA = $this->calculateSlaRemainingHours($ticketData->SLAResolucionLimite);
+            $tiempoRestanteSLA = $this->calculateSlaRemainingMinutes($ticketData->SLAResolucionLimite);
             // Fórmula de Autotriage (se favorece la urgencia y el tiempo restante negativo/bajo)
             $puntajeFinal = ($puntajePrioridad * 1000) - $tiempoRestanteSLA; 
 
@@ -74,17 +75,33 @@ class TicketAssignmentHandler
                     $idTecnico, 
                     $bestTechnician->cargaTrabajo, 
                     $justificacion, 
-                    self::ID_ESTADO_ASIGNADO // Asigna el estado 2: Asignado
+                    self::ID_ESTADO_ASIGNADO, // Asigna el estado 2: Asignado
+                    $idCategoria
                 );
-            } else {
-                // 6. Fallo: Queda en PENDIENTE (Estado 1)
-                $this->logAction($idTicket, self::ID_ESTADO_PENDIENTE, 'Autotriage fallido. No se encontró técnico activo y disponible con especialidades compatibles. Permanece Pendiente (1).', self::ID_USUARIO_SISTEMA);
-            }
+                return;
+            } 
+            // Si no se encuentra un técnico, se fuerza  la excepción para caer al fallback de asignación manual.
+            error_log("DEBUG: Autotriage no encontró un técnico. Iniciando Fallback a Asignación Manual.");
+            throw new \Exception("No se encontró técnico compatible para la asignación automática.");
 
         } catch (Exception $ex) {
-            // Si hay un error de sistema, se registra y el tiquete permanece Pendiente
-            $this->logAction($idTicket, self::ID_ESTADO_PENDIENTE, 'Error de sistema durante el Autotriage: El tiquete permanece Pendiente (1). Detalle: ' . $ex->getMessage(), self::ID_USUARIO_SISTEMA);
-        }
+        // --- INICIO DEL FALLBACK (CATCH BLOCK) ---
+        
+        // Si el Autotriage o la transacción fallan, pasa a Asignación Manual.
+        $motivoFallo = $ex->getMessage();
+        $justificacionFallback = "Fallo en Asignación Automática: " . $motivoFallo . ". Moviendo a Pendiente (1) para Asignación Manual.";
+        
+        // 1. Loguear la acción como Asignación Manual, usando el estado PENDIENTE (1)
+        $this->logActionFallback(
+            $idTicket, 
+            self::ID_ESTADO_PENDIENTE,        // Estado 1: Pendiente
+            $justificacionFallback, 
+            self::ID_METODO_ASIGNACION_MANUAL // Método 1: Manual
+        );
+        
+        error_log("DEBUG: Fallback a Asignación Manual completado. Ticket $idTicket en Estado " . self::ID_ESTADO_PENDIENTE);
+
+    }
     }
     
     /**
@@ -92,7 +109,7 @@ class TicketAssignmentHandler
      * @param string $slaResolucion Fecha y hora de resolución del SLA (formato Y-m-d H:i:s).
      * @return int Horas restantes (puede ser negativo si ya pasó el SLA).
      */
-    private function calculateSlaRemainingHours($slaResolucion)
+    private function calculateSlaRemainingMinutes($slaResolucion)
     {
         try {
             $future = new DateTime($slaResolucion);
@@ -101,10 +118,10 @@ class TicketAssignmentHandler
             // Calcula la diferencia en segundos
             $diffSeconds = $future->getTimestamp() - $now->getTimestamp();
             
-            // Convierte la diferencia a horas
-            $hours = round($diffSeconds / 3600);
+            // Convierte la diferencia a minutos
+            $minutes = round($diffSeconds / 60);
             
-            return $hours;
+            return $minutes;
         } catch (Exception $e) {
             // Si la fecha es inválida, retorna un valor negativo grande para un puntaje de urgencia alto (crítico)
             return -99999; 
@@ -119,7 +136,7 @@ class TicketAssignmentHandler
      * @param string $justificacion
      * @param int $idNuevoEstado Estado final del tiquete (debe ser Asignado: 2).
      */
-    private function executeAssignmentTransaction($idTicket, $idTecnico, $cargaActual, $justificacion, $idNuevoEstado)
+    private function executeAssignmentTransaction($idTicket, $idTecnico, $cargaActual, $justificacion, $idNuevoEstado,$idCategoria)
     {
         $conn = null;
         try {
@@ -129,20 +146,33 @@ class TicketAssignmentHandler
             // Iniciar transacción
             $conn->begin_transaction();
             error_log("DEBUG: Transacción Iniciada para Ticket $idTicket.");
-            // 1. Aumentar la carga de trabajo del Técnico (+1)
-            $nuevaCarga = (int)$cargaActual + 1;
-            $stmtTec = $conn->prepare("UPDATE tecnico SET cargaTrabajo = ? WHERE idTecnico = ?");
-            $stmtTec->bind_param("ii", $nuevaCarga, $idTecnico);
-            if (!$stmtTec->execute()) throw new Exception("Error al actualizar la carga del técnico.");
+
+            // 1. Aumentar la carga de trabajo del Técnico (Sumando la duración TOTAL del SLA con SQL)
+            $stmtTec = $conn->prepare("
+                UPDATE tecnico t
+                -- Hacemos JOIN con categoria y SLA para obtener el tiempoMaxResolucion asociado al tiquete
+                JOIN categoria c ON c.idCategoria = ? 
+                JOIN sla s ON s.idSla = c.idSla
+                SET t.cargaTrabajo = SEC_TO_TIME(
+                    -- Sumamos: (Carga Actual en Segundos) + (SLA Max. Resolución en Segundos)
+                    TIME_TO_SEC(t.cargaTrabajo) + TIME_TO_SEC(s.tiempoMaxResolucion)
+                )
+                WHERE t.idTecnico = ?
+            ");
+            // Bindeamos: idCategoria (para el JOIN) y idTecnico (para el WHERE)
+            $stmtTec->bind_param("ii", $idCategoria, $idTecnico);
+            
+            if (!$stmtTec->execute()) throw new Exception("Error al actualizar la carga del técnico (SLA).");
             $stmtTec->close();
-            error_log("DEBUG: 1. Carga de Técnico $idTecnico actualizada a $nuevaCarga.");
+            error_log("DEBUG: 1. Carga de Técnico $idTecnico actualizada sumando la duración total del SLA (con TIME_TO_SEC).");
 
             // 2. Actualizar el Tiquete (idEstado e idTecnicoAsignado)
-            $stmtTicket = $conn->prepare("UPDATE tiquete SET idEstado = ?, idTecnicoAsignado = ? WHERE idTiquete = ?");
-            $stmtTicket->bind_param("iii", $idNuevoEstado, $idTecnico, $idTicket);
+            $idMetodoAsignacion = self::ID_METODO_ASIGNACION_AUTOMATICO;
+            $stmtTicket = $conn->prepare("UPDATE tiquete SET idEstado = ?, idTecnicoAsignado = ?, idMetodoAsignacion = ? WHERE idTiquete = ?");
+            $stmtTicket->bind_param("iiii", $idNuevoEstado, $idTecnico, $idMetodoAsignacion, $idTicket);
             if (!$stmtTicket->execute()) throw new Exception("Error al actualizar el tiquete.");
             $stmtTicket->close();
-            error_log("DEBUG: 2. Tiquete $idTicket actualizado a Estado $idNuevoEstado.");
+            error_log("DEBUG: 2. Tiquete $idTicket actualizado a Estado $idNuevoEstado y Método $idMetodoAsignacion.");
 
            // 3. Registrar el movimiento en el Historial del Tiquete
             // CORREGIDO: Pasar $conn para que getNextId use la conexión de la transacción
@@ -218,6 +248,48 @@ class TicketAssignmentHandler
         } finally {
             if ($conn) {
                  $conn->close();
+            }
+        }
+    }
+
+    private function logActionFallback($idTicket, $idNuevoEstado, $observation, $idMetodoAsignacion)
+    {
+        $conn = null;
+        try {
+            $this->connection->connect();
+            $conn = $this->connection->link;
+
+            $conn->begin_transaction();
+
+            // 1. Actualizar el Tiquete al estado PENDIENTE (1) y método Manual (1)
+            // idTecnicoAsignado se establece a NULL
+            $stmtTicket = $conn->prepare("UPDATE tiquete SET idEstado = ?, idTecnicoAsignado = NULL, idMetodoAsignacion = ? WHERE idTiquete = ?");
+            $stmtTicket->bind_param("iii", $idNuevoEstado, $idMetodoAsignacion, $idTicket);
+            if (!$stmtTicket->execute()) throw new Exception("Error al actualizar el tiquete en fallback.");
+            $stmtTicket->close();
+            
+            // 2. Registrar el movimiento en el Historial del Tiquete
+            $result = $this->historyModel->getNextId($idTicket, $conn); 
+            $nextHistoryId = (is_array($result) && count($result) > 0 && is_object($result[0])) ? ((int)$result[0]->maxId + 1) : 1;
+            
+            $idUsuarioSistema = self::ID_USUARIO_SISTEMA;
+            
+            $stmtHist = $conn->prepare("INSERT INTO historial_tiquete (idHistorialTiquete, idTiquete, fecha, idUsuario, observacion, idEstado) 
+                                        VALUES (?, ?, NOW(), ?, ?, ?)");
+            $stmtHist->bind_param("iissi", $nextHistoryId, $idTicket, $idUsuarioSistema, $observation, $idNuevoEstado);
+            
+            if (!$stmtHist->execute()) throw new Exception("Error al registrar el historial en fallback.");
+            $stmtHist->close();
+
+            $conn->commit(); 
+        } catch (Exception $ex) {
+            if ($conn) {
+                $conn->rollback(); 
+            }
+            error_log("ERROR: Fallback a Asignación Manual falló. El ticket permanece en su estado original. Detalle: " . $ex->getMessage());
+        } finally {
+            if ($conn) {
+                $conn->close();
             }
         }
     }
