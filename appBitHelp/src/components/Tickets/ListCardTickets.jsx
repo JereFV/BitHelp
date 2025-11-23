@@ -7,6 +7,7 @@ import CardActions from '@mui/material/CardActions';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import { Info } from '@mui/icons-material';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { Chip, Box } from '@mui/material';
@@ -165,7 +166,7 @@ export function ListCardTickets({ data = [] }) {
                     <strong>Tiempo restante:</strong>{' '}
                     {item.tiempoRestante ?? '—'} {item.tiempoRestante ? 'horas' : ''}
                 </Typography>
-
+                <AssignmentIndIcon fontSize="small" color='warning'/>
                 <IconButton
                     aria-label="Detalle"
                     to={`/ticket/${item.id}`}
@@ -173,8 +174,10 @@ export function ListCardTickets({ data = [] }) {
                     color="primary"
                     size="small" 
                 >
-                    <Info fontSize="small" />
+                    <Info fontSize="small" />                    
                 </IconButton>
+                
+                
             </Box>
           </CardContent>
 

@@ -62,33 +62,7 @@ class TicketHistoryModel
         } 
     }
 
-    /**
-     * Obtiene el siguiente ID consecutivo para un nuevo movimiento de historial para un ticket.
-     */
-   /* public function getNextId($id, $conn = null) 
-    {
-        try {
-            $query = "SELECT MAX(idHistorialTiquete) AS maxId FROM historial_tiquete WHERE idTiquete = ?";
-            $result = $this->connection->executeSQL_prepared($query, [$idTicket]);
-            
-            $result = $result ?: [];
-            // 1. Si el resultado es un array no vacío y contiene un objeto:
-            if (is_array($result) && count($result) > 0) {
-                $historyObject = $result[0]; // Extrae el primer (y único) objeto/fila
-                
-                // 2. Retorna el valor numérico, sumándole 1 (para obtener el siguiente ID)
-                // Se asume que la propiedad que contiene el ID es 'maxId'
-                $nextId = (int)$historyObject->maxId;
-                return $nextId + 1;
-            }
-            
-            // 3. Si el resultado está vacío (no hay historial aún), el siguiente ID es 1
-            return 1;
-        } catch (Exception $ex) {
-            handleException($ex);
-            return 1;
-        }
-    } */
+    
     public function getNextId($id, $conn = null) 
     {
         try 
@@ -107,7 +81,7 @@ class TicketHistoryModel
             $query = "SELECT MAX(idHistorialTiquete) AS maxId FROM historial_tiquete WHERE idTiquete = ?";
             
             // Usar Prepared Statements con la conexión pasada/abierta
-            if (!$stmt = $conn->prepare($query)) { // ⬅️ Usar $conn
+            if (!$stmt = $conn->prepare($query)) { 
                 throw new \Exception('Error al preparar la sentencia en HistoryModel: ' . $conn->error);
             }
 
