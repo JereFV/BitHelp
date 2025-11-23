@@ -305,28 +305,38 @@ export function TicketDetail()
             </Stack>
 
             <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
-              <TextField
-                id="outlined-read-only-input"
-                label="Estado"
-                fullWidth
-                value={ticket.estadoTiquete?.nombre ?? ""}
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <NotificationsIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
+            {/* Campo 1: ESTADO (Ocupa la mitad de la fila) */}
+            <TextField
+              id="outlined-read-only-input"
+              label="Estado"
+              fullWidth
+              value={ticket.estadoTiquete?.nombre ?? ""}              
+              sx={{ flex: 1 }} 
+              slotProps={{
+                input: {
+                  readOnly: true,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <NotificationsIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
 
+            {/* Contenedor de Prioridad y Método de Asignación (Ocupa la otra mitad de la fila) */}
+            <Stack 
+              direction="row" 
+              spacing={2} 
+              sx={{ flex: 1 }} // El flex: 1 asegura que este Stack ocupe el otro 50%
+            >
+              {/* Prioridad (Ocupa 25% del total, 50% de su contenedor padre) */}
               <TextField
                 id="outlined-read-only-input"
                 label="Prioridad"
                 fullWidth
                 value={ticket.prioridad?.nombre ?? ""}
+                sx={{ flex: 1 }} // Asegura 50% del Stack padre
                 slotProps={{
                   input: {
                     readOnly: true,
@@ -338,7 +348,27 @@ export function TicketDetail()
                   },
                 }}
               />
+
+              {/* Método de Asignación (Ocupa 25% del total, 50% de su contenedor padre) */}
+              <TextField
+                id="outlined-read-only-input-asignation-method"
+                label="Método de Asignación"
+                fullWidth
+                value={ticket.metodoAsignacion ? ticket.metodoAsignacion?.nombre : "No asignado"}
+                sx={{ flex: 1 }} // Asegura 50% del Stack padre
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <StarsIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
             </Stack>
+          </Stack>
 
             <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
               <TextField
@@ -379,27 +409,6 @@ export function TicketDetail()
                 }}
               />
 
-              <TextField
-                id="outlined-read-only-input-asignation-method"
-                label="Método de Asignación"
-                fullWidth
-                value={
-                  // Accede al objeto 'metodoAsignacion' y extrae la propiedad 'nombre'
-                  ticket.metodoAsignacion
-                    ? ticket.metodoAsignacion?.nombre
-                    : "No asignado"
-                }
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <StarsIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
             </Stack>
 
             <Divider sx={{ mb: 3 }} />
@@ -713,6 +722,7 @@ export function TicketDetail()
 
           <Divider sx={{ mb: 3 }} />
 
+          {/*Nuevo Movimiento Tiquete */}
           <Box>
             <Typography
               variant="h6"
