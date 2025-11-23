@@ -61,4 +61,20 @@ class TicketHistoryModel
             handleException($ex);
         } 
     }
+
+    /**
+     * Obtiene el siguiente ID consecutivo para un nuevo movimiento de historial para un ticket.
+     */
+    public function getNextId($idTicket)
+    {
+        try {
+            $query = "SELECT COALESCE(MAX(idHistorialTiquete), 0) + 1 AS nextId FROM historial_tiquete WHERE idTiquete = $idTicket";
+            $result = $this->connection->executeSQL($query);
+            // Retorna 1 si no hay registros, o el siguiente ID.
+            return $result[0]->nextId;
+        } catch (Exception $ex) {
+            handleException($ex);
+            return 1;
+        }
+    }
 }

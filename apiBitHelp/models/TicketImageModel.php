@@ -16,6 +16,14 @@ class TicketImageModel
     {
         try 
         {
+
+            // Verifica que la clave 'file' exista y que sea un array o un objeto
+            // Si no existe o no es un array (por ejemplo, si es un string vacío como "" o null), salimos.
+            if (!isset($object["file"]) || !is_array($object["file"]) || empty($object["file"])) {
+                return; 
+            }
+
+
             $logger = new Logger('');
 
             $logger->info(json_encode($object));

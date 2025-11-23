@@ -1,5 +1,6 @@
 <?php
 require_once 'TicketAsignationModel.php';
+
 class TicketModel
 {
     public $connection;
@@ -244,12 +245,65 @@ class TicketModel
                                                     1)";
                                                     
             $this->connection->executeSQL_DML($query);
+            //Obtiene el método de asignación de la categoría. Ahora getById retorna un solo objeto o null.
+            $categorieModel = new CategorieModel();
+            $categoriaObject = $categorieModel->getByIdCategorie($ticket->idCategorie);
+            
+            error_log("ID de Tiquete Creado: " . $idTicket);
+            error_log("ID de Categoría Enviado: " . $ticket->idCategorie);
+            
+            if (is_object($categoriaObject)) {
+                error_log("Objeto de Categoría encontrado. idMetodoAsignacion: " . $categoriaObject->idMetodoAsignacion);
+            } else {
+                // Si entra aquí, significa que la categoría con ese ID no existe.
+                error_log("Objeto de Categoría NO encontrado o NO es objeto. Autotriage OMITIDO.");
+            }
+
+            // ID 2 es 'Automático'
+            // COMRPOBACIÓN FINAL: Verificamos que $categoriaObjeto sea realmente un objeto 
+            // y tenga la propiedad idMetodoAsignacion antes de usarla.
+            if (is_object($categoriaObject) && 
+                isset($categoriaObject->idMetodoAsignacion) && 
+                $categoriaObject->idMetodoAsignacion == 2) 
+            {
+                $assignmentHandler = new TicketAssignmentHandler();
+                // Llama al Handler para el Autotriage
+                $assignmentHandler->handlePostCreationAssignment(
+                    $idTicket,
+                    $ticket->idPriority,
+                    $categoriaObject->idCategoria 
+                );
+            }
 
             //Retorna el código de tiquete registrado con el objetivo de mostrarlo en pantalla.
             return $idTicket;
         }
         catch (Exception $ex) {
             handleException($ex);
+        }
+    }
+
+    /**
+     * Obtiene el listado de especialidades asociadas a una categoría (N:M).
+     * @param int $idCategoria ID de la Categoría.
+     */
+    public function getSpecialtiesByCategorieId($idCategoria) 
+    {
+        try 
+        {
+            $query = "
+                SELECT 
+                    e.idEspecialidad, 
+                    e.nombre 
+                FROM especialidad e
+                INNER JOIN categoria_especialidad ce ON e.idEspecialidad = ce.idEspecialidad
+                WHERE ce.idCategoria = $idCategoria
+            ";
+            return $this->connection->executeSQL($query) ?? [];
+        } 
+        catch (Exception $ex) {
+            handleException($ex);
+            return [];
         }
     }
 }

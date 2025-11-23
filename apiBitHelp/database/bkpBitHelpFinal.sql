@@ -29,11 +29,14 @@ CREATE TABLE `categoria` (
   `nombre` varchar(45) NOT NULL,
   `idSla` int(11) NOT NULL,
   `estado` tinyint(4) NOT NULL,
+  `idMetodoAsignacion` int(11) NOT NULL DEFAULT 2,
   PRIMARY KEY (`idCategoria`),
   UNIQUE KEY `idCategoria_UNIQUE` (`idCategoria`),
   KEY `fk_Sla_Categoria_idx` (`idSla`),
+  KEY `fk_MetodoAsignacion_Categoria_idx` (`idMetodoAsignacion`),
+  CONSTRAINT `fk_MetodoAsignacion_Categoria` FOREIGN KEY (`idMetodoAsignacion`) REFERENCES `metodo_asignacion` (`idMetodoAsignacion`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_Sla_Categoria` FOREIGN KEY (`idSla`) REFERENCES `sla` (`idSla`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -42,7 +45,7 @@ CREATE TABLE `categoria` (
 
 LOCK TABLES `categoria` WRITE;
 /*!40000 ALTER TABLE `categoria` DISABLE KEYS */;
-INSERT INTO `categoria` VALUES (1,'\"Hardware\" y dispositivos',4,1),(2,'\"Software\" y aplicaciones',3,1),(3,'Cuentas y Acceso',1,1),(4,'Redes y conectividad',2,1);
+INSERT INTO `categoria` VALUES (1,'\"Hardware\" y dispositivos',4,1,2),(2,'\"Software\" y aplicaciones',3,1,2),(3,'Cuentas y Acceso',1,1,2),(4,'Redes y Conectividad',2,1,2),(5,'Otro',4,1,1);
 /*!40000 ALTER TABLE `categoria` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -633,7 +636,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
-INSERT INTO `usuario` VALUES (1,'jfuentes','Jeremy','Fuentes','Venegas','jeremyfvcr15@gmail.com','85197237','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(2,'rherrera','Rodrigo','Herrera','Castillo','rrhc1606@gmail.com','85848621','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,3),(3,'jalfaro','Jeyson','Alfaro','Ríos','jeysonalfaro83@gmail.com','72501418','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(4,'jvazquez','Jaime','Vazquez','Ríos','jeisonv83@gmail.com','72051418','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(5,'msoto','María','Soto','Soto','msoto.soto@techpro.com','6011-2022','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,1),(6,'lchavez','Luis','Chávez','Arias','lchavez@protool.com','6033-4044','pass123',1,1),(7,'aflores','Andrés','Flores','Vargas','aflores.vargas@rugama.com','6055-6066','pass123',1,1),(8,'crojas','Carla','Rojas','Mora','crojas.mora@tonypan.com','6077-8088','pass123',1,1),(9,'pmendez','Pablo','Méndez','Castro','pmendez@techpro.com','6099-0100','$2y$10$vyP8TuUha7La33xDK5fVyOL9/FFuHfSAEHMtsVZFBhaIYQR394Iuq',1,1),(10,'gquiros','Gabriela','Quirós','León','gquiros.leon@protool.com','6111-2122','pass123',1,1);
+INSERT INTO `usuario` VALUES (1,'jfuentes','Jeremy','Fuentes','Venegas','jeremyfvcr15@gmail.com','85197237','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(2,'rherrera','Rodrigo','Herrera','Castillo','rrhc1606@gmail.com','85848621','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,3),(3,'jalfaro','Jeyson','Alfaro','Ríos','jeysonalfaro83@gmail.com','72501418','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(4,'jvazquez','Jaime','Vazquez','Ríos','jeisonv83@gmail.com','72051418','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,2),(5,'msoto','María','Soto','Soto','msoto.soto@techpro.com','60112022','$2y$10$zwUlDMVF5g.YXfqkWzv7..KeGA533te/BuOKy9r6YK4ejU2.WRILq',1,1),(6,'lchavez','Luis','Chávez','Arias','lchavez@protool.com','60334044','pass123',1,1),(7,'aflores','Andrés','Flores','Vargas','aflores.vargas@rugama.com','60556066','pass123',1,1),(8,'crojas','Carla','Rojas','Mora','crojas.mora@tonypan.com','60778088','pass123',1,1),(9,'pmendez','Pablo','Méndez','Castro','pmendez@techpro.com','60990100','$2y$10$vyP8TuUha7La33xDK5fVyOL9/FFuHfSAEHMtsVZFBhaIYQR394Iuq',1,1),(10,'gquiros','Gabriela','Quirós','León','gquiros.leon@protool.com','61112122','pass123',1,1);
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -646,4 +649,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-16 18:21:06
+-- Dump completed on 2025-11-22 16:36:42

@@ -72,6 +72,43 @@ class TechnicianModel
         }
     }
 
+
+    /**
+     * Busca el técnico más adecuado (menor carga) que pertenezca a CUALQUIERA de las especialidades dadas.
+     * @param array $idEspecialidades Array de IDs de especialidades.
+     * @return object|null El técnico con menor carga de trabajo o null (con idTecnico y cargaTrabajo).
+     */
+    public function getAvailableTechnicianBySpecialties(array $idEspecialidades)
+    {
+        if (empty($idEspecialidades)) {
+            return null;
+        }
+        
+        $specialtyList = implode(',', $idEspecialidades);
+        
+        try {
+            $query = "
+                SELECT 
+                    tec.idTecnico,
+                    tec.cargaTrabajo
+                FROM tecnico tec
+                INNER JOIN tecnico_especialidad tecEsp ON tec.idTecnico = tecEsp.idTecnico
+                WHERE tec.estado = 1 /* Solo activos */
+                AND tecEsp.idEspecialidad IN ($specialtyList)
+                GROUP BY tec.idTecnico, tec.cargaTrabajo /* Agrupar por técnico para contar */
+                ORDER BY tec.cargaTrabajo ASC, tec.idTecnico ASC 
+                LIMIT 1
+            ";
+            
+            $result = $this->connection->executeSQL($query);
+            return $result[0] ?? null;
+            
+        } catch (Exception $ex) {
+            handleException($ex);
+            return null;
+        }
+    }
+
     public function getTechnicianById(int $idTecnico)
     {
         try {

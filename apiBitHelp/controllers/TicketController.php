@@ -1,5 +1,5 @@
 <?php
-class Ticket
+class ticket
 {
     public function index()
     {

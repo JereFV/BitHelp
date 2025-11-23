@@ -26,7 +26,7 @@ class TicketService
   }
 
   createTicket(ticket) {
-    return axios.post(BASE_URL, JSON.stringify(ticket));
+    return axios.post(BASE_URL, ticket);
   }
 
 }
