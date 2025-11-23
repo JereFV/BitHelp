@@ -13,7 +13,7 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import CategoryIcon from '@mui/icons-material/Category';
 import { DateTimeField } from '@mui/x-date-pickers/DateTimeField';
 import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
-import {Card, CardContent, Grid, IconButton, Divider, Box, Typography, Modal, Stack, useTheme, Button} from "@mui/material";
+import {Card, CardContent, Grid, IconButton, Divider, Box, Typography, Modal, Stack, useTheme, Button, FormControl, InputLabel, Select, FormHelperText} from "@mui/material";
 import { Person, CalendarMonth, Image as ImageIcon, Close } from "@mui/icons-material";
 import HistoryIcon from '@mui/icons-material/History';
 import TicketService from "../../services/TicketService";
@@ -27,6 +27,8 @@ import CommentIcon from '@mui/icons-material/Comment';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import AddIcon from '@mui/icons-material/Add';
+import { Controller, useForm } from "react-hook-form";
 
 //URL de imágenes de tiquetes guardadas.
 const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -68,10 +70,6 @@ const getColorMap = (theme, severity) => {
 
 export function TicketDetail() 
 {
-  const theme = useTheme();
-  //Constante para el manejo de navegación y ruteo.
-  const navigate = useNavigate();
-
   //Estilos definidos para el contenedor padre.
   const styleParentBox = {
     position: "absolute",
@@ -103,6 +101,33 @@ export function TicketDetail()
     4: "Bueno",
     5: "Excelente",
   };
+
+  //Incializacióm del formulario junto con el valor predefinido de los campos.
+  const {
+    control,
+    //setValue,
+    //register,
+    //handleSubmit,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      title: "",
+      description: "",
+      idPriority: "",
+      idTag: "",
+      idRequestUser: "",
+      idCategorie: "",
+      categorie: "",
+    },
+    // Asignación de validaciones haciendo uso del esquema de tiquetes yup.
+    //resolver: yupResolver(ticketSchema),
+  });
+
+  //Obtiene el tema configurado.
+  const theme = useTheme();
+
+  //Constante para el manejo de navegación y ruteo.
+  const navigate = useNavigate();
 
   //Obtiene los parámetros de enrutamiento contenidos en la dirección.
   const routeParams = useParams();
@@ -225,7 +250,7 @@ export function TicketDetail()
                     marginBottom: "1.5rem",
                   },
                   startAdornment: (
-                    <InputAdornment position="start">
+                    <InputAdornment sx={{alignSelf: "start", marginRight: "8px"}}>
                       <DescriptionIcon color="primary" />
                     </InputAdornment>
                   ),
@@ -609,7 +634,7 @@ export function TicketDetail()
 
           <Divider sx={{ mb: 3 }} />
 
-          <Box>
+          <Box marginBottom={"1.5rem"}>
             <Typography
               variant="h6"
               fontWeight="bold"
@@ -693,6 +718,81 @@ export function TicketDetail()
                 hasta que haya sido cerrado.
               </Alert>
             )}
+          </Box>
+
+          <Divider sx={{ mb: 3 }} />
+
+          {/*Nuevo Movimiento Tiquete */}
+          <Box>
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              gutterBottom
+              marginBottom="2rem"
+            >
+              <Stack alignItems={"center"} direction={"row"}>
+                <AddIcon
+                  fontSize="large"
+                  color="primary"
+                  style={{ marginRight: "1%" }}
+                />
+                Nuevo Movimiento Tiquete
+              </Stack>
+            </Typography>
+
+            <Stack width={{ sm: "50%", lg: "35%" }} paddingBottom={"1.5rem"}>
+              <FormControl fullWidth>
+                <Controller
+                  name="idPriority"
+                  control={control}
+                  render={({ field }) => (
+                    <>
+                      <InputLabel id="id">Nuevo Estado</InputLabel>
+                      <Select
+                        {...field}
+                        labelId="idPriority"
+                        value={field.value}
+                        label="Nuevo Estado"
+                        //onChange={handlePriorityChange}
+                        fullWidth
+                        error={Boolean(errors.idPriority)}
+                      >
+                        {/* {ticketpriorities &&
+                            ticketpriorities.map((priority) => (
+                              <MenuItem
+                                key={priority.idPrioridadTiquete}
+                                value={priority.idPrioridadTiquete}
+                              >
+                                {priority.nombre}
+                              </MenuItem>
+                            ))} */}
+                      </Select>
+                      <FormHelperText error>
+                        {errors.idPriority ? errors.idPriority.message : ""}
+                      </FormHelperText>
+                    </>
+                  )}
+                />
+              </FormControl>
+            </Stack>
+
+            <TextField
+              id="standard-basic"
+              label="Comentario"
+              fullWidth
+              multiline
+              minRows={3}
+              maxRows={3}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment  sx={{alignSelf: "start", marginRight: "8px"}}>
+                      <CommentIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
           </Box>
 
           <IconButton
