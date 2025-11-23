@@ -13,7 +13,7 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import CategoryIcon from '@mui/icons-material/Category';
 import { DateTimeField } from '@mui/x-date-pickers/DateTimeField';
 import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
-import {Card, CardContent, Grid, IconButton, Divider, Box, Typography, Modal, Stack, useTheme, Button, FormControl, InputLabel, Select, FormHelperText} from "@mui/material";
+import {Card, CardContent, Grid, IconButton, Divider, Box, Typography, Modal, Stack, useTheme, Button, FormControl, InputLabel, Select, FormHelperText, MenuItem} from "@mui/material";
 import { Person, CalendarMonth, Image as ImageIcon, Close } from "@mui/icons-material";
 import HistoryIcon from '@mui/icons-material/History';
 import TicketService from "../../services/TicketService";
@@ -22,7 +22,7 @@ import StarsIcon from '@mui/icons-material/Stars';
 import Alert from '@mui/material/Alert';
 import StarIcon from '@mui/icons-material/Star';
 import Rating from '@mui/material/Rating';
-import { getSLAStatus, formatTimeRemaining } from '../../Utilities/slaCalculations';
+import { getSLAStatus } from '../../Utilities/slaCalculations';
 import CommentIcon from '@mui/icons-material/Comment';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useNavigate } from 'react-router-dom';
@@ -30,6 +30,11 @@ import PropTypes from 'prop-types';
 import AddIcon from '@mui/icons-material/Add';
 import { Controller, useForm } from "react-hook-form";
 import ImagesSelector from './ImagesSelector';
+import TicketStatusFlowService from '../../services/TicketStatusFlowService';
+import toast from 'react-hot-toast';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import TicketHistoryService from '../../services/TicketHistoryService';
 
 //URL de imágenes de tiquetes guardadas.
 const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -103,6 +108,17 @@ export function TicketDetail()
     5: "Excelente",
   };
 
+  //Esquema de validación de los campos de entrada del formulario de nuevo movimiento.
+  const newMovementSchema = yup.object({
+    idNewState: yup
+      .number()
+      .typeError("El nuevo estado del tiquete es requerido."),
+    comment: yup
+      .string()
+      .required("Es requerido que digite un comentario u observación.")
+      .max(300, "El comentario debe tener un máximo de 300 caracteres."),
+  });
+
   //Incializacióm del formulario junto con el valor predefinido de los campos.
   const {
     control,
@@ -112,16 +128,11 @@ export function TicketDetail()
     formState: { errors },
   } = useForm({
     defaultValues: {
-      title: "",
-      description: "",
-      idPriority: "",
-      idTag: "",
-      idRequestUser: "",
-      idCategorie: "",
-      categorie: "",
+      idNewState: "",
+      comment: ""
     },
     // Asignación de validaciones haciendo uso del esquema de tiquetes yup.
-    //resolver: yupResolver(ticketSchema),
+    resolver: yupResolver(newMovementSchema),
   });
 
   //Obtiene el tema configurado.
@@ -144,32 +155,58 @@ export function TicketDetail()
     navigate(-1);
   };
 
-  //Constantes que almacena el detalle del tiquete y sus movimientos.
+  //Constantes que almacenan el detalle del tiquete y sus movimientos.
   const [ticket, setTicket] = useState({});
   const [movements, setMovements] = useState([]);
   const [slaDetails, setSlaDetails] = useState({});
 
+  //Estados seleccionables en un nuevo movimiento del tiquete.
+  const [ticketStates, setTicketStates] = useState([]);
+
   useEffect(() => {
     const idTiquete = routeParams.id;
+
     //Obtiene el detalle del tiquete a partir del valor enviado.
     TicketService.getTicketById(idTiquete)
       .then((response) => {
         //Seteo del tiquete e historial de movimientos en las constantes de renderización.
         setTicket(response.data);
         setMovements(response.data.historialTiquete);
+
+        //Variable auxiliar para obtener el estado del tiquete a partir de la respuesta de la petición.
+        let estadoTiquete = response.data?.estadoTiquete?.idEstadoTiquete;
+
+        //Obtiene los estados seleccionables en un nuevo movimiento del tiquete, al estar en un estado diferente de Pendiente y Cerrado.
+        if (estadoTiquete != "1" && estadoTiquete != "5") 
+        {
+          TicketStatusFlowService.getStates(estadoTiquete)
+            .then((response) => {
+              setTicketStates(response.data);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        }
       })
       .catch((error) => {
-        console.log(error);
+        toast.error(
+          "Ha ocurrido un error al intentar obtener el detalle del tiquete."
+        );
+        console.error(error);
       });
+
     TicketService.getSlaDetailsById(idTiquete)
       .then((response) => {
         setSlaDetails(response.data); // Almacena los límites y fechas reales del backend
       })
       .catch((error) => {
+        toast.error(
+          "Ha ocurrido un error al intentar obtener los detalles de SLA del tiquete."
+        );
         console.error("Error al obtener detalles de SLA:", error);
-        // Opcional: setSlaDetails({}) o un valor para evitar errores de null checking
-      });
+      });  
   }, [routeParams.id]);
+
   let slaRespuestaDisplay = null;
   let slaResolucionDisplay = null;
 
@@ -188,6 +225,62 @@ export function TicketDetail()
       slaDetails.cumplimientoSlaResolucion
     );
   }
+
+  //Evento submit del formulario de nuevo movimiento tiquete.
+  const onSubmit = (DataForm) => {
+      try 
+      {
+        //Valida que los campos del formulario cumplan con las especificaciones requeridas.
+        if (newMovementSchema.isValid()) 
+        {
+          //Creación del nuevo movimiento en el historial de tiquetes.
+          TicketHistoryService.createTicketHistory(DataForm)
+            .then((response) => {
+              setMovements(response.data);
+              toast.success(`Se ha registrado correctamente el movimiento del tiquete.`, { duration: 4000});
+
+                //Arma la estructura de entrada para el almacenamiento de imágenes.
+                /*formData.append("file", images);
+                formData.append("idTicket", response.data);
+  
+                //Almacenamiento de imágenes, una vez creado el tiquete.
+                TicketImageService.uploadImages(formData)
+                  .then(() => {
+                    toast.success(
+                      `Se ha creado correctamente el tiquete #${response.data} - ${DataForm.title}`,
+                      {
+                        duration: 4000,
+                        position: "top-center",
+                      }
+                    );
+  
+                    //Al haber agregado el registro exitosamente, redirreciona hacia el listado.
+                    return navigate("/tickets/ticketsList");
+                  })
+                  .catch((error) => {
+                    toast.error(
+                      "Ha ocurrido un error al intentar crear el tiquete."
+                    );
+                    console.error(error);
+                  });*/
+            })
+            .catch((error) => {
+              toast.error("Ha ocurrido un error al intentar registrar el movimiento del tiquete.");
+              console.error(error);
+            });
+        }
+      } 
+      catch (error) {
+        toast.error("Ha ocurrido un error al intentar registrar el movimiento del tiquete.");
+        console.error(error);
+      }
+    };
+  
+    //Evento error del formulario.
+    const onError = (errors, e) => {
+      toast.error("Ha ocurrido un error al intentar crear el tiquete.");
+      console.log(errors, e);
+    }
 
   return (
     <div>
@@ -253,7 +346,7 @@ export function TicketDetail()
                   startAdornment: (
                     <InputAdornment
                       position="start"
-                      sx={{alignSelf: "start", marginRight: "8px"}}
+                      sx={{ alignSelf: "start", marginRight: "8px" }}
                     >
                       <DescriptionIcon color="primary" />
                     </InputAdornment>
@@ -722,7 +815,8 @@ export function TicketDetail()
 
           {/*Nuevo Movimiento Tiquete */}
           {/*Renderiza únicamente si el estado del tiquete no es Pendiente ni Cerrado.*/}
-          {ticket.estadoTiquete?.idEstadoTiquete != 1 &&  ticket.estadoTiquete?.idEstadoTiquete != 5 ? (
+          {ticket.estadoTiquete?.idEstadoTiquete != 1 &&
+          ticket.estadoTiquete?.idEstadoTiquete != 5 ? (
             <Box>
               <Divider sx={{ mb: 3 }} />
 
@@ -745,32 +839,31 @@ export function TicketDetail()
               <Stack width={{ sm: "50%", lg: "35%" }} paddingBottom={"1.5rem"}>
                 <FormControl fullWidth>
                   <Controller
-                    name="idPriority"
+                    name="idNewState"
                     control={control}
                     render={({ field }) => (
                       <>
                         <InputLabel id="id">Nuevo Estado</InputLabel>
                         <Select
                           {...field}
-                          labelId="idPriority"
+                          labelId="idNewState"
                           value={field.value}
                           label="Nuevo Estado"
-                          //onChange={handlePriorityChange}
                           fullWidth
-                          error={Boolean(errors.idPriority)}
+                          error={Boolean(errors.idNewState)}
                         >
-                          {/* {ticketpriorities &&
-                              ticketpriorities.map((priority) => (
-                                <MenuItem
-                                  key={priority.idPrioridadTiquete}
-                                  value={priority.idPrioridadTiquete}
-                                >
-                                  {priority.nombre}
-                                </MenuItem>
-                              ))} */}
+                          {ticketStates &&
+                            ticketStates.map((ticketState) => (
+                              <MenuItem
+                                key={ticketState.idNuevoEstado}
+                                value={ticketState.idNuevoEstado}
+                              >
+                                {ticketState.nombre}
+                              </MenuItem>
+                            ))}
                         </Select>
                         <FormHelperText error>
-                          {errors.idPriority ? errors.idPriority.message : ""}
+                          {errors.idNewState ? errors.idNewState.message : ""}
                         </FormHelperText>
                       </>
                     )}
@@ -778,26 +871,37 @@ export function TicketDetail()
                 </FormControl>
               </Stack>
 
-              <TextField
-                id="standard-basic"
-                label="Comentario"
-                fullWidth
-                multiline
-                minRows={3}
-                maxRows={3}
-                sx={{ paddingBottom: "1.5rem" }}
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment
-                        position="start"
-                        sx={{ alignSelf: "start", marginRight: "8px" }}
-                      >
-                        <CommentIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
+              <Controller
+                name="comment"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    id="comment"
+                    label="Comentario"
+                    fullWidth
+                    multiline
+                    minRows={3}
+                    maxRows={3}
+                    sx={{ paddingBottom: "1.5rem" }}
+                    error={Boolean(errors.comment)}
+                    helperText={
+                      errors.comment ? errors.comment.message : ""
+                    }
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment
+                            position="start"
+                            sx={{ alignSelf: "start", marginRight: "8px" }}
+                          >
+                            <CommentIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                )}
               />
 
               {/*Sección de imágenes adjuntas y botones de acción.*/}

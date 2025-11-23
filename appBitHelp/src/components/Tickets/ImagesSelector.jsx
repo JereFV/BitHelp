@@ -17,7 +17,7 @@ import PropTypes from 'prop-types';
 //Validación de propiedades para el historial del tiquete
 ImagesSelector.propTypes = {
   newTicket: PropTypes.bool,
-  onchange: PropTypes.func
+  onChange: PropTypes.func
 }
 
 export default function ImagesSelector({ newTicket, onChange }) {

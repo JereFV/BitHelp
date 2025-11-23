@@ -173,7 +173,7 @@ CREATE TABLE `estado_tiquete` (
 
 LOCK TABLES `estado_tiquete` WRITE;
 /*!40000 ALTER TABLE `estado_tiquete` DISABLE KEYS */;
-INSERT INTO `estado_tiquete` VALUES (1,'Pendiente',1),(2,'Asignado',1),(3,'En Proceso',1),(4,'Resuelto',1),(5,'Cerrado',1);
+INSERT INTO `estado_tiquete` VALUES (1,'Pendiente',1),(2,'Asignado',1),(3,'En Proceso',1),(4,'Resuelto',1),(5,'Cerrado',1),(6,'Devuelto',1);
 /*!40000 ALTER TABLE `estado_tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -228,6 +228,35 @@ LOCK TABLES `etiqueta_categoria` WRITE;
 /*!40000 ALTER TABLE `etiqueta_categoria` DISABLE KEYS */;
 INSERT INTO `etiqueta_categoria` VALUES (1,1),(2,1),(3,1),(4,2),(5,2),(6,3),(7,4),(8,4),(9,2),(10,3);
 /*!40000 ALTER TABLE `etiqueta_categoria` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `flujo_estado_tiquete`
+--
+
+DROP TABLE IF EXISTS `flujo_estado_tiquete`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `flujo_estado_tiquete` (
+  `idFlujoEstadoTiquete` int(11) NOT NULL AUTO_INCREMENT,
+  `idEstadoActual` int(11) NOT NULL,
+  `idNuevoEstado` int(11) NOT NULL,
+  PRIMARY KEY (`idFlujoEstadoTiquete`),
+  KEY `fk_EstadoActual_FlujoEstadoTiquete_idx` (`idEstadoActual`),
+  KEY `fk_EstadoNuevo_FlujoEstadoTiquete_idx` (`idNuevoEstado`),
+  CONSTRAINT `fk_EstadoActual_FlujoEstadoTiquete` FOREIGN KEY (`idEstadoActual`) REFERENCES `estado_tiquete` (`idEstadoTiquete`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_NuevoEstado_FlujoEstadoTiquete` FOREIGN KEY (`idNuevoEstado`) REFERENCES `estado_tiquete` (`idEstadoTiquete`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `flujo_estado_tiquete`
+--
+
+LOCK TABLES `flujo_estado_tiquete` WRITE;
+/*!40000 ALTER TABLE `flujo_estado_tiquete` DISABLE KEYS */;
+INSERT INTO `flujo_estado_tiquete` VALUES (1,2,3),(2,3,4),(3,4,5),(4,4,6),(5,6,3);
+/*!40000 ALTER TABLE `flujo_estado_tiquete` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -591,7 +620,7 @@ CREATE TABLE `tiquete` (
   CONSTRAINT `fk_Tecnico_Tiquete` FOREIGN KEY (`idTecnicoAsignado`) REFERENCES `tecnico` (`idTecnico`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_UsuarioCierra_Tiquete` FOREIGN KEY (`idUsuarioCierra`) REFERENCES `usuario` (`idUsuario`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_UsuarioCrea_Tiquete` FOREIGN KEY (`idUsuarioSolicita`) REFERENCES `usuario` (`idUsuario`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -649,4 +678,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-22 20:53:30
+-- Dump completed on 2025-11-23  2:15:47
