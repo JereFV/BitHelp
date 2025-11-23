@@ -2,11 +2,10 @@
 
 class TicketAssignmentHandler
 {
-    private $connection;
-    private $ticketModel;
-    private $technicianModel;
-    private $priorityModel;
-    private $historyModel;
+    public $connection;
+    public $technicianModel;
+    public $priorityModel;
+    public $historyModel;
     
     // Constantes de IDs basadas en la estructura de BitHelp
     const ID_METODO_ASIGNACION_AUTOMATICO = 2; 
@@ -17,7 +16,6 @@ class TicketAssignmentHandler
     public function __construct()
     {
         $this->connection = new MySqlConnect();
-        $this->ticketModel = new TicketModel(); 
         $this->technicianModel = new TechnicianModel(); 
         $this->priorityModel = new TicketPriorityModel(); 
         $this->historyModel = new TicketHistoryModel();
@@ -31,12 +29,12 @@ class TicketAssignmentHandler
      * @param int $idPrioridad ID de la prioridad del tiquete.
      * @param int $idCategoria ID de la categoría (usado para buscar especialidades N:M).
      */
-    public function handlePostCreationAssignment($idTicket, $idPrioridad, $idCategoria)
+    public function handlePostCreationAssignment($idTicket, $idPrioridad, $idCategoria, TicketModel $ticketModel)
     {
         try {
             // 1. Obtener la lista de especialidades requeridas por la categoría (N:M)
             // Se asume que TicketModel::getSpecialtiesByCategorieId existe y retorna IDs de especialidad
-            $specialtyObjects = $this->ticketModel->getSpecialtiesByCategorieId($idCategoria);
+            $specialtyObjects = $ticketModel->getSpecialtiesByCategorieId($idCategoria);
             
             // Extraer solo los IDs de especialidad
             $idEspecialidades = array_map(function($obj) {
@@ -51,7 +49,7 @@ class TicketAssignmentHandler
 
             // 2. Obtener datos del ticket para el cálculo del puntaje
             // Se asume que TicketModel::getDetails retorna un array con el SLA (slaResolucion)
-            $ticketData = $this->ticketModel->getSlaDetails($idTicket);
+            $ticketData = $ticketModel->getSlaDetails($idTicket);
             if (!$ticketData) throw new Exception("Detalles del tiquete no encontrados para cálculo de SLA.");
             $ticketData = $ticketData[0];
 
@@ -146,7 +144,14 @@ class TicketAssignmentHandler
             
             // 3. Registrar el movimiento en el Historial del Tiquete
             // Se asume la función getNextId en TicketHistoryModel
+            $result = $this->historyModel->getNextId($idTicket);
             $nextHistoryId = $this->historyModel->getNextId($idTicket); 
+            if (is_array($result) && count($result) > 0) {
+                $nextHistoryId = is_object($result[0]) ? $result[0]->idHistorialTiquete : $result[0]['idHistorialTiquete'];
+            } else {
+                // Manejar caso donde no hay historial previo (ej: id = 1)
+                $nextHistoryId = 1; 
+            }
             $stmtHist = $conn->prepare("INSERT INTO historial_tiquete (idHistorialTiquete, idTiquete, fecha, idUsuario, observacion, idEstado) 
                                         VALUES (?, ?, NOW(), ?, ?, ?)");
             $stmtHist->bind_param("iissi", $nextHistoryId, $idTicket, self::ID_USUARIO_SISTEMA, $justificacion, $idNuevoEstado);

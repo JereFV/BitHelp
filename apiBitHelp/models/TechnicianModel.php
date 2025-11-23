@@ -1,5 +1,5 @@
 <?php
-// Sustituye CategorieModel por TechnicianModel
+
 class TechnicianModel
 {
     public $connection;

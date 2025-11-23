@@ -1,6 +1,6 @@
 <?php
 require_once 'TicketAsignationModel.php';
-
+require_once 'TicketAssignmentHandler.php';
 class TicketModel
 {
     public $connection;
@@ -271,7 +271,8 @@ class TicketModel
                 $assignmentHandler->handlePostCreationAssignment(
                     $idTicket,
                     $ticket->idPriority,
-                    $categoriaObject->idCategoria 
+                    $categoriaObject->idCategoria ,
+                    $this
                 );
             }
 
