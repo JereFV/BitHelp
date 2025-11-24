@@ -224,10 +224,16 @@ class TicketAssignmentHandler
 
             // 2. Actualizar el Tiquete (idEstado e idTecnicoAsignado)
             $idMetodoAsignacion = self::ID_METODO_ASIGNACION_AUTOMATICO;
+            $responseDate = date("Y-m-d H:i:s");
+
+            //COMENTADO TEMPORALMENTE A FALTA DE PRUEBAS.
+            //$stmtTicket = $conn->prepare("UPDATE tiquete SET idEstado = ?, idTecnicoAsignado = ?, idMetodoAsignacion = ?, slaRespuesta = ? WHERE idTiquete = ?");
+            //$stmtTicket->bind_param("iiisi", $idNuevoEstado, $idTecnico, $idMetodoAsignacion, $responseDate, $idTicket);
+
             $stmtTicket = $conn->prepare("UPDATE tiquete SET idEstado = ?, idTecnicoAsignado = ?, idMetodoAsignacion = ? WHERE idTiquete = ?");
             $stmtTicket->bind_param("iiii", $idNuevoEstado, $idTecnico, $idMetodoAsignacion, $idTicket);
             if (!$stmtTicket->execute()) throw new Exception("Error al actualizar el tiquete.");
-            $stmtTicket->close();
+            $stmtTicket->close();  
             error_log("DEBUG: 2. Tiquete $idTicket actualizado a Estado $idNuevoEstado y Método $idMetodoAsignacion.");
 
            // 3. Registrar el movimiento en el Historial del Tiquete

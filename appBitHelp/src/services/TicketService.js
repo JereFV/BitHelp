@@ -51,6 +51,10 @@ class TicketService
     return axios.put(`${BASE_URL}/assignManually/${idTicket}`, payload); 
   }
 
+  updateTicket(ticket) {
+    return axios.put(BASE_URL, ticket);
+  }
+
 }
 
 export default new TicketService();

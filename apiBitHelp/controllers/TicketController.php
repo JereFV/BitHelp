@@ -164,4 +164,26 @@ class ticket
         }
     }
     
+
+    //Actualización del tiquete a partir del nuevo estado definido.
+    public function update()
+    {
+        try 
+        {
+            $request = new Request();
+            $response = new Response();
+            $ticketModel = new TicketModel();
+
+            //Armado de la estructura de entrada, decodificando la estructura JSON enviada como un objeto.
+            $decodedRequest = $request->getJson();
+
+            //Actualiza y obtiene el tiquete con sus valores actualizados hacia la interfaz.
+            $ticket = $ticketModel->update_2($decodedRequest);   
+            
+            $response->toJson($ticket);      
+        }
+        catch (Exception $ex) {
+            handleException($ex);
+        }
+    }
 }

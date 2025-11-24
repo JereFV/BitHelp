@@ -1,9 +1,16 @@
 <?php
+
 require_once 'TicketAsignationModel.php';
 require_once 'TicketAssignmentHandler.php';
+
 class TicketModel
 {
     public $connection;
+
+    //Estado de tiquete Resuelto.
+    public const ID_RESOLVED_STATE = 4;
+    //Estado de tiquete Cerrado.
+    public const ID_CLOSED_STATE = 4;  
 
     public function __construct()
     {
@@ -408,5 +415,36 @@ class TicketModel
             return false;
         }
     }
+
+    //Actualiza el tiquete según el nuevo estado seleccionado, guardando el movimiento en el historial.
+    public function update_2($ticket)
+    {
+        try 
+        {
+            $ticketHistoryModel = new TicketHistoryModel();
+
+            //Inicialmente actualiza el tiquete según el nuevo estado.
+            $query = "UPDATE tiquete SET idUsuarioCierra = " . ($ticket->idNewState == self::ID_CLOSED_STATE ? $ticket->idSessionUser : "NULL")
+                                        . ",idEstado = $ticket->idNewState"
+                                        . ",fechaCierre = " . ($ticket->idNewState == self::ID_CLOSED_STATE ? date("Y-m-d h:i:s") : "NULL")
+                                        . ",slaResolucion = " . ($ticket->idNewState == self::ID_RESOLVED_STATE ? date("Y-m-d h:i:s") : "NULL")
+                                        . " WHERE idTiquete = $ticket->idTicket";
+
+            $this->connection->executeSQL_DML($query);
+
+            //Almacena un nuevo movimiento en el historial del tiquete.
+            $ticketHistoryModel->create($ticket);
+
+            //Obtiene y retorna el tiquete con sus valores actualizados junto con el historial de movimientos.
+            $ticket = $this->get($ticket->idTicket);
+
+            return $ticket;
+        }
+        catch (Exception $ex) {
+            handleException($ex);
+        }
+    }
 }
 ?>
+
+

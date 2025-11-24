@@ -222,7 +222,7 @@ export function CreateTicket() {
   // });
 
   //Evento auxiliar para la obtención de imágenes. 
-  const handleImagenes = (images) => {
+  const handleImages = (images) => {
     // setImages(images.map((i) => (i.file, i.file.name)));
     setImages(images[0], images[0].name)
   };
@@ -587,7 +587,7 @@ export function CreateTicket() {
 
           <Divider sx={{ mb: 3 }} />
 
-          <ImagesSelector newTicket={true} onChange={handleImagenes} />
+          <ImagesSelector newTicket={true} onChange={handleImages} />
         </form>
 
         <IconButton
