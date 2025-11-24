@@ -29,6 +29,28 @@ class TicketService
     return axios.post(BASE_URL, ticket);
   }
 
+  getTicketDetailsForAssignment(id) {
+    return axios.get(`${BASE_URL}/getDetails/${id}`); 
+  }
+
+  /**
+   * Realiza la asignación manual de un tiquete a un técnico.
+   * @param {number} idTicket ID del tiquete a asignar.
+   * @param {number} idTechnician ID del técnico seleccionado.
+   * @param {string} justification Justificación de la asignación.
+   * @param {number} idAdminUser ID del usuario administrador logueado.
+   * @returns {Promise<axios.Response>} Promesa con la respuesta de la API.
+   */
+  assignTicketManually(idTicket, idTechnician, justification, idAdminUser) {
+    const payload = {
+        idTecnicoAsignado: idTechnician,
+        justificacion: justification,
+        idUsuarioAdmin: idAdminUser // Se envía el ID del administrador que realiza la acción
+    };
+    
+    return axios.put(`${BASE_URL}/assignManually/${idTicket}`, payload); 
+  }
+
   updateTicket(ticket) {
     return axios.put(BASE_URL, ticket);
   }

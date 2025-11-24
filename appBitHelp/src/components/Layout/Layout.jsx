@@ -92,7 +92,7 @@ export function Layout({ children }) {
       // una lógica similar a la de 'Usuarios' aquí, tal vez solo para Admin/Técnico.
       { segment: 'technician', title: 'Técnicos', icon: <GroupIcon /> },
       { kind: 'divider' },
-      { segment: 'categories', title: 'Categorias', icon: <ViewListIcon/> },
+      { segment: 'categories', title: 'Categorías', icon: <ViewListIcon/> },
       { kind: 'divider' },
 
       

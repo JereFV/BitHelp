@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
@@ -7,14 +7,18 @@ import CardActions from '@mui/material/CardActions';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import { Info } from '@mui/icons-material';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { Chip, Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip';
+import ManualAssignmentModal from './ManualAssignmentModal';
 
 ListCardTickets.propTypes = {
   data: PropTypes.array,
+  onTicketAssigned: PropTypes.func, 
+  currentUser: PropTypes.object,
 };
 
 // Asignación de colores para los chips de PRIORIDAD
@@ -51,9 +55,42 @@ const getStateColor = (estado) => {
   }
 };
 
-export function ListCardTickets({ data = [] }) {
+export function ListCardTickets({ data = [], onTicketAssigned, currentUser }) {
+  // 1. Estado para controlar la visibilidad del modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // 2. Estado para saber qué tiquete se va a asignar
+  const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const ADMIN_ROL_ID = 3;
+  // 3. Función para abrir el modal
+  // 3. Función para abrir el modal
+const handleOpenModal = (ticketId) => {
+    // 💡 CORRECCIÓN ROBUSTA: Usar parseInt(value, 10) para garantizar
+    // que el valor es un número entero de JavaScript.
+    const numericId = parseInt(ticketId, 10);
+    
+    // Verificamos que sea un número válido y positivo.
+    if (!isNaN(numericId) && numericId > 0) {
+        setSelectedTicketId(numericId);
+        setIsModalOpen(true);
+    } else {
+        // En caso de que item.id sea inválido (p. ej., null o "N/A")
+        console.error("Intento de abrir modal con ID de tiquete inválido:", ticketId);
+        setSelectedTicketId(null);
+    }
+};
+
+  // 4. Función para cerrar el modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTicketId(null);
+    // Si se pasa una función para refrescar los tickets, se invoca aquí
+    if (onTicketAssigned) {
+      onTicketAssigned();
+    }
+  };
+
   return (
-    // Contenedor principal de la grilla
+    // Contenedor principal 
     <Box
       sx={{
         p: 2,
@@ -119,8 +156,7 @@ export function ListCardTickets({ data = [] }) {
                 sx={(theme) => {
                   const colorName = getStateColor(item.estado); // 'error', 'warning', 'default', etc.
                   
-                  if (colorName === 'default') {
-                    // Lógica especial para "Cerrado" (modo oscuro/claro)
+                  if (item.estado === 'Cerrado') { // Lógica especial para "Cerrado"
                     return (theme.palette.mode === 'light'
                       // MODO CLARO: Fondo Negro, Fuente Blanca
                       ? {
@@ -166,18 +202,36 @@ export function ListCardTickets({ data = [] }) {
                     <strong>Tiempo restante:</strong>{' '}
                     {item.tiempoRestante ?? '—'} {item.tiempoRestante ? 'horas' : ''}
                 </Typography>
-                <AssignmentIndIcon fontSize="small" color='warning'/>
-                <IconButton
-                    aria-label="Detalle"
-                    to={`/ticket/${item.id}`}
-                    component={Link}
-                    color="primary"
-                    size="small" 
-                >
-                    <Info fontSize="small" />                    
-                </IconButton>
                 
+                {/* 5. Botón de Asignación Manual con Invocación */}
+                {/* solo si el usuario actual existe Y tiene el rol 3 */}
+                {(currentUser && currentUser.idRol == ADMIN_ROL_ID) && (
+                    <Tooltip title="Asignación Manual" placement="bottom-end" >
+                        <IconButton
+                            aria-label="Asignación Manual"
+                            color='warning' 
+                            // 👇 Aquí se invoca la función para abrir el modal con el ID del tiquete
+                            onClick={() => handleOpenModal(item.id)}
+                            size="small"
+                            sx={{marginLeft:"7%"}}
+                        >
+                            <ManageAccountsIcon fontSize="small"/>
+                        </IconButton>
+                    </Tooltip>
+                )}
                 
+                <Tooltip title="Ver detalle" placement="bottom-start">
+                  <IconButton
+                      aria-label="Detalle"
+                      to={`/ticket/${item.id}`}
+                      component={Link}
+                      color="primary"
+                      size="small" 
+                      sx={{marginLeft:"-2%"}}
+                  >
+                      <Info fontSize="small" />                    
+                  </IconButton>
+                </Tooltip> 
             </Box>
           </CardContent>
 
@@ -192,6 +246,17 @@ export function ListCardTickets({ data = [] }) {
           </CardActions>
         </Card>
       ))}
+
+      {/* 6. Renderizar el Modal de Asignación Manual */}
+      {selectedTicketId && (
+        <ManualAssignmentModal
+          open={isModalOpen}
+          // El modal se cierra y notifica la recarga de la lista
+          onClose={handleCloseModal} 
+          idTicket={selectedTicketId}
+          currentUser={currentUser} // Se pasa el objeto del administrador
+        />
+      )}
     </Box>
   );
 }
