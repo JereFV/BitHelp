@@ -1,23 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-    Modal,
-    Box,
-    Typography,
-    TextField,
-    Button,
-    Grid,
-    CircularProgress,
-    Alert,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Card,
-    CardContent,
-    Chip,
-    Stack,
-    Tooltip,
-    Divider
+import {Modal,Box,Typography,TextField,Button,Grid,CircularProgress,
+    Alert,FormControl,InputLabel,Select,MenuItem,Card,CardContent,
+    Chip,Stack,Tooltip,Divider
 } from '@mui/material';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PropTypes from 'prop-types';
@@ -66,8 +50,8 @@ const ManualAssignmentModal = ({ open, onClose, idTicket, currentUser }) => {
     const [success, setSuccess] = useState(false);
     
     
-    // Asumimos que el ID del administrador viene del usuario logueado
-    const idAdminUser = currentUser?.idUsuario || 11 // Usar 11 como fallback si no hay usuario
+    // REVISAR VALIDAR QUE SEA USUARIO ADMIN
+    const idAdminUser = currentUser?.idUsuario ==3 // Usar 11 como fallback si no hay usuario
 
     const fetchAssignmentData = useCallback(async () => {
         if (!idTicket) return;

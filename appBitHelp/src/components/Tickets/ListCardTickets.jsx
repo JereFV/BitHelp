@@ -60,7 +60,7 @@ export function ListCardTickets({ data = [], onTicketAssigned, currentUser }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   // 2. Estado para saber qué tiquete se va a asignar
   const [selectedTicketId, setSelectedTicketId] = useState(null);
-
+  const ADMIN_ROL_ID = 3;
   // 3. Función para abrir el modal
   // 3. Función para abrir el modal
 const handleOpenModal = (ticketId) => {
@@ -204,18 +204,21 @@ const handleOpenModal = (ticketId) => {
                 </Typography>
                 
                 {/* 5. Botón de Asignación Manual con Invocación */}
-                <Tooltip title="Asignación Manual" placement="bottom-end" >
-                    <IconButton
-                        aria-label="Asignación Manual"
-                        color='warning' 
-                        // 👇 Aquí se invoca la función para abrir el modal con el ID del tiquete
-                        onClick={() => handleOpenModal(item.id)}
-                        size="small"
-                        sx={{marginLeft:"7%"}}
-                    >
-                        <ManageAccountsIcon fontSize="small"/>
-                    </IconButton>
-                </Tooltip>
+                {/* solo si el usuario actual existe Y tiene el rol 3 */}
+                {(currentUser && currentUser.idRol == ADMIN_ROL_ID) && (
+                    <Tooltip title="Asignación Manual" placement="bottom-end" >
+                        <IconButton
+                            aria-label="Asignación Manual"
+                            color='warning' 
+                            // 👇 Aquí se invoca la función para abrir el modal con el ID del tiquete
+                            onClick={() => handleOpenModal(item.id)}
+                            size="small"
+                            sx={{marginLeft:"7%"}}
+                        >
+                            <ManageAccountsIcon fontSize="small"/>
+                        </IconButton>
+                    </Tooltip>
+                )}
                 
                 <Tooltip title="Ver detalle" placement="bottom-start">
                   <IconButton

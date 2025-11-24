@@ -149,7 +149,7 @@ class ticket
                 http_response_code(200);
                 echo json_encode(['status' => 'success', 'message' => 'Tiquete asignado correctamente.']);
             } else {
-                // Este caso es poco probable si el handler lanza excepciones, pero es una protección
+                // Poco probable si el handler lanza excepciones, pero es una protección
                 http_response_code(500);
                 echo json_encode(['status' => 'error', 'message' => 'Fallo la asignación por una razón desconocida.']);
             }
