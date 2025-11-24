@@ -7,11 +7,13 @@ import CardActions from '@mui/material/CardActions';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import { Info } from '@mui/icons-material';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { Chip, Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip';
+
 
 ListCardTickets.propTypes = {
   data: PropTypes.array,
@@ -166,18 +168,21 @@ export function ListCardTickets({ data = [] }) {
                     <strong>Tiempo restante:</strong>{' '}
                     {item.tiempoRestante ?? '—'} {item.tiempoRestante ? 'horas' : ''}
                 </Typography>
-                <AssignmentIndIcon fontSize="small" color='warning'/>
-                <IconButton
-                    aria-label="Detalle"
-                    to={`/ticket/${item.id}`}
-                    component={Link}
-                    color="primary"
-                    size="small" 
-                >
-                    <Info fontSize="small" />                    
-                </IconButton>
-                
-                
+                <Tooltip title="Asignación Manual" placement="bottom-end" >
+                  <ManageAccountsIcon fontSize="small" color='warning' sx={{marginLeft:"7%"}}/>
+                </Tooltip>
+                <Tooltip title="Ver detalle" placement="bottom-start">
+                  <IconButton
+                      aria-label="Detalle"
+                      to={`/ticket/${item.id}`}
+                      component={Link}
+                      color="primary"
+                      size="small" 
+                      sx={{marginLeft:"-2%"}}
+                  >
+                      <Info fontSize="small" />                    
+                  </IconButton>
+                </Tooltip>              
             </Box>
           </CardContent>
 

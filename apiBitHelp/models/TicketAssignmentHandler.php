@@ -104,61 +104,7 @@ class TicketAssignmentHandler
     }
     }
 
-    /**
-     * Asigna un tiquete a un técnico de forma manual y registra el movimiento.
-     * ✅ NUEVO MÉTODO para asignación manual.
-     * @param int $idTicket ID del tiquete.
-     * @param int $idTecnico ID del técnico a asignar.
-     * @param int $idAdmin ID del usuario (administrador) que realiza la asignación.
-     * @param string $justification Razón de la asignación manual.
-     * @return bool True si la transacción fue exitosa.
-     */
-    public function handleManualAssignment($idTicket, $idTecnico, $idAdmin, $justification)
-    {
-        $conn = $this->connection->getConn();
-        $conn->begin_transaction();
-        
-        try {
-            // Constantes
-            $idNuevoEstado = self::ID_ESTADO_ASIGNADO; 
-            $idMetodoAsignacion = self::ID_METODO_ASIGNACION_MANUAL; 
-            $observation = "Asignación manual por el administrador. Razón: " . $justification;
-            
-            // 1. Actualizar el Tiquete
-            $stmtTicket = $conn->prepare("UPDATE tiquete 
-                                          SET idEstado = ?, 
-                                              idTecnicoAsignado = ?, 
-                                              idMetodoAsignacion = ? 
-                                          WHERE idTiquete = ?");
-            $stmtTicket->bind_param("iiii", $idNuevoEstado, $idTecnico, $idMetodoAsignacion, $idTicket);
-            if (!$stmtTicket->execute()) throw new Exception("Error al actualizar el tiquete en asignación manual.");
-            $stmtTicket->close();
-            
-            // 2. Registrar el movimiento en el Historial del Tiquete
-            // Nota: Este llamado asume que getNextId puede recibir $conn para usar en la misma transacción.
-            $result = $this->historyModel->getNextId($idTicket, $conn); 
-            $nextHistoryId = (is_array($result) && count($result) > 0 && is_object($result[0])) 
-                                ? ((int)$result[0]->maxId + 1) : 1;
-            
-            $stmtHist = $conn->prepare("INSERT INTO historial_tiquete 
-                                        (idHistorialTiquete, idTiquete, fecha, idUsuario, observacion, idEstado) 
-                                        VALUES (?, ?, NOW(), ?, ?, ?)");
-            // El usuario que realiza la acción es el administrador ($idAdmin)
-            $stmtHist->bind_param("iissi", $nextHistoryId, $idTicket, $idAdmin, $observation, $idNuevoEstado);
-            
-            if (!$stmtHist->execute()) throw new Exception("Error al registrar el historial en asignación manual.");
-            $stmtHist->close();
-
-            $conn->commit(); 
-            return true;
-        } catch (Exception $ex) {
-            if ($conn) {
-                $conn->rollback(); 
-            }
-            error_log("ERROR: Asignación manual falló. Detalle: " . $ex->getMessage());
-            throw $ex; 
-        } 
-    }
+    
     
     /**
      * Realiza el cálculo de las horas restantes para el SLA.
