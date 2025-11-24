@@ -160,6 +160,50 @@ class TicketModel
         }
     }
 
+
+    public function getTicketDetailsForManualAssignment($id)
+    {
+        try 
+        {           
+
+            $query = "SELECT 
+                        t.idTiquete,
+                        t.titulo,
+                        t.descripcion,
+                        et.nombre AS estado,
+                        pt.nombre AS prioridad,
+                        c.nombre AS categoria,
+                        t.slaResolucion,
+                        TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante,
+                        -- 🚨 CAMPOS AGREGADOS PARA EL TÉCNICO
+                        CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.primerApellido,''), ' ', COALESCE(u.segundoApellido,'')) AS tecnico
+                      FROM tiquete t
+                      INNER JOIN estado_tiquete et ON t.idEstado = et.idEstadoTiquete
+                      INNER JOIN prioridad_tiquete pt ON t.idPrioridad = pt.idPrioridadTiquete
+                      INNER JOIN categoria c ON t.idCategoria = c.idCategoria
+                      -- 🚨 JOINS AGREGADOS PARA EL TÉCNICO
+                      LEFT JOIN tecnico tec ON t.idTecnicoAsignado = tec.idTecnico
+                      LEFT JOIN usuario u ON tec.idUsuario = u.idUsuario
+                      WHERE t.idTiquete = ?"; 
+
+            // Usamos executeSQL_SelectQuery con parámetros para evitar la inyección
+            $result = $this->connection->executeSQL_prepared($query, [$id]);
+            
+            
+            // Si no se encuentra el tiquete, devuelve null o un array vacío
+            if (empty($result)) {
+                return null;
+            }
+
+            // Devolvemos solo el primer elemento (el tiquete)
+            return $result[0];
+        } 
+        catch (Exception $ex) {
+            handleException($ex);
+            return null; 
+        }
+    }
+
     public function getSlaDetails($id)
     {
         try 
@@ -305,6 +349,63 @@ class TicketModel
         catch (Exception $ex) {
             handleException($ex);
             return [];
+        }
+    }
+
+
+   /**
+     * Actualiza los campos de un tiquete existente.
+     * @param int $id ID del tiquete a actualizar.
+     * @param object $data Objeto con las propiedades a actualizar.
+     * @return bool Retorna verdadero si la actualización fue exitosa.
+     */
+    public function update($id, $data)
+    {
+        try 
+        {
+            // Nota de Seguridad: Este código NO utiliza sentencias preparadas 
+            // y es vulnerable si los datos no son validados correctamente.
+            
+            $setClauses = [];
+            
+            // Construir dinámicamente la cláusula SET, asegurando casteo de enteros
+            // y comillas para strings.
+
+            if (isset($data->idTecnicoAsignado)) {
+                // Se asume que es un entero
+                $setClauses[] = "idTecnicoAsignado = " . (int)$data->idTecnicoAsignado;
+            }
+            if (isset($data->idEstado)) {
+                // Se asume que es un entero
+                $setClauses[] = "idEstado = " . (int)$data->idEstado;
+            }
+            if (isset($data->slaResolucion)) {
+                // Se asume que es una string con formato de fecha/hora
+                $sla = $data->slaResolucion; 
+                $setClauses[] = "slaResolucion = '$sla'"; 
+            }
+            if (isset($data->idMetodoAsignacion)) {
+                $setClauses[] = "idMetodoAsignacion = " . (int)$data->idMetodoAsignacion;
+            }
+            // Agrega aquí cualquier otro campo que necesites actualizar (ej. titulo, descripcion, etc.)
+
+            if (empty($setClauses)) {
+                error_log("ADVERTENCIA: No se proporcionaron campos para actualizar el tiquete $id.");
+                return true;
+            }
+
+            $setStatement = implode(', ', $setClauses);
+            $query = "UPDATE tiquete SET $setStatement WHERE idTiquete = " . (int)$id;
+
+            error_log("DEBUG (Model-Update): Ejecutando query: " . $query);
+            
+            $this->connection->executeSQL_DML($query);
+
+            return true;
+        } 
+        catch (Exception $ex) {
+            handleException($ex);
+            return false;
         }
     }
 }

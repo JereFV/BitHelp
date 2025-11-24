@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
@@ -13,10 +13,12 @@ import { Link } from 'react-router-dom';
 import { Chip, Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import Tooltip from '@mui/material/Tooltip';
-
+import ManualAssignmentModal from './ManualAssignmentModal';
 
 ListCardTickets.propTypes = {
   data: PropTypes.array,
+  onTicketAssigned: PropTypes.func, 
+  currentUser: PropTypes.object,
 };
 
 // Asignación de colores para los chips de PRIORIDAD
@@ -53,9 +55,42 @@ const getStateColor = (estado) => {
   }
 };
 
-export function ListCardTickets({ data = [] }) {
+export function ListCardTickets({ data = [], onTicketAssigned, currentUser }) {
+  // 1. Estado para controlar la visibilidad del modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // 2. Estado para saber qué tiquete se va a asignar
+  const [selectedTicketId, setSelectedTicketId] = useState(null);
+
+  // 3. Función para abrir el modal
+  // 3. Función para abrir el modal
+const handleOpenModal = (ticketId) => {
+    // 💡 CORRECCIÓN ROBUSTA: Usar parseInt(value, 10) para garantizar
+    // que el valor es un número entero de JavaScript.
+    const numericId = parseInt(ticketId, 10);
+    
+    // Verificamos que sea un número válido y positivo.
+    if (!isNaN(numericId) && numericId > 0) {
+        setSelectedTicketId(numericId);
+        setIsModalOpen(true);
+    } else {
+        // En caso de que item.id sea inválido (p. ej., null o "N/A")
+        console.error("Intento de abrir modal con ID de tiquete inválido:", ticketId);
+        setSelectedTicketId(null);
+    }
+};
+
+  // 4. Función para cerrar el modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTicketId(null);
+    // Si se pasa una función para refrescar los tickets, se invoca aquí
+    if (onTicketAssigned) {
+      onTicketAssigned();
+    }
+  };
+
   return (
-    // Contenedor principal de la grilla
+    // Contenedor principal 
     <Box
       sx={{
         p: 2,
@@ -121,8 +156,7 @@ export function ListCardTickets({ data = [] }) {
                 sx={(theme) => {
                   const colorName = getStateColor(item.estado); // 'error', 'warning', 'default', etc.
                   
-                  if (colorName === 'default') {
-                    // Lógica especial para "Cerrado" (modo oscuro/claro)
+                  if (item.estado === 'Cerrado') { // Lógica especial para "Cerrado"
                     return (theme.palette.mode === 'light'
                       // MODO CLARO: Fondo Negro, Fuente Blanca
                       ? {
@@ -168,9 +202,21 @@ export function ListCardTickets({ data = [] }) {
                     <strong>Tiempo restante:</strong>{' '}
                     {item.tiempoRestante ?? '—'} {item.tiempoRestante ? 'horas' : ''}
                 </Typography>
+                
+                {/* 5. Botón de Asignación Manual con Invocación */}
                 <Tooltip title="Asignación Manual" placement="bottom-end" >
-                  <ManageAccountsIcon fontSize="small" color='warning' sx={{marginLeft:"7%"}}/>
+                    <IconButton
+                        aria-label="Asignación Manual"
+                        color='warning' 
+                        // 👇 Aquí se invoca la función para abrir el modal con el ID del tiquete
+                        onClick={() => handleOpenModal(item.id)}
+                        size="small"
+                        sx={{marginLeft:"7%"}}
+                    >
+                        <ManageAccountsIcon fontSize="small"/>
+                    </IconButton>
                 </Tooltip>
+                
                 <Tooltip title="Ver detalle" placement="bottom-start">
                   <IconButton
                       aria-label="Detalle"
@@ -182,7 +228,7 @@ export function ListCardTickets({ data = [] }) {
                   >
                       <Info fontSize="small" />                    
                   </IconButton>
-                </Tooltip>              
+                </Tooltip> 
             </Box>
           </CardContent>
 
@@ -197,6 +243,17 @@ export function ListCardTickets({ data = [] }) {
           </CardActions>
         </Card>
       ))}
+
+      {/* 6. Renderizar el Modal de Asignación Manual */}
+      {selectedTicketId && (
+        <ManualAssignmentModal
+          open={isModalOpen}
+          // El modal se cierra y notifica la recarga de la lista
+          onClose={handleCloseModal} 
+          idTicket={selectedTicketId}
+          currentUser={currentUser} // Se pasa el objeto del administrador
+        />
+      )}
     </Box>
   );
 }

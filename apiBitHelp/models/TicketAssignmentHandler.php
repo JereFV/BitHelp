@@ -104,7 +104,61 @@ class TicketAssignmentHandler
     }
     }
 
-    
+    /**
+     * Maneja la asignación manual o reasignación de un tiquete.
+     * Esta función debe ser llamada por el controlador (TicketController)
+     * al recibir la petición PUT /ticket/assignManually/{id}.
+     * * @param int $idTicket ID del tiquete.
+     * @param object $data Datos de asignación (idTecnicoAsignado, justificacion, idUsuarioAdmin, slaResolucion).
+     * @param TicketModel $ticketModel Instancia de TicketModel.
+     * @return bool Retorna verdadero si la asignación fue exitosa.
+     */
+    public function handleManualAssignment($idTicket, $data, $ticketModel)
+    {
+        try 
+        {
+            // 1. Preparar los datos para la actualización del tiquete.
+            $updateData = (object) [
+                'idTecnicoAsignado' => $data->idTecnicoAsignado,
+                // El estado debe pasar a 'Asignado' (2)
+                'idEstado' => self::ID_ESTADO_ASIGNADO, 
+                // Asumiendo que el SLA de resolución se recalcula o se envía desde el frontend en $data
+                'slaResolucion' => $data->slaResolucion ?? null, // Asegúrate de que este campo venga del frontend si es necesario.
+                'idMetodoAsignacion' => self::ID_METODO_ASIGNACION_MANUAL
+            ];
+
+            // 2. Actualizar la tabla tiquete.
+            $updateResult = $ticketModel->update($idTicket, $updateData);
+
+            if (!$updateResult) {
+                throw new Exception("Error al actualizar el tiquete en la base de datos.");
+            }
+            
+            // 3. Registrar el movimiento en el Historial del Tiquete.
+            // Se asume que $this->historyModel es una instancia de TicketHistoryModel
+            
+            $observacion = "Asignación manual al técnico ID {$data->idTecnicoAsignado}. Razón: {$data->justificacion}";
+            
+            // Usamos $data->idUsuarioAdmin (el usuario que realiza la asignación)
+            $historyData = (object) [
+                'idTicket' => $idTicket,
+                'idUser' => $data->idUsuarioAdmin,
+                'comment' => $observacion,
+                'idNewState' => self::ID_ESTADO_ASIGNADO
+            ];
+
+            // Usamos el método 'create' de TicketHistoryModel para registrar el movimiento.
+            $this->historyModel->create($historyData); 
+
+            error_log("INFO: Tiquete $idTicket asignado/reasignado manualmente con éxito.");
+            return true;
+
+        } catch (Exception $ex) {
+            error_log("ERROR: Falló la asignación manual del tiquete $idTicket. Detalle: " . $ex->getMessage());
+            // El error debe ser relanzado para que el controlador lo capture y devuelva el 500
+            throw $ex; 
+        }
+    }
     
     /**
      * Realiza el cálculo de las horas restantes para el SLA.
