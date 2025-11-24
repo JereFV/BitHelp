@@ -29,6 +29,10 @@ class TicketService
     return axios.post(BASE_URL, ticket);
   }
 
+  updateTicket(ticket) {
+    return axios.put(BASE_URL, ticket);
+  }
+
 }
 
 export default new TicketService();

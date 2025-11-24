@@ -118,28 +118,22 @@ class TicketHistoryModel
     {
         try 
         {
-            $ticketModel = new TicketModel();
-
             //Obtiene el siguiente secuencial en el historial para el tiquete.
-            $idTicketHistory = $this->getNextId($newTicketHistory->idTicket);
+            $idTicketHistory = $this->getNextId($newTicketHistory->idTicket)[0]->maxId + 1;
 
             $query = "INSERT INTO historial_tiquete VALUES ($idTicketHistory,
                                                             $newTicketHistory->idTicket,
                                                             NOW(),
-                                                            $newTicketHistory->idUser,
-                                                            $newTicketHistory->comment,
+                                                            $newTicketHistory->idSessionUser,
+                                                            '$newTicketHistory->comment',
                                                             $newTicketHistory->idNewState)";
             
             //Inserta el registro.
             $this->connection->executeSQL_DML($query);
-
-            //Obtiene los datos actualizados del tiquete.
-            $ticket = $ticketModel->get($newTicketHistory->idTicket);
-
-            return $ticket;
         }
         catch(Exception $ex) {
             handleException($ex);
+            throw $ex;
         }
     }
 }

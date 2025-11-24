@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -34,10 +34,21 @@ import TicketStatusFlowService from '../../services/TicketStatusFlowService';
 import toast from 'react-hot-toast';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import TicketHistoryService from '../../services/TicketHistoryService';
+import TicketImageService from '../../services/TicketImageService';
 
 //URL de imágenes de tiquetes guardadas.
 const BASE_URL = import.meta.env.VITE_BASE_URL;
+
+//Posibles estados del tiquete.
+const ID_ASIGNED_STATE = "2";
+const ID_INPROGRESS_STATE = "3";
+const ID_RESOLVED_STATE = "4";
+const ID_CLOSED_STATE = "5";
+const ID_RETURNED_STATE = "6";
+
+const ID_CLIENT_ROLE = "1";
+const ID_TECHNICIAN_ROLE = "2";
+const ID_ADMINISTRATOR_ROLE = "3";
 
 //Validación de propiedades para el historial del tiquete
 TicketHistory.propTypes = {
@@ -76,6 +87,15 @@ const getColorMap = (theme, severity) => {
 
 export function TicketDetail() 
 {
+  //Variable que contiene los campos del formulario en un formato de llave -> valor.
+  let formData = new FormData();
+
+  //Referencia al contenido del modal.
+  const modalContentRef = useRef(null);
+
+  //Almacena los datos del usuario en sesión a partir de la información de localStorage.
+  const userSession = JSON.parse(localStorage.getItem("userSession"));
+
   //Estilos definidos para el contenedor padre.
   const styleParentBox = {
     position: "absolute",
@@ -94,6 +114,7 @@ export function TicketDetail()
     borderRadius: 2,
     boxShadow: 24,
     p: 4,
+    paddingBottom: 0,
     display: "flex",
     flexDirection: "column",
     overflowY: "auto",
@@ -122,14 +143,17 @@ export function TicketDetail()
   //Incializacióm del formulario junto con el valor predefinido de los campos.
   const {
     control,
-    //setValue,
-    //register,
-    //handleSubmit,
+    setValue,
+    register,
+    handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
+      idTicket: "",
+      idSessionUser: "",
       idNewState: "",
-      comment: ""
+      comment: "",
     },
     // Asignación de validaciones haciendo uso del esquema de tiquetes yup.
     resolver: yupResolver(newMovementSchema),
@@ -160,52 +184,16 @@ export function TicketDetail()
   const [movements, setMovements] = useState([]);
   const [slaDetails, setSlaDetails] = useState({});
 
+  //Almacena las imágenes adjuntas.
+  const [images, setImages] = useState(null);
+
   //Estados seleccionables en un nuevo movimiento del tiquete.
   const [ticketStates, setTicketStates] = useState([]);
 
-  useEffect(() => {
-    const idTiquete = routeParams.id;
-
-    //Obtiene el detalle del tiquete a partir del valor enviado.
-    TicketService.getTicketById(idTiquete)
-      .then((response) => {
-        //Seteo del tiquete e historial de movimientos en las constantes de renderización.
-        setTicket(response.data);
-        setMovements(response.data.historialTiquete);
-
-        //Variable auxiliar para obtener el estado del tiquete a partir de la respuesta de la petición.
-        let estadoTiquete = response.data?.estadoTiquete?.idEstadoTiquete;
-
-        //Obtiene los estados seleccionables en un nuevo movimiento del tiquete, al estar en un estado diferente de Pendiente y Cerrado.
-        if (estadoTiquete != "1" && estadoTiquete != "5") 
-        {
-          TicketStatusFlowService.getStates(estadoTiquete)
-            .then((response) => {
-              setTicketStates(response.data);
-            })
-            .catch((error) => {
-              console.error(error);
-            });
-        }
-      })
-      .catch((error) => {
-        toast.error(
-          "Ha ocurrido un error al intentar obtener el detalle del tiquete."
-        );
-        console.error(error);
-      });
-
-    TicketService.getSlaDetailsById(idTiquete)
-      .then((response) => {
-        setSlaDetails(response.data); // Almacena los límites y fechas reales del backend
-      })
-      .catch((error) => {
-        toast.error(
-          "Ha ocurrido un error al intentar obtener los detalles de SLA del tiquete."
-        );
-        console.error("Error al obtener detalles de SLA:", error);
-      });  
-  }, [routeParams.id]);
+  //Controla el renderizado de las secciones de registro de nuevos movimientos y valoración del tiquete.
+  const [displayNewMovSection, setDisplayNewMovSection] = useState(false);
+  const [displayValorationSection, setDisplayValorationSection] =
+    useState(false);
 
   let slaRespuestaDisplay = null;
   let slaResolucionDisplay = null;
@@ -226,61 +214,151 @@ export function TicketDetail()
     );
   }
 
+  //Determina el renderizado de la sección de agregado de nuevos movimientos del tiquete a partir del estado del mismo y el rol del usuario en sesión.
+  const validateDisplayNewMovSection = (idTicketState) => {
+    //Variable auxiliar para determinar el llenado de valores en el control de "Nuevo Estado".
+    let display = false;
+
+    switch (idTicketState) {
+      //Si el caso está asignado, en progreso o devuelto, renderiza únicamente para el técnico asignado al tiquete.
+      case ID_ASIGNED_STATE:
+      case ID_INPROGRESS_STATE:
+      case ID_RETURNED_STATE:
+        if (userSession.idRol == ID_TECHNICIAN_ROLE) {
+          setDisplayNewMovSection(true);
+          display = true;
+        }
+
+        break;
+      //Si el caso está resuelto, renderiza únicamente para el cliente que reportó el tiquete.
+      case ID_RESOLVED_STATE:
+        if (userSession.idRol == ID_CLIENT_ROLE) {
+          setDisplayNewMovSection(true);
+          display = true;
+        }
+
+        break;
+    }
+
+    //Obtiene los estados seleccionables en un nuevo movimiento del tiquete al determinar la renderización del formulario.
+    if (display) {
+      TicketStatusFlowService.getStates(idTicketState)
+        .then((response) => {
+          setTicketStates(response.data);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+
+      //Asigna el id del usuario en sesión al campo hidden del formulario.
+      setValue("idSessionUser", userSession.idUsuario);
+    }
+  };
+
   //Evento submit del formulario de nuevo movimiento tiquete.
   const onSubmit = (DataForm) => {
-      try 
+    try 
+    {
+      //Valida que los campos del formulario cumplan con las especificaciones requeridas.
+      if (newMovementSchema.isValid()) 
       {
-        //Valida que los campos del formulario cumplan con las especificaciones requeridas.
-        if (newMovementSchema.isValid()) 
-        {
-          //Creación del nuevo movimiento en el historial de tiquetes.
-          TicketHistoryService.createTicketHistory(DataForm)
-            .then((response) => {
-              setMovements(response.data);
-              toast.success(`Se ha registrado correctamente el movimiento del tiquete.`, { duration: 4000});
+        //Creación del nuevo movimiento en el historial de tiquetes.
+        TicketService.updateTicket(DataForm)
+          .then((response) => {
+            //Si hay imágenes adjuntas las almacena en referencia al movimiento recién ingresado.
+            if (images != null) {
+              //Arma la estructura de entrada para el almacenamiento de imágenes.
+              formData.append("file", images);
+              formData.append("idTicket", DataForm.idTicket);
 
-                //Arma la estructura de entrada para el almacenamiento de imágenes.
-                /*formData.append("file", images);
-                formData.append("idTicket", response.data);
-  
-                //Almacenamiento de imágenes, una vez creado el tiquete.
-                TicketImageService.uploadImages(formData)
-                  .then(() => {
-                    toast.success(
-                      `Se ha creado correctamente el tiquete #${response.data} - ${DataForm.title}`,
-                      {
-                        duration: 4000,
-                        position: "top-center",
-                      }
-                    );
-  
-                    //Al haber agregado el registro exitosamente, redirreciona hacia el listado.
-                    return navigate("/tickets/ticketsList");
-                  })
-                  .catch((error) => {
-                    toast.error(
-                      "Ha ocurrido un error al intentar crear el tiquete."
-                    );
-                    console.error(error);
-                  });*/
-            })
-            .catch((error) => {
-              toast.error("Ha ocurrido un error al intentar registrar el movimiento del tiquete.");
-              console.error(error);
-            });
-        }
-      } 
-      catch (error) {
-        toast.error("Ha ocurrido un error al intentar registrar el movimiento del tiquete.");
-        console.error(error);
+              //Almacenamiento de imágenes, una vez creado el tiquete.
+              TicketImageService.uploadImages(formData).catch((error) => {
+                console.error(error);
+                throw error;
+              });
+            }
+
+            //Obtiene y renderiza los datos del tiquete con sus valores actualizados junto con su historial de movimientos.
+            setTicket(response.data);
+            setMovements(response.data.historialTiquete);
+
+            //Limpia los campos del formulario
+            reset();
+
+            //Se posiciona al inicio del modal, dando un efecto de "recargado de página".
+            modalContentRef.current.scrollTop  = 0;    
+
+            toast.success(
+              `Se ha registrado correctamente el movimiento del tiquete.`,
+              { duration: 4000 }
+            );    
+          })
+          .catch((error) => {
+            toast.error("Ha ocurrido un error al intentar registrar el movimiento del tiquete.");
+            console.error(error);
+          });
       }
-    };
-  
-    //Evento error del formulario.
-    const onError = (errors, e) => {
-      toast.error("Ha ocurrido un error al intentar crear el tiquete.");
-      console.log(errors, e);
+    } 
+    catch (error) {
+      toast.error( "Ha ocurrido un error al intentar registrar el movimiento del tiquete.");
+      console.error(error);
     }
+  };
+
+  //Evento error del formulario.
+  const onError = (errors, e) => {
+    toast.error("Ha ocurrido un error al intentar crear el tiquete.");
+    console.log(errors, e);
+  };
+
+  //Evento auxiliar para la obtención de imágenes.
+  const handleImages = (images) => {
+    // setImages(images.map((i) => (i.file, i.file.name)));
+    setImages(images[0], images[0].name);
+  };
+
+  useEffect(() => {
+    const idTiquete = routeParams.id;
+
+    //Obtiene el detalle del tiquete a partir del valor enviado.
+    TicketService.getTicketById(idTiquete)
+      .then((response) => {
+        //Seteo del tiquete e historial de movimientos en las constantes de renderización.
+        setTicket(response.data);
+        setMovements(response.data.historialTiquete);
+
+        //Variable auxiliar para obtener el estado del tiquete a partir de la respuesta de la petición.
+        const idTicketState = response.data?.estadoTiquete?.idEstadoTiquete;
+
+        //Invoca el renderizado del formulario de nuevo movimiento en tiquete a excepción de que el usuario en sesión sea un administrador.
+        if (userSession?.idRol != ID_ADMINISTRATOR_ROLE)
+          validateDisplayNewMovSection(idTicketState);
+
+        //Renderiza la sección de valoración del tiquete al estar en un estado cerrado.
+        if (idTicketState == ID_CLOSED_STATE) 
+          setDisplayValorationSection(true);
+
+        //Almacena el código del tiquete en un elemento de tipo hidden.
+        setValue("idTicket", response.data?.idTiquete);
+      })
+      .catch((error) => {
+        toast.error(
+          "Ha ocurrido un error al intentar obtener el detalle del tiquete."
+        );
+        console.error(error);
+      });
+
+    TicketService.getSlaDetailsById(idTiquete)
+      .then((response) => {
+        setSlaDetails(response.data); // Almacena los límites y fechas reales del backend
+      })
+      .catch((error) => {
+        toast.error(
+          "Ha ocurrido un error al intentar obtener los detalles de SLA del tiquete."
+        );
+        console.error("Error al obtener detalles de SLA:", error);
+      });
+  }, [routeParams.id, handleSubmit]);
 
   return (
     <div>
@@ -295,7 +373,7 @@ export function TicketDetail()
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={styleParentBox}>
+        <Box ref={modalContentRef} sx={styleParentBox}>
           <Box sx={{ mb: 3, flexShrink: 0 }}>
             <Typography
               id="modal-modal-title"
@@ -721,9 +799,111 @@ export function TicketDetail()
 
           <TicketHistory movements={movements}></TicketHistory>
 
+          {/*Nuevo Movimiento Tiquete (Flujo del Tiquete)*/}
+          {/*Renderiza únicamente si el estado del tiquete no es Pendiente ni Cerrado.*/}
+          {displayNewMovSection ? (
+            <form onSubmit={handleSubmit(onSubmit, onError)}>
+              <Box sx={{paddingBottom: "1.5rem"}}>
+                <Divider sx={{ mb: 3 }} />
+
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  gutterBottom
+                  marginBottom="2rem"
+                >
+                  <Stack alignItems={"center"} direction={"row"}>
+                    <AddIcon
+                      fontSize="large"
+                      color="primary"
+                      style={{ marginRight: "1%" }}
+                    />
+                    Nuevo Movimiento Tiquete
+                  </Stack>
+                </Typography>
+
+                {/*Campos tipo hidden que son enviados durante el evento submit.*/}
+                <input type="hidden" {...register("idTicket")} />
+                <input type="hidden" {...register("idSessionUser")} />
+
+                <Stack
+                  width={{ sm: "50%", lg: "35%" }}
+                  paddingBottom={"1.5rem"}
+                >
+                  <FormControl fullWidth>
+                    <Controller
+                      name="idNewState"
+                      control={control}
+                      render={({ field }) => (
+                        <>
+                          <InputLabel id="id">Nuevo Estado</InputLabel>
+                          <Select
+                            {...field}
+                            labelId="idNewState"
+                            value={field.value}
+                            label="Nuevo Estado"
+                            fullWidth
+                            error={Boolean(errors.idNewState)}
+                          >
+                            {ticketStates &&
+                              ticketStates.map((ticketState) => (
+                                <MenuItem
+                                  key={ticketState.idNuevoEstado}
+                                  value={ticketState.idNuevoEstado}
+                                >
+                                  {ticketState.nombre}
+                                </MenuItem>
+                              ))}
+                          </Select>
+                          <FormHelperText error>
+                            {errors.idNewState ? errors.idNewState.message : ""}
+                          </FormHelperText>
+                        </>
+                      )}
+                    />
+                  </FormControl>
+                </Stack>
+
+                <Controller
+                  name="comment"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      id="comment"
+                      label="Comentario"
+                      fullWidth
+                      multiline
+                      minRows={3}
+                      maxRows={3}
+                      sx={{ paddingBottom: "1.5rem" }}
+                      error={Boolean(errors.comment)}
+                      helperText={errors.comment ? errors.comment.message : ""}
+                      slotProps={{
+                        input: {
+                          startAdornment: (
+                            <InputAdornment
+                              position="start"
+                              sx={{ alignSelf: "start", marginRight: "8px" }}
+                            >
+                              <CommentIcon color="primary" />
+                            </InputAdornment>
+                          ),
+                        },
+                      }}
+                    />
+                  )}
+                />
+
+                {/*Sección de imágenes adjuntas y botones de acción.*/}
+                <ImagesSelector onChange={handleImages} />
+              </Box>
+            </form>
+          ) : null}
+
           {/*Valoración Tiquete*/}
           {/*Renderiza únicamente si el estado del tiquete es cerrado.*/}
-          {ticket.estadoTiquete?.idEstadoTiquete == 5 ? (
+          {displayValorationSection ? (
             <Box marginBottom={"1.5rem"}>
               <Divider sx={{ mb: 3 }} />
 
@@ -810,102 +990,6 @@ export function TicketDetail()
                 hasta que haya sido cerrado.
               </Alert>
             )}*/}
-            </Box>
-          ) : null}
-
-          {/*Nuevo Movimiento Tiquete */}
-          {/*Renderiza únicamente si el estado del tiquete no es Pendiente ni Cerrado.*/}
-          {ticket.estadoTiquete?.idEstadoTiquete != 1 &&
-          ticket.estadoTiquete?.idEstadoTiquete != 5 ? (
-            <Box>
-              <Divider sx={{ mb: 3 }} />
-
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                gutterBottom
-                marginBottom="2rem"
-              >
-                <Stack alignItems={"center"} direction={"row"}>
-                  <AddIcon
-                    fontSize="large"
-                    color="primary"
-                    style={{ marginRight: "1%" }}
-                  />
-                  Nuevo Movimiento Tiquete
-                </Stack>
-              </Typography>
-
-              <Stack width={{ sm: "50%", lg: "35%" }} paddingBottom={"1.5rem"}>
-                <FormControl fullWidth>
-                  <Controller
-                    name="idNewState"
-                    control={control}
-                    render={({ field }) => (
-                      <>
-                        <InputLabel id="id">Nuevo Estado</InputLabel>
-                        <Select
-                          {...field}
-                          labelId="idNewState"
-                          value={field.value}
-                          label="Nuevo Estado"
-                          fullWidth
-                          error={Boolean(errors.idNewState)}
-                        >
-                          {ticketStates &&
-                            ticketStates.map((ticketState) => (
-                              <MenuItem
-                                key={ticketState.idNuevoEstado}
-                                value={ticketState.idNuevoEstado}
-                              >
-                                {ticketState.nombre}
-                              </MenuItem>
-                            ))}
-                        </Select>
-                        <FormHelperText error>
-                          {errors.idNewState ? errors.idNewState.message : ""}
-                        </FormHelperText>
-                      </>
-                    )}
-                  />
-                </FormControl>
-              </Stack>
-
-              <Controller
-                name="comment"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    id="comment"
-                    label="Comentario"
-                    fullWidth
-                    multiline
-                    minRows={3}
-                    maxRows={3}
-                    sx={{ paddingBottom: "1.5rem" }}
-                    error={Boolean(errors.comment)}
-                    helperText={
-                      errors.comment ? errors.comment.message : ""
-                    }
-                    slotProps={{
-                      input: {
-                        startAdornment: (
-                          <InputAdornment
-                            position="start"
-                            sx={{ alignSelf: "start", marginRight: "8px" }}
-                          >
-                            <CommentIcon color="primary" />
-                          </InputAdornment>
-                        ),
-                      },
-                    }}
-                  />
-                )}
-              />
-
-              {/*Sección de imágenes adjuntas y botones de acción.*/}
-              <ImagesSelector />
             </Box>
           ) : null}
 
