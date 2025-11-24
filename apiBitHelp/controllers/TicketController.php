@@ -178,7 +178,7 @@ class ticket
             $decodedRequest = $request->getJson();
 
             //Actualiza y obtiene el tiquete con sus valores actualizados hacia la interfaz.
-            $ticket = $ticketModel->update($decodedRequest);   
+            $ticket = $ticketModel->update_2($decodedRequest);   
             
             $response->toJson($ticket);      
         }
