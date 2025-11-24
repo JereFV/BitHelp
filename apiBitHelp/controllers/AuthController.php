@@ -44,6 +44,11 @@ public function login() {
             return;
         }
 
+        //Crear notificación de inicio de sesión
+        $notificationModel = new NotificationModel();
+        $nombreCompleto = $user->nombre . ' ' . $user->primerApellido . ' ' . $user->segundoApellido;
+        $notificationModel->createLoginNotification($user->idUsuario, $nombreCompleto);
+
         // Generar token JWT
         $payload = [
             'idUsuario' => $user->idUsuario,
