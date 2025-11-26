@@ -53,5 +53,7 @@ require_once "controllers/NotificationController.php";
 
 //Enrutador
 require_once "routes/RoutesController.php";
+// Configurar zona horaria para toda la aplicación
+date_default_timezone_set('America/Costa_Rica');
 $index = new RoutesController();
 $index->index();

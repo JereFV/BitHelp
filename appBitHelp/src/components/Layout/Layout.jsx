@@ -15,6 +15,8 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { AuthContext } from '../../context/AuthContext.jsx';
 import { Toaster } from 'react-hot-toast';
+import NotificationBadge from '../Notifications/NotificationBadge';
+import NotificationPanel from '../Notifications/NotificationPanel';
 
 Layout.propTypes = { children: PropTypes.node.isRequired }; 
 
@@ -39,6 +41,8 @@ function getUserRoleId() {
 
 export function Layout({ children }) { 
   const { user, logout } = useContext(AuthContext);
+  const [notificationPanelOpen, setNotificationPanelOpen] = React.useState(false);
+  const [refreshCountCallback, setRefreshCountCallback] = React.useState(null);
   
   // 1. Obtener el rol actual del usuario desde localStorage
   const userRoleId = getUserRoleId();
@@ -136,20 +140,28 @@ export function Layout({ children }) {
       <Toaster/>
 
       <DashboardLayout>
-        {/* Botón de Logout */}
+        {/* Barra superior con notificaciones y logout */}
         <Box sx={{ 
           position: 'fixed', 
-          top: 7, 
+          top: 2, 
           right: 75, 
           zIndex: 1300,
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
+          gap: 2,
           backgroundColor: 'background.paper',
-          padding: '8px 16px',
+          padding: '5px 16px',
           borderRadius: 2,
           boxShadow: 2
         }}>
+          {/* Icono de notificaciones */}
+          <NotificationBadge 
+            onOpen={(refreshFn) => {
+              setRefreshCountCallback(() => refreshFn);
+              setNotificationPanelOpen(true);
+            }} 
+          />
+
           {user && (
             <>
               <AccountCircleIcon color="primary" />
@@ -168,6 +180,13 @@ export function Layout({ children }) {
             </>
           )}
         </Box>
+
+        {/* Panel de notificaciones */}
+        <NotificationPanel 
+          open={notificationPanelOpen}
+          onClose={() => setNotificationPanelOpen(false)}
+          onRefreshCount={refreshCountCallback}
+        />
 
         <PageContainer title='' breadcrumbs={[]} maxWidth={false}>
           {children}

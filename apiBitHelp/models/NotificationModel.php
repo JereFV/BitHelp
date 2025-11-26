@@ -36,6 +36,9 @@ class NotificationModel
 
             // Estado inicial: No Leída (1)
             $idEstadoNotificacion = 1;
+            
+            // CAMBIO: Configurar zona horaria de Costa Rica
+            date_default_timezone_set('America/Costa_Rica');
             $fecha = date('Y-m-d H:i:s');
 
             $stmt = $conn->prepare(
@@ -94,7 +97,8 @@ class NotificationModel
                     WHERE n.idUsuarioDestinatario = $idUsuario
                     ORDER BY n.fecha DESC";
 
-            return $this->connection->ExecuteSQL($query);
+            $result = $this->connection->ExecuteSQL($query);
+            return is_array($result) ? $result : [];
         } catch (Exception $ex) {
             handleException($ex);
             return [];
@@ -117,15 +121,19 @@ class NotificationModel
                         CONCAT(ur.nombre, ' ', ur.primerApellido) as usuarioRemitente,
                         n.fecha,
                         n.descripcion,
+                        n.idEstadoNotificacion,
+                        en.nombre as estadoNotificacion,
                         n.idTiquete
                     FROM notificacion n
                     INNER JOIN tipo_notificacion tn ON n.idTipoNotificacion = tn.idTipoNotificacion
                     INNER JOIN usuario ur ON n.idUsuarioRemitente = ur.idUsuario
+                    INNER JOIN estado_notificacion en ON n.idEstadoNotificacion = en.idEstadoNotificacion
                     WHERE n.idUsuarioDestinatario = $idUsuario
                     AND n.idEstadoNotificacion = 1
                     ORDER BY n.fecha DESC";
 
-            return $this->connection->ExecuteSQL($query);
+            $result = $this->connection->ExecuteSQL($query);
+            return is_array($result) ? $result : [];
         } catch (Exception $ex) {
             handleException($ex);
             return [];
@@ -194,7 +202,12 @@ class NotificationModel
         try {
             $query = "SELECT idUsuario FROM usuario WHERE idRol = 3 AND estado = 1";
             $result = $this->connection->ExecuteSQL($query);
-
+            
+            // Validación defensiva: verificar que sea array antes de usar array_map
+            if (!is_array($result) || empty($result)) {
+                return [];
+            }
+            
             return array_map(function ($admin) {
                 return $admin->idUsuario;
             }, $result);
