@@ -219,10 +219,10 @@ class NotificationModel
 
     /**
      * Crea notificación de inicio de sesión.
-     * Notifica al usuario que inició sesión + todos los administradores.
+     * Notifica únicamente al usuario que inició sesión.
      * @param int $idUsuario ID del usuario que inició sesión
      * @param string $nombreUsuario Nombre completo del usuario
-     * @return bool True si se crearon las notificaciones
+     * @return bool True si se creó la notificación
      */
     public function createLoginNotification(int $idUsuario, string $nombreUsuario)
     {
@@ -230,16 +230,8 @@ class NotificationModel
             $descripcion = "Inicio de sesión detectado para: $nombreUsuario";
             $idTipoNotificacion = 2; // Tipo: Inicio de Sesión
 
-            // Notificar al mismo usuario
+            // Notificar solo al mismo usuario
             $this->createNotification($idTipoNotificacion, $idUsuario, $idUsuario, $descripcion);
-
-            // Notificar a todos los administradores
-            $administrators = $this->getAllAdministrators();
-            foreach ($administrators as $idAdmin) {
-                if ($idAdmin != $idUsuario) { // Evitar duplicado si el usuario es admin
-                    $this->createNotification($idTipoNotificacion, $idUsuario, $idAdmin, $descripcion);
-                }
-            }
 
             return true;
         } catch (Exception $ex) {
