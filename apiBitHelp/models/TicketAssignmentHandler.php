@@ -104,51 +104,20 @@ class TicketAssignmentHandler
     }
     }
 
-    /**
-     * Maneja la asignación manual o reasignación de un tiquete.
-     * Esta función debe ser llamada por el controlador (TicketController)
-     * al recibir la petición PUT /ticket/assignManually/{id}.
-     * * @param int $idTicket ID del tiquete.
-     * @param object $data Datos de asignación (idTecnicoAsignado, justificacion, idUsuarioAdmin, slaResolucion).
-     * @param TicketModel $ticketModel Instancia de TicketModel.
-     * @return bool Retorna verdadero si la asignación fue exitosa.
-     */
     public function handleManualAssignment($idTicket, $data, $ticketModel)
     {
         try 
         {
-            // 1. Preparar los datos para la actualización del tiquete.
-            $updateData = (object) [
-                'idTecnicoAsignado' => $data->idTecnicoAsignado,
-                // El estado debe pasar a 'Asignado' (2)
-                'idEstado' => self::ID_ESTADO_ASIGNADO, 
-                // Asumiendo que el SLA de resolución se recalcula o se envía desde el frontend en $data
-                'slaResolucion' => $data->slaResolucion ?? null, // Asegúrate de que este campo venga del frontend si es necesario.
-                'idMetodoAsignacion' => self::ID_METODO_ASIGNACION_MANUAL
-            ];
+            // El SLA de resolución debe ser obligatorio para la asignación
+           
 
-            // 2. Actualizar la tabla tiquete.
-            $updateResult = $ticketModel->update($idTicket, $updateData);
-
-            if (!$updateResult) {
-                throw new Exception("Error al actualizar el tiquete en la base de datos.");
-            }
-            
-            // 3. Registrar el movimiento en el Historial del Tiquete.
-            // Se asume que $this->historyModel es una instancia de TicketHistoryModel
-            
-            $observacion = "Asignación manual al técnico ID {$data->idTecnicoAsignado}. Razón: {$data->justificacion}";
-            
-            // Usamos $data->idUsuarioAdmin (el usuario que realiza la asignación)
-            $historyData = (object) [
-                'idTicket' => $idTicket,
-                'idUser' => $data->idUsuarioAdmin,
-                'comment' => $observacion,
-                'idNewState' => self::ID_ESTADO_ASIGNADO
-            ];
-
-            // Usamos el método 'create' de TicketHistoryModel para registrar el movimiento.
-            $this->historyModel->create($historyData); 
+            // 1. Llamar a la función transaccional
+            $this->executeManualAssignmentTransaction(
+                $idTicket, 
+                $data->idTecnicoAsignado, 
+                $data->idUsuarioAdmin, // Usuario que realiza la asignación
+                $data->justificacion                
+            );
 
             error_log("INFO: Tiquete $idTicket asignado/reasignado manualmente con éxito.");
             return true;
@@ -272,6 +241,114 @@ class TicketAssignmentHandler
                 // En tu estructura, esto podría variar. Asegúrate de cerrar la conexión correctamente.
                  $conn->close(); 
                  error_log("DEBUG: Conexión cerrada.");
+            }
+        }
+    }
+
+    /**
+     * Ejecuta una transacción para asignar el tiquete de forma manual: 
+     * actualiza tiquete, actualiza carga del técnico y registra en historial.
+     * @param int $idTicket
+     * @param int $idTecnico
+     * @param int $idUsuarioAdmin El ID del usuario que realiza la asignación.
+     * @param string $justificacion
+     */
+    private function executeManualAssignmentTransaction($idTicket, $idTecnico, $idUsuarioAdmin, $justificacion)
+    {
+        $conn = null;
+        $idNuevoEstado = self::ID_ESTADO_ASIGNADO; // Estado 2
+        $idMetodoAsignacion = self::ID_METODO_ASIGNACION_MANUAL; // Método 1
+
+        try {
+            $this->connection->connect();
+            $conn = $this->connection->link; 
+            
+            $conn->begin_transaction();          
+            $nombreCompletoTecnico=$this->technicianModel->getTechnicianFullName($idTecnico);
+
+            //Obtener el ID de la Categoría del tiquete para calculo del sla
+            $stmtCategory = $conn->prepare("SELECT idCategoria FROM tiquete WHERE idTiquete = ?");
+            $stmtCategory->bind_param("i", $idTicket);
+            if (!$stmtCategory->execute()) throw new Exception("Error al obtener la categoría del tiquete.");
+            $resultCategory = $stmtCategory->get_result();
+            $ticketData = $resultCategory->fetch_object();
+            $stmtCategory->close();
+            
+            if (!$ticketData || !isset($ticketData->idCategoria)) {
+                throw new Exception("No se pudo obtener la categoría del tiquete para el cálculo de carga.");
+            }
+            $idCategoria = $ticketData->idCategoria;
+            error_log("DEBUG: Categoría del tiquete $idTicket obtenida: $idCategoria.");
+
+            // Actualizar el Tiquete 
+            $stmtTicket = $conn->prepare("UPDATE tiquete 
+                                                SET idEstado = ?, 
+                                                    idTecnicoAsignado = ?, 
+                                                    idMetodoAsignacion = ?
+                                                WHERE idTiquete = ?");
+            
+            $stmtTicket->bind_param("iiii", $idNuevoEstado, $idTecnico, $idMetodoAsignacion, $idTicket);
+            
+            if (!$stmtTicket->execute()) {
+                throw new Exception("Error al actualizar el tiquete.");
+            }
+            $stmtTicket->close();
+            error_log("DEBUG: Tiquete $idTicket actualizado a Asignado y Técnico $idTecnico.");
+
+
+            // Aumenta la carga de trabajo del Técnico (Sumando la duración TOTAL del SLA) 
+            $stmtTec = $conn->prepare("
+                UPDATE tecnico t
+                -- Hacemos JOIN con categoria y SLA para obtener el tiempoMaxResolucion asociado al tiquete
+                JOIN categoria c ON c.idCategoria = ?    
+                JOIN sla s ON s.idSla = c.idSla
+                SET t.cargaTrabajo = SEC_TO_TIME(
+                    -- Sumamos: (Carga Actual en Segundos) + (SLA Max. Resolución en Segundos)
+                    TIME_TO_SEC(t.cargaTrabajo) + TIME_TO_SEC(s.tiempoMaxResolucion)
+                )
+                WHERE t.idTecnico = ?
+            ");
+            // Bindeamos: idCategoria (para el JOIN) y idTecnico (para el WHERE)
+            $stmtTec->bind_param("ii", $idCategoria, $idTecnico);
+            
+            if (!$stmtTec->execute()) {
+                throw new Exception("Error al actualizar la carga de trabajo del técnico (Manual).");
+            }
+            $stmtTec->close();
+            error_log("DEBUG: Carga de Técnico $idTecnico actualizada sumando la duración total del SLA.");
+
+
+            //  Registrar el movimiento en el Historial 
+            $result = $this->historyModel->getNextId($idTicket, $conn);
+            $nextHistoryId = (is_array($result) && count($result) > 0 && is_object($result[0])) ? ((int)$result[0]->maxId + 1) : 1;
+            
+            $observacionHistorial = "Asignación manual al técnico $nombreCompletoTecnico. Razón: $justificacion";
+            
+            $stmtHist = $conn->prepare("INSERT INTO historial_tiquete (idHistorialTiquete, idTiquete, fecha, idUsuario, observacion, idEstado) 
+                                         VALUES (?, ?, NOW(), ?, ?, ?)");
+            // Usamos $idUsuarioAdmin como el usuario que realizó la acción
+            $stmtHist->bind_param("iissi", $nextHistoryId, $idTicket, $idUsuarioAdmin, $observacionHistorial, $idNuevoEstado);
+            
+            if (!$stmtHist->execute()) {
+                throw new Exception("Error al registrar el historial.");
+            }
+            $stmtHist->close();
+            error_log("DEBUG: Historial Insertado correctamente.");
+
+            // Confirmar transacción
+            $conn->commit();
+            error_log("DEBUG: COMMIT exitoso. Transacción Manual finalizada.");
+
+        } catch (Exception $ex) {
+            if ($conn) {
+                $conn->rollback();
+            }
+            error_log("ERROR CRÍTICO (ROLLBACK): Transacción de asignación manual fallida. Detalle: " . $ex->getMessage());
+            // Relanzar la excepción para que el controlador la maneje y devuelva el 500
+            throw new Exception("Transacción de asignación manual fallida: " . $ex->getMessage());
+        } finally {
+            if ($conn) {
+                $conn->close();
             }
         }
     }

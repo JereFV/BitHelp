@@ -82,7 +82,11 @@ class RoutesController
 
                                 case 'PUT':
                                 case 'PATCH':
-
+                                    if ($action && $param1 && method_exists($controller, $action)) {
+                                    // ESTA ES LA CORRECCIÓN: Llama al método correcto con el ID como parámetro.
+                                    $response->$action($param1); 
+                                    break; 
+                                }
                                     if ($param1 === 'password' && is_numeric($action) && method_exists($controller, 'updatePassword')) {                                           
                                             $response->updatePassword($action);
                                             break; 

@@ -45,6 +45,7 @@ class TechnicianModel
             
             // Iterar sobre cada técnico para añadir sus especialidades
             foreach ($technicians as $tech) {
+                error_log("DEBUG Entró al foreach");
                 
                 // Query secundario para obtener las especialidades de ESTE técnico
                 $specialtyQuery = "SELECT e.nombre 
@@ -72,7 +73,34 @@ class TechnicianModel
             handleException($ex);
         }
     }
+    /**
+     * Obtiene el nombre completo de un técnico a partir de su ID de Técnico.
+     * @param int $idTecnico ID del técnico.
+     * @return string|null Nombre completo (Nombre Apellido1 Apellido2) o null si no se encuentra.
+     */
+    public function getTechnicianFullName(int $idTecnico)
+    {
+        try {
+            $query = "SELECT 
+                        CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.primerApellido,''), ' ', COALESCE(u.segundoApellido,'')) AS nombreCompleto
+                    FROM 
+                        tecnico t
+                    INNER JOIN 
+                        usuario u ON t.idUsuario = u.idUsuario
+                    WHERE 
+                        t.idTecnico = {$idTecnico}";
 
+            // Asumo que $this->connection->executeSQL ejecuta la consulta y retorna el resultado
+            $result = $this->connection->executeSQL($query); 
+            
+            // Devolvemos el nombre limpio o null
+            return trim($result[0]->nombreCompleto) ?: null; 
+            
+        } catch (Exception $ex) {
+            error_log("Error al obtener nombre de técnico: " . $ex->getMessage());
+            return "ERROR_NOMBRE";
+        }
+    }
 
     /**
      * Busca el técnico más adecuado (menor carga) que pertenezca a CUALQUIERA de las especialidades dadas.

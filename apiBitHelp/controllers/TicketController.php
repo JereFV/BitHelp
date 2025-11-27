@@ -116,8 +116,10 @@ class ticket
 
     public function assignManually($id) 
     {
+        error_log("DEBUG DEL CONTROLADOR: Solicitud de Asignación Manual recibida para Ticket $id.");
         function get_request_data() 
         {
+            error_log("DEBUG DEL CONTROLADOR: Solicitud entro a la función get request data.");
             // Leer el contenido crudo (raw) del cuerpo de la solicitud (php://input)
             $json_data = file_get_contents('php://input');
             
@@ -129,6 +131,7 @@ class ticket
             // Retorna null o un array vacío si no hay datos
             return [];
         }
+        error_log("DEBUG (Controller): Entro al controller assignManually: ");
         // Obtener el cuerpo de la petición PUT
         $requestData = get_request_data(); // Asumiendo que tienes una función para esto
         error_log("DEBUG (Controller): Datos de asignación recibidos: " . print_r($requestData, true));

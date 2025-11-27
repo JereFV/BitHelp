@@ -49,9 +49,8 @@ const ManualAssignmentModal = ({ open, onClose, idTicket, currentUser }) => {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     
-    
     // REVISAR VALIDAR QUE SEA USUARIO ADMIN
-    const idAdminUser = currentUser?.idUsuario ==3 // Usar 11 como fallback si no hay usuario
+    const idAdminUser = currentUser?.idUsuario// Usar 11 como fallback si no hay usuario
 
     const fetchAssignmentData = useCallback(async () => {
         if (!idTicket) return;
@@ -128,12 +127,12 @@ const ManualAssignmentModal = ({ open, onClose, idTicket, currentUser }) => {
         setSubmitting(true);
 
         try {
-            
+            const numericIdAdminUSer= +idAdminUser;
             await TicketService.assignTicketManually(
                 idTicket,
                 selectedTechnicianId,
                 justification,
-                idAdminUser
+                numericIdAdminUSer
             );
 
             setSuccess(true);
