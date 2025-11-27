@@ -352,6 +352,9 @@ class TicketAssignmentHandler
             }
         }
     }
+
+
+    
     
     /**
      * Registra un movimiento en el historial usando el ID de usuario del Sistema (0).

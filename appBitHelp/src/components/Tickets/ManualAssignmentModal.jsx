@@ -279,33 +279,63 @@ const ManualAssignmentModal = ({ open, onClose, idTicket, currentUser }) => {
                                             </MenuItem>
                                             {/* 🎯 Requisito: Lista de técnicos con carga de trabajo, disponibilidad y especialidad */}
                                             {technicians.map((tech) => (
-                                                <MenuItem key={tech.idTecnico} value={tech.idTecnico} sx={{ py: 1.5 }}>
-                                                    <Grid container alignItems="center">
-                                                        <Grid item xs={5.5}>
-                                                            <Person sx={{ mr: 1, verticalAlign: 'middle' }} fontSize="small" />
-                                                            {`${tech.nombre} ${tech.primerApellido}`}
+                        <MenuItem key={tech.idTecnico} value={tech.idTecnico} sx={{ py: 1.5, height: 'auto' }}>
+                                                    {/* Usamos un Stack vertical para agrupar la información */}
+                                                    <Stack direction="column" spacing={0.5} sx={{ width: '100%' }}>
+                                                        
+                                                        {/* Fila 1: Nombre, Disponibilidad y Carga */}
+                                                        <Grid container alignItems="center">
+                                                            <Grid item xs={6}> {/* Más espacio para el nombre */}
+                                                                <Person sx={{ mr: 1, verticalAlign: 'middle' }} fontSize="small" />
+                                                                <Typography component="span" variant="body2" sx={{ fontWeight: 'bold' }}>
+                                                                    {`${tech.nombre} ${tech.primerApellido}`}
+                                                                </Typography>
+                                                            </Grid>
+                                                            <Grid item xs={3} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                                                <Tooltip title={`Disponibilidad: ${tech.disponibilidad}`}>
+                                                                    <Chip
+                                                                        label={tech.disponibilidad}
+                                                                        color={getAvailabilityColor(tech.disponibilidad)}
+                                                                        size="small"
+                                                                    />
+                                                                </Tooltip>
+                                                            </Grid>
+                                                            <Grid item xs={3} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                                <Tooltip title={`Carga de Trabajo: ${tech.cargaTrabajo}`}>
+                                                                    <Chip
+                                                                        icon={<Work fontSize="small" />}
+                                                                        label={tech.cargaTrabajo || '0'}
+                                                                        size="small"
+                                                                        color={tech.cargaTrabajo > 10 ? 'error' : (tech.cargaTrabajo > 5 ? 'warning' : 'default')}
+                                                                    />
+                                                                </Tooltip>
+                                                            </Grid>
                                                         </Grid>
-                                                        <Grid item xs={3.5} sx={{ display: 'flex', justifyContent: 'center', marginLeft:"1%" }}>
-                                                            <Tooltip title={`Disponibilidad: ${tech.disponibilidad}`}>
-                                                                <Chip 
-                                                                    label={tech.disponibilidad} 
-                                                                    color={getAvailabilityColor(tech.disponibilidad)} 
-                                                                    size="small"
-                                                                />
-                                                            </Tooltip>
-                                                        </Grid>
-                                                        <Grid item xs={3} sx={{ display: 'flex', justifyContent: 'flex-end', marginLeft:"1%"}}>
-                                                            <Tooltip title={`Carga de Trabajo: ${tech.cargaTrabajo}`}>
-                                                                <Chip 
-                                                                    icon={<Work fontSize="small" />}
-                                                                    label={tech.cargaTrabajo || '00:00:00'}
-                                                                    size="small"
-                                                                />
-                                                            </Tooltip>
-                                                        </Grid>
-                                                    </Grid>
-                                                </MenuItem>
-                                            ))}
+
+                                                        {/* Fila 2: Especialidades */}
+                                                        <Box sx={{ pl: 4, pt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                                            <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                                                                Especialidades:
+                                                            </Typography>
+                                                            {/* Convertimos el string a array (si no lo hizo PHP) o mapeamos el array */}
+                                                            {Array.isArray(tech.especialidades) && tech.especialidades.length > 0 ? (
+                                                                tech.especialidades.map((esp) => (
+                                                                    <Chip 
+                                                                        key={esp} 
+                                                                        label={esp} 
+                                                                        size="small" 
+                                                                        variant="outlined" 
+                                                                        color="secondary"
+                                                                        sx={{ height: '20px' }}
+                                                                    />
+                                                                ))
+                                                            ) : (
+                                                                <Chip label="Ninguna" size="small" color="default" sx={{ height: '20px' }}/>
+                                                            )}
+                                                        </Box>
+                                                    </Stack>
+                        </MenuItem>
+                      ))}
                                         </Select>
                                         <Typography variant="caption" sx={{ mt: 1 }}>
                                             **Validación de Especialidad:** El sistema verificará que el técnico posea la especialidad requerida por la categoría.
