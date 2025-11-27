@@ -1,7 +1,7 @@
 <?php
 class ticket
 {
-    
+
     public function index()
     {
         try {
@@ -21,18 +21,16 @@ class ticket
     //Obtener los tiquetes según el rol del usuario en sesión.
     public function getAllByRolUser($idRole, $idUser)
     {
-        try 
-        { 
+        try {
             $response = new Response();
             $ticketModel = new TicketModel();
 
             //Obtiene los tiquetes y los devuelve en una estructura JSON como respuesta.
             $tickets = $ticketModel->getAllByRolUser($idRole, $idUser);
-            
-            if ($tickets) 
-                $response->toJson($tickets);           
-        }
-        catch (Exception $ex) {
+
+            if ($tickets)
+                $response->toJson($tickets);
+        } catch (Exception $ex) {
             handleException($ex);
         }
     }
@@ -40,17 +38,15 @@ class ticket
     //Obtener el tiquete especifico a partir del parámetro enviado.
     public function get($id)
     {
-        try 
-        { 
+        try {
             $response = new Response();
             $ticketModel = new TicketModel();
 
             //Obtiene el tiquete y lo devuelve en una estructura JSON como respuesta.
             $ticket = $ticketModel->get($id);
-            
-            $response->toJson($ticket);           
-        }
-        catch (Exception $ex) {
+
+            $response->toJson($ticket);
+        } catch (Exception $ex) {
             handleException($ex);
         }
     }
@@ -58,18 +54,16 @@ class ticket
     // método para obtener SOLAMENTE los detalles de SLA
     public function getSlaDetails($id)
     {
-        try 
-        { 
+        try {
             $response = new Response();
             $ticketModel = new TicketModel();
 
             // Llama al nuevo método para obtener la información de SLA con cálculos.
             $slaDetails = $ticketModel->getSlaDetails($id);
-            
+
             // Devuelve los detalles del SLA en una estructura JSON.
-            $response->toJson($slaDetails);           
-        }
-        catch (Exception $ex) {
+            $response->toJson($slaDetails);
+        } catch (Exception $ex) {
             handleException($ex);
         }
     }
@@ -93,8 +87,7 @@ class ticket
     //Creación de un nuevo tiquete.
     public function create()
     {
-        try 
-        { 
+        try {
             $response = new Response();
             $request = new Request();
             $ticketModel = new TicketModel();
@@ -103,31 +96,58 @@ class ticket
             $decodedRequest = $request->getJson();
 
             //Agrega el tiquete y obtiene el id creado.
-            $ticket = $ticketModel->create($decodedRequest);
-            
-            $response->toJson($ticket);           
-        }
-        catch (Exception $ex) {
+            $idTicket = $ticketModel->create($decodedRequest);
+
+            $notificationModel = new NotificationModel();
+
+            // Obtener información del usuario que creó el ticket
+            $userModel = new UserModel();
+            $user = $userModel->get($decodedRequest->idRequestUser);
+            $nombreUsuario = $user->nombre . ' ' . $user->primerApellido;
+
+            // 1. Notificar al usuario creador
+            $notificationModel->createNotification(
+                1, // Tipo: Cambio de Estado de Ticket
+                $decodedRequest->idRequestUser, // Remitente: el mismo usuario
+                $decodedRequest->idRequestUser, // Destinatario: el mismo usuario
+                "Tu ticket #$idTicket '$decodedRequest->title' fue creado exitosamente y está en estado Pendiente",
+                $idTicket
+            );
+
+            // 2. Notificar a todos los administradores
+            $administrators = $notificationModel->getAllAdministrators();
+            foreach ($administrators as $idAdmin) {
+                $notificationModel->createNotification(
+                    1, // Tipo: Cambio de Estado de Ticket
+                    $decodedRequest->idRequestUser, // Remitente: usuario que creó
+                    $idAdmin, // Destinatario: cada administrador
+                    "Nuevo ticket #$idTicket '$decodedRequest->title' creado por $nombreUsuario. Estado: Pendiente",
+                    $idTicket
+                );
+            }
+
+            $response->toJson($idTicket);
+        } catch (Exception $ex) {
             handleException($ex);
         }
     }
 
-    
 
-    public function assignManually($id) 
+
+    public function assignManually($id)
     {
         error_log("DEBUG DEL CONTROLADOR: Solicitud de Asignación Manual recibida para Ticket $id.");
-        function get_request_data() 
+        function get_request_data()
         {
             error_log("DEBUG DEL CONTROLADOR: Solicitud entro a la función get request data.");
             // Leer el contenido crudo (raw) del cuerpo de la solicitud (php://input)
             $json_data = file_get_contents('php://input');
-            
+
             // Intentar decodificar el JSON. El 'true' convierte el objeto JSON a un array asociativo de PHP.
             if ($json_data) {
                 return json_decode($json_data, true);
             }
-            
+
             // Retorna null o un array vacío si no hay datos
             return [];
         }
@@ -142,8 +162,8 @@ class ticket
         try {
             // Ejecutar la lógica de negocio
             $result = $assignmentHandler->handleManualAssignment(
-                $id, 
-                (object)$requestData, 
+                $id,
+                (object)$requestData,
                 $ticketModel
             );
 
@@ -156,23 +176,21 @@ class ticket
                 http_response_code(500);
                 echo json_encode(['status' => 'error', 'message' => 'Fallo la asignación por una razón desconocida.']);
             }
-
         } catch (Exception $e) {
             // Capturar la excepción del handler y devolver el 500
             http_response_code(500);
             echo json_encode([
-                'status' => 'error', 
+                'status' => 'error',
                 'message' => 'Error en la asignación: ' . $e->getMessage()
             ]);
         }
     }
-    
+
 
     //Actualización del tiquete a partir del nuevo estado definido.
     public function update()
     {
-        try 
-        {
+        try {
             $request = new Request();
             $response = new Response();
             $ticketModel = new TicketModel();
@@ -181,11 +199,10 @@ class ticket
             $decodedRequest = $request->getJson();
 
             //Actualiza y obtiene el tiquete con sus valores actualizados hacia la interfaz.
-            $ticket = $ticketModel->update_2($decodedRequest);   
-            
-            $response->toJson($ticket);      
-        }
-        catch (Exception $ex) {
+            $ticket = $ticketModel->update_2($decodedRequest);
+
+            $response->toJson($ticket);
+        } catch (Exception $ex) {
             handleException($ex);
         }
     }
