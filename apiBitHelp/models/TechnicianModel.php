@@ -36,7 +36,7 @@ class TechnicianModel
                         disponibilidad_tecnico dt ON t.idDisponibilidad = dt.idDisponibilidad;";
             // Ejecución de la consulta.
             $technicians = $this->connection->ExecuteSQL($query);
-            // ✅ DEBUG 11: Muestra cuántos técnicos se encontraron antes de la lógica de especialidades
+            //  DEBUG 11: Muestra cuántos técnicos se encontraron antes de la lógica de especialidades
             error_log("DEBUG 11 (Tech Model): Conteo de técnicos encontrados por SQL: " . count($technicians));
             // Si no hay técnicos, devuelve un array vacío (o el resultado de ExecuteSQL)
             if (empty($technicians)) {
