@@ -13,10 +13,12 @@ import {
   IconButton
 } from '@mui/material';
 import { Visibility, VisibilityOff, Login as LoginIcon } from '@mui/icons-material';
+import { NotificationContext } from '../../context/NotificationContext';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useContext(AuthContext);
+  const { refreshCount } = useContext(NotificationContext);
 
   const [formData, setFormData] = useState({
     credential: '',
@@ -56,7 +58,10 @@ const Login = () => {
         loading: 'Iniciando sesión...',
         success: (result) => {
           if (result.success) {
-            setTimeout(() => navigate('/'), 500);
+            setTimeout(() => {
+              refreshCount(); // Refrescar contador
+              navigate('/');
+            }, 1000);
             return 'Inicio de sesión exitoso';
           } else {
             throw new Error(result.message || 'Credenciales inválidas');

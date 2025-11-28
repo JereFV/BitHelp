@@ -14,6 +14,7 @@ import { TicketDetail } from "./components/Tickets/TicketDetail";
 import { CreateTicket } from "./components/Tickets/CreateTicket";
 import UserMaintenance from "./components/User/UserMaintenance.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { NotificationProvider } from "./context/NotificationContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./components/Login/Login";
 
@@ -77,9 +78,11 @@ const rutas = createBrowserRouter([
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AuthProvider>
-      <UserProvider>
-        <RouterProvider router={rutas} />
-      </UserProvider>
+      <NotificationProvider>
+        <UserProvider>
+          <RouterProvider router={rutas} />
+        </UserProvider>
+      </NotificationProvider>
     </AuthProvider>
   </StrictMode>
 );

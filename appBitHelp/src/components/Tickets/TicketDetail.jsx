@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useContext} from 'react';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -35,6 +35,7 @@ import toast from 'react-hot-toast';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import TicketImageService from '../../services/TicketImageService';
+import { NotificationContext } from '../../context/NotificationContext';
 
 //URL de imágenes de tiquetes guardadas.
 const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -87,6 +88,8 @@ const getColorMap = (theme, severity) => {
 
 export function TicketDetail() 
 {
+  const { refreshCount } = useContext(NotificationContext);
+
   //Variable que contiene los campos del formulario en un formato de llave -> valor.
   let formData = new FormData();
 
@@ -286,7 +289,9 @@ export function TicketDetail()
             reset();
 
             //Se posiciona al inicio del modal, dando un efecto de "recargado de página".
-            modalContentRef.current.scrollTop  = 0;    
+            modalContentRef.current.scrollTop  = 0;
+
+            refreshCount(); // Actualiza el contador de notificaciones
 
             toast.success(
               `Se ha registrado correctamente el movimiento del tiquete.`,

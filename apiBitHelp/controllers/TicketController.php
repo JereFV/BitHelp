@@ -95,8 +95,12 @@ class ticket
             //Armado de la estructura de entrada, decodificando la estructura JSON enviada como un objeto.
             $decodedRequest = $request->getJson();
 
-            //Agrega el tiquete y obtiene el id creado.
+            // Crear el ticket (puede incluir autotriage)
             $idTicket = $ticketModel->create($decodedRequest);
+
+            // ***** Obtener información actualizada del ticket *****
+            $queryTicketInfo = "SELECT idEstado, idTecnicoAsignado, titulo FROM tiquete WHERE idTiquete = $idTicket";
+            $ticketInfo = $ticketModel->connection->ExecuteSQL($queryTicketInfo)[0];
 
             $notificationModel = new NotificationModel();
 
@@ -107,21 +111,46 @@ class ticket
 
             // 1. Notificar al usuario creador
             $notificationModel->createNotification(
-                1, // Tipo: Cambio de Estado de Ticket
-                $decodedRequest->idRequestUser, // Remitente: el mismo usuario
-                $decodedRequest->idRequestUser, // Destinatario: el mismo usuario
-                "Tu ticket #$idTicket '$decodedRequest->title' fue creado exitosamente y está en estado Pendiente",
+                1,
+                $decodedRequest->idRequestUser,
+                $decodedRequest->idRequestUser,
+                "Tu ticket #$idTicket '{$ticketInfo->titulo}' fue creado exitosamente",
                 $idTicket
             );
 
-            // 2. Notificar a todos los administradores
+            // 2. Notificar a administradores
             $administrators = $notificationModel->getAllAdministrators();
             foreach ($administrators as $idAdmin) {
                 $notificationModel->createNotification(
-                    1, // Tipo: Cambio de Estado de Ticket
-                    $decodedRequest->idRequestUser, // Remitente: usuario que creó
-                    $idAdmin, // Destinatario: cada administrador
-                    "Nuevo ticket #$idTicket '$decodedRequest->title' creado por $nombreUsuario. Estado: Pendiente",
+                    1,
+                    $decodedRequest->idRequestUser,
+                    $idAdmin,
+                    "Nuevo ticket #$idTicket '{$ticketInfo->titulo}' creado por $nombreUsuario",
+                    $idTicket
+                );
+            }
+
+            // 3. Si fue asignado automáticamente, crear notificaciones de asignación
+            if ($ticketInfo->idEstado == 2 && $ticketInfo->idTecnicoAsignado) {
+                // Obtener nombre del técnico
+                $techUser = $userModel->get($ticketInfo->idTecnicoAsignado);
+                $nombreTecnico = $techUser->nombre . ' ' . $techUser->primerApellido;
+
+                // Notificar al cliente sobre la asignación
+                $notificationModel->createNotification(
+                    1,
+                    11, // Sistema
+                    $decodedRequest->idRequestUser,
+                    "Ticket #$idTicket fue asignado automáticamente al técnico $nombreTecnico",
+                    $idTicket
+                );
+
+                // Notificar al técnico
+                $notificationModel->createNotification(
+                    1,
+                    11, // Sistema
+                    $ticketInfo->idTecnicoAsignado,
+                    "Ticket #$idTicket '{$ticketInfo->titulo}' te fue asignado automáticamente",
                     $idTicket
                 );
             }

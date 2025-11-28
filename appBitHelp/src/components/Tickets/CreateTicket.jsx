@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect, useContext} from "react";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -42,8 +42,10 @@ import TicketService from "../../services/TicketService";
 import toast from 'react-hot-toast';
 import TicketImageService from "../../services/TicketImageService"; 
 import ImagesSelector from "./ImagesSelector";
+import { NotificationContext } from '../../context/NotificationContext';
 
 export function CreateTicket() {
+  const { refreshCount } = useContext(NotificationContext);
   //Variable que contiene los campos del formulario en un formato de llave -> valor.
   let formData = new FormData();
 
@@ -186,6 +188,7 @@ export function CreateTicket() {
                       position: "top-center",
                     }
                   );
+                  refreshCount(); // Actualiza el contador de notificaciones
 
                   //Al haber agregado el registro exitosamente, redirreciona hacia el listado.
                   return navigate("/tickets/ticketsList");

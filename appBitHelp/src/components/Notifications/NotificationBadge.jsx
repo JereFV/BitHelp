@@ -1,33 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useContext } from 'react';
 import { IconButton, Badge, Tooltip } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import NotificationService from '../../services/NotificationService';
+import { NotificationContext } from '../../context/NotificationContext';
 
 export default function NotificationBadge({ onOpen }) {
-    const [unreadCount, setUnreadCount] = useState(0);
-
-    const fetchUnreadCount = async () => {
-        try {
-            const response = await NotificationService.getUnreadCount();
-            setUnreadCount(response.data.data.count);
-        } catch (error) {
-            console.error('Error al obtener contador de notificaciones:', error);
-        }
-    };
-
-    useEffect(() => {
-        fetchUnreadCount();
-        
-        // Actualizar contador cada 30 segundos
-        const interval = setInterval(fetchUnreadCount, 30000);
-        
-        return () => clearInterval(interval);
-    }, []);
-
-    // Función pública para refrescar el contador
-    const refreshCount = () => {
-        fetchUnreadCount();
-    };
+    const { unreadCount, refreshCount } = useContext(NotificationContext);
 
     return (
         <Tooltip title="Notificaciones">

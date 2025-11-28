@@ -422,6 +422,16 @@ class TicketModel
         try 
         {
             $ticketHistoryModel = new TicketHistoryModel();
+            $notificationModel = new NotificationModel();
+
+            // Obtener estado anterior antes de actualizar
+            $queryEstadoAnterior = "SELECT idEstado, titulo, idUsuarioSolicita, idTecnicoAsignado 
+                                FROM tiquete WHERE idTiquete = $ticket->idTicket";
+            $resultEstadoAnterior = $this->connection->executeSQL($queryEstadoAnterior);
+            $estadoAnterior = $resultEstadoAnterior[0]->idEstado;
+            $tituloTicket = $resultEstadoAnterior[0]->titulo;
+            $idUsuarioSolicita = $resultEstadoAnterior[0]->idUsuarioSolicita;
+            $idTecnicoAsignado = $resultEstadoAnterior[0]->idTecnicoAsignado;
 
             //Inicialmente actualiza el tiquete según el nuevo estado.
             $query = "UPDATE tiquete SET idUsuarioCierra = " . ($ticket->idNewState == self::ID_CLOSED_STATE ? $ticket->idSessionUser : "NULL")
@@ -435,6 +445,98 @@ class TicketModel
             //Almacena un nuevo movimiento en el historial del tiquete.
             $ticketHistoryModel->create($ticket);
 
+            // Crear notificaciones según el cambio de estado
+            $descripcionBase = "Ticket #$ticket->idTicket '$tituloTicket' cambió de estado";
+            
+            // Asignado (2) → En Progreso (3): Cliente + Técnico
+            if ($estadoAnterior == 2 && $ticket->idNewState == 3) {
+                // Notificar al cliente
+                $notificationModel->createNotification(
+                    1, 
+                    $ticket->idSessionUser, 
+                    $idUsuarioSolicita,
+                    "$descripcionBase a 'En Proceso'. El técnico está trabajando en tu solicitud.",
+                    $ticket->idTicket
+                );
+                
+                // Notificar al técnico
+                if ($idTecnicoAsignado) {
+                    $notificationModel->createNotification(
+                        1,
+                        $ticket->idSessionUser,
+                        $idTecnicoAsignado,
+                        "$descripcionBase a 'En Proceso'. Comenzaste a trabajar en este ticket.",
+                        $ticket->idTicket
+                    );
+                }
+            }
+            // En Progreso (3) → Resuelto (4): Solo Cliente
+            elseif ($estadoAnterior == 3 && $ticket->idNewState == 4) {
+                $notificationModel->createNotification(
+                    1,
+                    $ticket->idSessionUser,
+                    $idUsuarioSolicita,
+                    "$descripcionBase a 'Resuelto'. Por favor verifica que tu problema fue solucionado.",
+                    $ticket->idTicket
+                );
+            }
+            // Resuelto (4) → Cerrado (5): Solo Técnico
+            elseif ($estadoAnterior == 4 && $ticket->idNewState == 5) {
+                if ($idTecnicoAsignado) {
+                    $notificationModel->createNotification(
+                        1,
+                        $ticket->idSessionUser,
+                        $idTecnicoAsignado,
+                        "$descripcionBase a 'Cerrado'. El cliente confirmó la solución.",
+                        $ticket->idTicket
+                    );
+                }
+            }
+            // Resuelto (4) → Devuelto (6): Cliente + Técnico
+            elseif ($estadoAnterior == 4 && $ticket->idNewState == 6) {
+                // Notificar al cliente
+                $notificationModel->createNotification(
+                    1,
+                    $ticket->idSessionUser,
+                    $idUsuarioSolicita,
+                    "$descripcionBase a 'Devuelto'. El problema será revisado nuevamente.",
+                    $ticket->idTicket
+                );
+                
+                // Notificar al técnico
+                if ($idTecnicoAsignado) {
+                    $notificationModel->createNotification(
+                        1,
+                        $ticket->idSessionUser,
+                        $idTecnicoAsignado,
+                        "$descripcionBase a 'Devuelto'. El cliente reporta que el problema persiste.",
+                        $ticket->idTicket
+                    );
+                }
+            }
+            // Devuelto (6) → En Progreso (3): Cliente + Técnico
+            elseif ($estadoAnterior == 6 && $ticket->idNewState == 3) {
+                // Notificar al cliente
+                $notificationModel->createNotification(
+                    1,
+                    $ticket->idSessionUser,
+                    $idUsuarioSolicita,
+                    "$descripcionBase a 'En Proceso'. El técnico está revisando nuevamente tu solicitud.",
+                    $ticket->idTicket
+                );
+                
+                // Notificar al técnico
+                if ($idTecnicoAsignado) {
+                    $notificationModel->createNotification(
+                        1,
+                        $ticket->idSessionUser,
+                        $idTecnicoAsignado,
+                        "$descripcionBase a 'En Proceso'. Continúas trabajando en este ticket.",
+                        $ticket->idTicket
+                    );
+                }
+            }
+
             //Obtiene y retorna el tiquete con sus valores actualizados junto con el historial de movimientos.
             $ticket = $this->get($ticket->idTicket);
 
@@ -446,5 +548,3 @@ class TicketModel
     }
 }
 ?>
-
-
