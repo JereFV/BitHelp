@@ -10,7 +10,7 @@ class TicketModel
     //Estado de tiquete Resuelto.
     public const ID_RESOLVED_STATE = 4;
     //Estado de tiquete Cerrado.
-    public const ID_CLOSED_STATE = 4;  
+    public const ID_CLOSED_STATE = 5;  
 
     public function __construct()
     {
@@ -437,8 +437,8 @@ class TicketModel
             $query = "UPDATE tiquete SET idUsuarioCierra = " . ($ticket->idNewState == self::ID_CLOSED_STATE ? $ticket->idSessionUser : "NULL")
                                         . ",idEstado = $ticket->idNewState"
                                         . ",fechaCierre = " . ($ticket->idNewState == self::ID_CLOSED_STATE ? date("Y-m-d h:i:s") : "NULL")
-                                        . ",slaResolucion = " . ($ticket->idNewState == self::ID_RESOLVED_STATE ? date("Y-m-d h:i:s") : "NULL")
-                                        . " WHERE idTiquete = $ticket->idTicket";
+                                        . ",slaResolucion = '" . ($ticket->idNewState == self::ID_RESOLVED_STATE ? date("Y-m-d h:i:s") : "NULL")
+                                        . "' WHERE idTiquete = $ticket->idTicket";
 
             $this->connection->executeSQL_DML($query);
 

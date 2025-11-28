@@ -28,6 +28,7 @@ class Request
         foreach ($_POST as $key => $value) {
             $body[$key] = filter_input(INPUT_POST, $key, FILTER_SANITIZE_SPECIAL_CHARS);
         }
+
         // Iterar sobre los archivos enviados con $_FILES
         foreach ($_FILES as $key => $file) {
             if (is_array($file['name'])) {
@@ -47,6 +48,8 @@ class Request
                 $body[$key] = $file;
             }
         }
+
+        $log->info((json_encode($body['files'])));
 
         return $body;
     }

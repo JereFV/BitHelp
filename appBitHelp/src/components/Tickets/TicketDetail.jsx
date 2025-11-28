@@ -188,7 +188,7 @@ export function TicketDetail()
   const [slaDetails, setSlaDetails] = useState({});
 
   //Almacena las imágenes adjuntas.
-  const [images, setImages] = useState(null);
+  const [images, setImages] = useState([]);
 
   //Estados seleccionables en un nuevo movimiento del tiquete.
   const [ticketStates, setTicketStates] = useState([]);
@@ -268,12 +268,17 @@ export function TicketDetail()
         //Creación del nuevo movimiento en el historial de tiquetes.
         TicketService.updateTicket(DataForm)
           .then((response) => {
-            //Si hay imágenes adjuntas las almacena en referencia al movimiento recién ingresado.
-            if (images != null) {
+            //Si hay imágenes adjuntas, las almacena en referencia al movimiento recién ingresado.
+            if (images != null) 
+            {
               //Arma la estructura de entrada para el almacenamiento de imágenes.
-              formData.append("file", images);
               formData.append("idTicket", DataForm.idTicket);
 
+              //Recorre cada una de las imágenes adjuntas para añadirlas en el arreglo.
+              images.map((image) => (
+                formData.append("files[]", image)
+              ))
+              
               //Almacenamiento de imágenes, una vez creado el tiquete.
               TicketImageService.uploadImages(formData).catch((error) => {
                 console.error(error);
@@ -312,14 +317,19 @@ export function TicketDetail()
 
   //Evento error del formulario.
   const onError = (errors, e) => {
-    toast.error("Ha ocurrido un error al intentar crear el tiquete.");
+    toast.error("Ha ocurrido un error al intentar registrar el movimiento del tiquete.");
     console.log(errors, e);
   };
 
   //Evento auxiliar para la obtención de imágenes.
   const handleImages = (images) => {
-    // setImages(images.map((i) => (i.file, i.file.name)));
-    setImages(images[0], images[0].name);
+    //images.map((i) => (
+    //  setImages(i, i.name)
+    //))
+
+    setImages(images)
+
+    //setImages(images[0], images[0].name);
   };
 
   useEffect(() => {

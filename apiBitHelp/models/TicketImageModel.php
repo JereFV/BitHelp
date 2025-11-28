@@ -18,7 +18,7 @@ class TicketImageModel
         {
             // Verifica que la clave 'file' exista y que sea un array o un objeto
             // Si no existe o no es un array (por ejemplo, si es un string vacío como "" o null), salimos.
-            if (!isset($object["file"]) || !is_array($object["file"]) || empty($object["file"])) {
+            if (!isset($object["files"]) || !is_array($object["files"]) || empty($object["files"])) {
                 return; 
             }
 
@@ -26,30 +26,27 @@ class TicketImageModel
             //Contador auxiliar.
             $counter = 0;
 
-            $image = $object["file"];
+            $images = $object["files"];
             $idTicket = $object["idTicket"];
 
-            //foreach ($images as $image)
-            //{
+            foreach ($images as $image)
+            {
                 //Extraer información de la imagen iterada.
                 $fileName = $image['name'];
                 $tempPath = $image['tmp_name'];
-                $fileSize = $image['size'];
-                $fileError = $image['error'];
 
                 //Extraer extensión de la imagen.
                 $separatedFileName = explode('.', $fileName);
                 $fileExt =  end($separatedFileName);
-                
-                //Obtiene el último registro en el historial del tiquete con el objetivo de extraer el id en el armado de la ruta.
-                $ticketHsitory = $ticketHistoryModel->get($idTicket);               
-                $lastTicketHistory = end($ticketHsitory);
+                               
+                //Obtiene el último secuencial registrado en el historial del tiquete.
+                $idTicketHistory = $ticketHistoryModel->getNextId($idTicket)[0]->maxId;
 
                 //Aumenta el contador previo a su utilización.
                 ++$counter;
 
                 //Ruta del directorio a partir del número de tiquete y último movimiento del historial.
-                $directory = "{$this->upload_path}ticket {$idTicket}/idHistory {$lastTicketHistory->idHistorialTiquete}";
+                $directory = "{$this->upload_path}ticket {$idTicket}/idHistory {$idTicketHistory}";
 
                 //Valida la existencia del directorio para crearlo.
                 if (!is_dir($directory))
@@ -67,12 +64,12 @@ class TicketImageModel
                 {       
                     //Al almacenar la imagen física correctamente, ejecuta la inserción en base de datos.         
                     $query = "INSERT INTO imagen_historial_tiquete VALUES ($counter,
-                                                                           $lastTicketHistory->idHistorialTiquete,
+                                                                           $idTicketHistory,
                                                                            $idTicket,
                                                                            '$fileName')";
                     $this->connection->executeSQL_DML($query);                   
                 }                                                   
-            //}    
+            }    
         } 
         catch (Exception $ex) {
             handleException($ex);
