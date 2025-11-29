@@ -166,25 +166,21 @@ class ticket
     public function assignManually($id)
     {
         error_log("DEBUG DEL CONTROLADOR: Solicitud de Asignación Manual recibida para Ticket $id.");
+        
         function get_request_data()
         {
-            error_log("DEBUG DEL CONTROLADOR: Solicitud entro a la función get request data.");
-            // Leer el contenido crudo (raw) del cuerpo de la solicitud (php://input)
             $json_data = file_get_contents('php://input');
-
-            // Intentar decodificar el JSON. El 'true' convierte el objeto JSON a un array asociativo de PHP.
             if ($json_data) {
                 return json_decode($json_data, true);
             }
-
-            // Retorna null o un array vacío si no hay datos
             return [];
         }
+        
         error_log("DEBUG (Controller): Entro al controller assignManually: ");
-        // Obtener el cuerpo de la petición PUT
-        $requestData = get_request_data(); // Asumiendo que tienes una función para esto
+        
+        $requestData = get_request_data();
         error_log("DEBUG (Controller): Datos de asignación recibidos: " . print_r($requestData, true));
-        // Instanciar modelos y handler
+        
         $ticketModel = new TicketModel();
         $assignmentHandler = new TicketAssignmentHandler();
 
@@ -197,16 +193,43 @@ class ticket
             );
 
             if ($result) {
+                // Crear notificaciones de asignación manual
+                $notificationModel = new NotificationModel();
+                $userModel = new UserModel();
+                
+                // Obtener información del ticket
+                $queryTicketInfo = "SELECT titulo, idUsuarioSolicita FROM tiquete WHERE idTiquete = $id";
+                $ticketInfo = $ticketModel->connection->ExecuteSQL($queryTicketInfo)[0];
+                
+                // Obtener nombre del técnico asignado
+                $techUser = $userModel->get($requestData['idTecnicoAsignado']);
+                $nombreTecnico = $techUser->nombre . ' ' . $techUser->primerApellido;
+                
+                // 1. Notificar al usuario solicitante
+                $notificationModel->createNotification(
+                    1, // Tipo: Cambio de Estado
+                    $requestData['idUsuarioAdmin'], // Remitente: admin que asignó
+                    $ticketInfo->idUsuarioSolicita, // Destinatario: cliente
+                    "Ticket #$id '{$ticketInfo->titulo}' fue asignado manualmente al técnico $nombreTecnico",
+                    $id
+                );
+                
+                // 2. Notificar al técnico asignado
+                $notificationModel->createNotification(
+                    1, // Tipo: Cambio de Estado
+                    $requestData['idUsuarioAdmin'], // Remitente: admin que asignó
+                    $requestData['idTecnicoAsignado'], // Destinatario: técnico
+                    "Ticket #$id '{$ticketInfo->titulo}' te fue asignado manualmente",
+                    $id
+                );                
                 // Responder con éxito (200 OK)
                 http_response_code(200);
                 echo json_encode(['status' => 'success', 'message' => 'Tiquete asignado correctamente.']);
             } else {
-                // Poco probable si el handler lanza excepciones, pero es una protección
                 http_response_code(500);
                 echo json_encode(['status' => 'error', 'message' => 'Fallo la asignación por una razón desconocida.']);
             }
         } catch (Exception $e) {
-            // Capturar la excepción del handler y devolver el 500
             http_response_code(500);
             echo json_encode([
                 'status' => 'error',

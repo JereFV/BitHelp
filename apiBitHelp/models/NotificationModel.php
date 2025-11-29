@@ -36,29 +36,50 @@ class NotificationModel
 
             // Estado inicial: No Leída (1)
             $idEstadoNotificacion = 1;
-            
-            // CAMBIO: Configurar zona horaria de Costa Rica
+
+            // Configurar zona horaria de Costa Rica
             date_default_timezone_set('America/Costa_Rica');
             $fecha = date('Y-m-d H:i:s');
 
-            $stmt = $conn->prepare(
-                "INSERT INTO notificacion 
-                (idNotificacion, idTipoNotificacion, idUsuarioRemitente, idUsuarioDestinatario, 
-                fecha, descripcion, idEstadoNotificacion, idTiquete) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-            );
+            // Manejar idTiquete nullable correctamente
+            if ($idTiquete === null) {
+                $stmt = $conn->prepare(
+                    "INSERT INTO notificacion 
+                    (idNotificacion, idTipoNotificacion, idUsuarioRemitente, idUsuarioDestinatario, 
+                    fecha, descripcion, idEstadoNotificacion, idTiquete) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NULL)"
+                );
 
-            $stmt->bind_param(
-                "iiiissii",
-                $nextId,
-                $idTipoNotificacion,
-                $idUsuarioRemitente,
-                $idUsuarioDestinatario,
-                $fecha,
-                $descripcion,
-                $idEstadoNotificacion,
-                $idTiquete
-            );
+                $stmt->bind_param(
+                    "iiiissi",
+                    $nextId,
+                    $idTipoNotificacion,
+                    $idUsuarioRemitente,
+                    $idUsuarioDestinatario,
+                    $fecha,
+                    $descripcion,
+                    $idEstadoNotificacion
+                );
+            } else {
+                $stmt = $conn->prepare(
+                    "INSERT INTO notificacion 
+                    (idNotificacion, idTipoNotificacion, idUsuarioRemitente, idUsuarioDestinatario, 
+                    fecha, descripcion, idEstadoNotificacion, idTiquete) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                );
+
+                $stmt->bind_param(
+                    "iiiissii",
+                    $nextId,
+                    $idTipoNotificacion,
+                    $idUsuarioRemitente,
+                    $idUsuarioDestinatario,
+                    $fecha,
+                    $descripcion,
+                    $idEstadoNotificacion,
+                    $idTiquete
+                );
+            }
 
             $result = $stmt->execute();
             $stmt->close();
@@ -202,12 +223,12 @@ class NotificationModel
         try {
             $query = "SELECT idUsuario FROM usuario WHERE idRol = 3 AND estado = 1";
             $result = $this->connection->ExecuteSQL($query);
-            
+
             // Validación defensiva: verificar que sea array antes de usar array_map
             if (!is_array($result) || empty($result)) {
                 return [];
             }
-            
+
             return array_map(function ($admin) {
                 return $admin->idUsuario;
             }, $result);
