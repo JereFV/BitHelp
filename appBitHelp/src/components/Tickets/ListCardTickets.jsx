@@ -50,6 +50,8 @@ const getStateColor = (estado) => {
       return 'success';
     case 'Cerrado':
       return 'default';
+    case 'Devuelto':
+      return 'secondary';
     default:
       return 'default';
   }
