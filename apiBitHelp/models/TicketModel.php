@@ -221,7 +221,7 @@ class TicketModel
                 SELECT
                     T.idTiquete,
                     T.fechaCreacion,
-                    -- 1. Fechas Reales de Acción (Ahora contienen la fecha de respuesta/resolución real)
+                    -- 1. Fechas Reales de Acción
                     T.slaRespuesta AS FechaRespuestaReal, 
                     T.slaResolucion AS FechaResolucionReal, 
                     
@@ -436,9 +436,9 @@ class TicketModel
             //Inicialmente actualiza el tiquete según el nuevo estado.
             $query = "UPDATE tiquete SET idUsuarioCierra = " . ($ticket->idNewState == self::ID_CLOSED_STATE ? $ticket->idSessionUser : "NULL")
                                         . ",idEstado = $ticket->idNewState"
-                                        . ",fechaCierre = " . ($ticket->idNewState == self::ID_CLOSED_STATE ? date("Y-m-d h:i:s") : "NULL")
-                                        . ",slaResolucion = '" . ($ticket->idNewState == self::ID_RESOLVED_STATE ? date("Y-m-d h:i:s") : "NULL")
-                                        . "' WHERE idTiquete = $ticket->idTicket";
+                                        . ",fechaCierre = " . ($ticket->idNewState == self::ID_CLOSED_STATE ? "NOW()" : "NULL")
+                                        . ",slaResolucion = " . ($ticket->idNewState == self::ID_RESOLVED_STATE ? "NOW()" : "NULL")
+                                        . " WHERE idTiquete = $ticket->idTicket";
 
             $this->connection->executeSQL_DML($query);
 
