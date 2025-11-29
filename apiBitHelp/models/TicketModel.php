@@ -10,7 +10,9 @@ class TicketModel
     //Estado de tiquete Resuelto.
     public const ID_RESOLVED_STATE = 4;
     //Estado de tiquete Cerrado.
-    public const ID_CLOSED_STATE = 5;  
+    public const ID_CLOSED_STATE = 5;
+    //Estado de tiquete Devuelto.
+    public const ID_RETURNED_STATE = 6;  
 
     public function __construct()
     {
@@ -423,9 +425,10 @@ class TicketModel
         {
             $ticketHistoryModel = new TicketHistoryModel();
             $notificationModel = new NotificationModel();
+            $technicianModel = new TechnicianModel();
 
             // Obtener estado anterior antes de actualizar
-            $queryEstadoAnterior = "SELECT idEstado, titulo, idUsuarioSolicita, idTecnicoAsignado 
+            $queryEstadoAnterior = "SELECT idEstado, titulo, idUsuarioSolicita, idTecnicoAsignado, idCateogria 
                                 FROM tiquete WHERE idTiquete = $ticket->idTicket";
             $resultEstadoAnterior = $this->connection->executeSQL($queryEstadoAnterior);
             $estadoAnterior = $resultEstadoAnterior[0]->idEstado;
@@ -444,6 +447,16 @@ class TicketModel
 
             //Almacena un nuevo movimiento en el historial del tiquete.
             $ticketHistoryModel->create($ticket);
+
+            //Si el nuevo estado del tiquete es resuelto o devuelto, actualiza la carga de trabajo del técnico asignado.
+            if ($ticket->idNewState == self::ID_RESOLVED_STATE || $ticket->idNewState == self::ID_RETURNED_STATE)
+            {
+                //Determina dinámicamente el operador a utilizar en el cálculo de la carga de trabajo del técnico.
+                //Si el tiquete pasa a resuelto disminuye la carga de trabajo, si pasa a devuelto más bien aumenta la carga original del tiquete.
+                $operator = $ticket->idNewState == self::ID_RESOLVED_STATE ? "-" : "+";
+
+                $technicianModel->updateWorkCharge($idTecnicoAsignado, $resultEstadoAnterior[0]->idCategoria, $operator);
+            }      
 
             // Crear notificaciones según el cambio de estado
             $descripcionBase = "Ticket #$ticket->idTicket '$tituloTicket' cambió de estado";
