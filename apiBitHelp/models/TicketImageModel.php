@@ -69,7 +69,12 @@ class TicketImageModel
                                                                            '$fileName')";
                     $this->connection->executeSQL_DML($query);                   
                 }                                                   
-            }    
+            }
+            
+            //Obtiene y retorna el historial del tiquete incluyendo las nuevas imágenes almacenadas en el último registro.
+            $ticketHistory = $ticketHistoryModel->get($idTicket);
+            
+            return $ticketHistory;
         } 
         catch (Exception $ex) {
             handleException($ex);

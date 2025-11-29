@@ -510,4 +510,30 @@ class TechnicianModel
         }
     }
 
+    /**
+     * Actualiza la carga de trabajo de un tecnico en específico.
+     * @param int $idTechnician Id del técnico a actualizar.
+     * @param int $idCategorie Id de la categoría a la que pertenece el tiquete en atención, para a partir de ella obtener el valor de SLA a sumar en la carga de trabajo.
+     * @param string $operationSymbol Símbolo aritmético de la operación a realizar. (+, -)
+     * @return void
+     */
+    public function updateWorkCharge(int $idTechnician, int $idCategorie, string $operationSymbol)
+    {
+        try
+        {
+            $query = "UPDATE tecnico
+                      INNER JOIN categoria a
+                      ON a.idCategoria = $idCategorie
+                      INNER JOIN sla b
+                      ON a.idSla = b.idSla
+                      SET cargaTrabajo = SEC_TO_TIME(TIME_TO_SEC(cargaTrabajo) $operationSymbol TIME_TO_SEC(b.tiempoMaxResolucion))
+                      WHERE idTecnico = $idTechnician";
+
+            $this->connection->executeSQL_DML($query);          
+        }
+        catch(Exception $ex) {
+            handleException($ex);
+        }
+    }
+
 }

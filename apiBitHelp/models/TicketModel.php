@@ -429,7 +429,7 @@ class TicketModel
             $technicianModel = new TechnicianModel();
 
             // Obtener estado anterior antes de actualizar
-            $queryEstadoAnterior = "SELECT idEstado, titulo, idUsuarioSolicita, idTecnicoAsignado, idCateogria 
+            $queryEstadoAnterior = "SELECT idEstado, titulo, idUsuarioSolicita, idTecnicoAsignado, idCategoria 
                                 FROM tiquete WHERE idTiquete = $ticket->idTicket";
             $resultEstadoAnterior = $this->connection->executeSQL($queryEstadoAnterior);
             $estadoAnterior = $resultEstadoAnterior[0]->idEstado;

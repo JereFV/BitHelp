@@ -17,13 +17,11 @@ import PropTypes from 'prop-types';
 //Validación de propiedades para el historial del tiquete
 ImagesSelector.propTypes = {
   newTicket: PropTypes.bool,
-  onChange: PropTypes.func
+  images: PropTypes.array,
+  setImages: PropTypes.any
 }
 
-export default function ImagesSelector({ newTicket, onChange }) {
-  //Constante auxiliar para el manejo de imágenes adjuntas.
-  const [images, setImages] = useState([]);
-
+export default function ImagesSelector({ newTicket, images, setImages }) {
   //Almacena la imagen seleccionada de los adjuntos para ser ampliada en otra vista.
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -40,21 +38,17 @@ export default function ImagesSelector({ newTicket, onChange }) {
 
     //Crea una estructura con las imagenes existentes y los nuevos adjuntos para renderización en pantalla.
     const updateImages = [...images, ...newImages];
-    setImages(updateImages);
 
-    //Invoca la actualización de imágenes a partir del evento proporcionado como parámetro. (envío de imágenes adjuntas hacia otra función) 
-    onChange && onChange(updateImages.map((i) => i.file));
+    //Almacena las imágenes sobre el arreglo envíado por el componente padre.
+    setImages(updateImages);
   };
 
   const handleEliminar = (index) => {
     //Filtra el arreglo de imágenes adjuntas, excluyendo el elemento seleccionado para eliminación.
     const updateImages = images.filter((_, i) => i !== index);
 
-    //Renderizado de imágenes luego de la eliminación del elemento.
+    //Renderizado de imágenes luego de la eliminación del elemento, actualizando el arreglo.
     setImages(updateImages);
-
-    //Invoca la actualización de imágenes a partir del evento proporcionado como parámetro. (envío de imágenes adjuntas hacia otra función) 
-    onChange && onChange(updateImages.map((i) => i.file));
   };
 
   //Componente input personalizado de MUI.

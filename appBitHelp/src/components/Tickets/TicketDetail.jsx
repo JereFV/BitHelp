@@ -195,8 +195,10 @@ export function TicketDetail()
 
   //Controla el renderizado de las secciones de registro de nuevos movimientos y valoración del tiquete.
   const [displayNewMovSection, setDisplayNewMovSection] = useState(false);
-  const [displayValorationSection, setDisplayValorationSection] =
-    useState(false);
+  const [displayValorationSection, setDisplayValorationSection] = useState(false);
+
+  //"Bandera" auxiliar de refrescamiento del modal utilizada como dependencia para el UseEffect.
+  const [refresh, setRefresh] = useState(0);
 
   let slaRespuestaDisplay = null;
   let slaResolucionDisplay = null;
@@ -231,6 +233,8 @@ export function TicketDetail()
           setDisplayNewMovSection(true);
           display = true;
         }
+        else
+          setDisplayNewMovSection(false);
 
         break;
       //Si el caso está resuelto, renderiza únicamente para el cliente que reportó el tiquete.
@@ -239,8 +243,13 @@ export function TicketDetail()
           setDisplayNewMovSection(true);
           display = true;
         }
+        else
+          setDisplayNewMovSection(false);
 
         break;
+      //Al cerrarse el tiquete, oculta la sección.
+      case ID_CLOSED_STATE:
+        setDisplayNewMovSection(false);
     }
 
     //Obtiene los estados seleccionables en un nuevo movimiento del tiquete al determinar la renderización del formulario.
@@ -267,31 +276,36 @@ export function TicketDetail()
       {
         //Creación del nuevo movimiento en el historial de tiquetes.
         TicketService.updateTicket(DataForm)
-          .then((response) => {
+          .then(() => {
             //Si hay imágenes adjuntas, las almacena en referencia al movimiento recién ingresado.
-            if (images != null) 
+            if (images.length > 0) 
             {
               //Arma la estructura de entrada para el almacenamiento de imágenes.
               formData.append("idTicket", DataForm.idTicket);
 
               //Recorre cada una de las imágenes adjuntas para añadirlas en el arreglo.
               images.map((image) => (
-                formData.append("files[]", image)
+                formData.append("files[]", image.file)
               ))
               
-              //Almacenamiento de imágenes, una vez creado el tiquete.
-              TicketImageService.uploadImages(formData).catch((error) => {
-                console.error(error);
-                throw error;
-              });
+              //Almacenamiento de imágenes, una vez actualizado el tiquete.
+              TicketImageService.uploadImages(formData)
+                .then(() => {
+                  //Refresca los datos del formulario actualizados y limpia el contenedor de imágenes adjuntas.
+                  setImages([]);
+                  setRefresh(i => i + 1); 
+                })
+                .catch((error) => {
+                  console.error(error);
+                  throw error;
+                });
             }
-
-            //Obtiene y renderiza los datos del tiquete con sus valores actualizados junto con su historial de movimientos.
-            setTicket(response.data);
-            setMovements(response.data.historialTiquete);
-
+            else
+              //Refresca los datos del formulario actualizados, sin haber almacenado imágenes..
+              setRefresh(i => i + 1);
+            
             //Limpia los campos del formulario
-            reset();
+            reset({idNewState: "", comment: ""});
 
             //Se posiciona al inicio del modal, dando un efecto de "recargado de página".
             modalContentRef.current.scrollTop  = 0;
@@ -319,17 +333,6 @@ export function TicketDetail()
   const onError = (errors, e) => {
     toast.error("Ha ocurrido un error al intentar registrar el movimiento del tiquete.");
     console.log(errors, e);
-  };
-
-  //Evento auxiliar para la obtención de imágenes.
-  const handleImages = (images) => {
-    //images.map((i) => (
-    //  setImages(i, i.name)
-    //))
-
-    setImages(images)
-
-    //setImages(images[0], images[0].name);
   };
 
   useEffect(() => {
@@ -373,7 +376,7 @@ export function TicketDetail()
         );
         console.error("Error al obtener detalles de SLA:", error);
       });
-  }, [routeParams.id, handleSubmit]);
+  }, [routeParams.id, refresh]);
 
   return (
     <div>
@@ -911,7 +914,7 @@ export function TicketDetail()
                 />
 
                 {/*Sección de imágenes adjuntas y botones de acción.*/}
-                <ImagesSelector onChange={handleImages} />
+                <ImagesSelector images={images} setImages={setImages}/>
               </Box>
             </form>
           ) : null}
@@ -939,7 +942,7 @@ export function TicketDetail()
               </Typography>
 
               {/*Si el tiquete ya ha sido calificado por el cliente muestra los valores registrados, de lo contrario muestra un mensaje informativo.*/}
-              {/*{ticket.valoracion ? (*/}
+              {ticket.valoracion ? (
               <Box>
                 <Box
                   sx={{
@@ -999,12 +1002,11 @@ export function TicketDetail()
                   }}
                 />
               </Box>
-              {/*) : (
+              ) : (
               <Alert severity="info">
-                No existe valoración registrada para el tiquete seleccionado
-                hasta que haya sido cerrado.
+                No existe valoración registrada para el tiquete seleccionado.
               </Alert>
-            )}*/}
+            )}
             </Box>
           ) : null}
 
@@ -1124,7 +1126,7 @@ function TicketHistory({ movements }) {
                     >
                       <CalendarMonth fontSize="small" color="action" />
                       <Typography variant="body2" color="text.primary">
-                        {mov.fecha}
+                        {dayjs(mov.fecha).format("DD/MM/YYYY hh:mm:ss a")}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -1135,6 +1137,7 @@ function TicketHistory({ movements }) {
                     fullWidth
                     multiline
                     size="small"
+                    maxRows={3}
                     sx={{
                       mb: mov.imagenes?.length ? 2 : 0,
                       marginTop: "1rem",

@@ -17,7 +17,8 @@ class TicketHistoryModel
             $ticketStatusModel = new TicketStatusModel;
 
             $query = "SELECT * FROM historial_tiquete
-                      WHERE idTiquete = $id";
+                      WHERE idTiquete = $id
+                      ORDER BY idHistorialTiquete DESC";
 
             $ticketHistory = $this->connection->executeSQL($query);
 

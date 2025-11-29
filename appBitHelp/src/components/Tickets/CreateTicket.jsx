@@ -140,7 +140,7 @@ export function CreateTicket() {
   const [open, setOpen] = React.useState(true);
 
   //Almacena las imágenes adjuntas.
-  const [images, setImages] = useState(null);
+  const [images, setImages] = useState([]);
 
   //Evento OnCahnge personalizado para el select de etiquetas.
   const handleTagChange = (event, fieldOnChange) => {
@@ -173,10 +173,15 @@ export function CreateTicket() {
         TicketService.createTicket(DataForm)
           .then((response) => {
             //Valida que exista algún valor en la respuesta.
-            if (response.data != null) {
-              //Arma la estructura de entrada para el almacenamiento de imágenes.
-              formData.append("file", images);
+            if (response.data != null) 
+            {
+              //Arma la estructura de entrada para el almacenamiento de imágenes.            
               formData.append("idTicket", response.data);
+
+              //Recorre cada una de las imágenes adjuntas para añadirlas en el arreglo.
+              images.map((image) => (
+                formData.append("files[]", image.file)
+              ))
 
               //Almacenamiento de imágenes, una vez creado el tiquete.
               TicketImageService.uploadImages(formData)
@@ -188,15 +193,14 @@ export function CreateTicket() {
                       position: "top-center",
                     }
                   );
+
                   refreshCount(); // Actualiza el contador de notificaciones
 
                   //Al haber agregado el registro exitosamente, redirreciona hacia el listado.
                   return navigate("/tickets/ticketsList");
                 })
                 .catch((error) => {
-                  toast.error(
-                    "Ha ocurrido un error al intentar crear el tiquete."
-                  );
+                  toast.error("Ha ocurrido un error al intentar crear el tiquete.");
                   console.error(error);
                 });
             }
@@ -218,17 +222,6 @@ export function CreateTicket() {
     toast.error("Ha ocurrido un error al intentar crear el tiquete.");
     console.log(errors, e);
   }    
-
-  // const [form, setForm] = useState({
-  //   descripcion: "",
-  //   imagenes: [],
-  // });
-
-  //Evento auxiliar para la obtención de imágenes. 
-  const handleImages = (images) => {
-    // setImages(images.map((i) => (i.file, i.file.name)));
-    setImages(images[0], images[0].name)
-  };
 
   useEffect(() => {
     //Consulta el catálogo interno de prioridades de tiquetes.
@@ -590,7 +583,7 @@ export function CreateTicket() {
 
           <Divider sx={{ mb: 3 }} />
 
-          <ImagesSelector newTicket={true} onChange={handleImages} />
+          <ImagesSelector newTicket={true} images={images} setImages={setImages} />
         </form>
 
         <IconButton
