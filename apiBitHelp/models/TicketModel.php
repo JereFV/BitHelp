@@ -221,7 +221,7 @@ class TicketModel
                 SELECT
                     T.idTiquete,
                     T.fechaCreacion,
-                    -- 1. Fechas Reales de Acción
+                    -- 1. Fechas Reales de Acción 
                     T.slaRespuesta AS FechaRespuestaReal, 
                     T.slaResolucion AS FechaResolucionReal, 
                     
