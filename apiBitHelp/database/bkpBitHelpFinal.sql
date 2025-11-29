@@ -200,7 +200,7 @@ CREATE TABLE `etiqueta` (
 
 LOCK TABLES `etiqueta` WRITE;
 /*!40000 ALTER TABLE `etiqueta` DISABLE KEYS */;
-INSERT INTO `etiqueta` VALUES (1,'Computadora',1),(2,'Impresora',1),(3,'Monitor',1),(4,'Sistema Operativo',1),(5,'Antivirus',1),(6,'Correo Institucional',1),(7,'Conexión WiFi',1),(8,'Cableado',1),(9,'Licencia de Software',1),(10,'Cuenta de Usuario',1);
+INSERT INTO `etiqueta` VALUES (1,'Computadora',1),(2,'Impresora',1),(3,'Monitor',1),(4,'Sistema Operativo',1),(5,'Antivirus',1),(6,'Correo Institucional',1),(7,'Conexión WiFi',1),(8,'Cableado',1),(9,'Licencia de Software',1),(10,'Cuenta de Usuario',1),(11,'Otro',11);
 /*!40000 ALTER TABLE `etiqueta` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -227,7 +227,7 @@ CREATE TABLE `etiqueta_categoria` (
 
 LOCK TABLES `etiqueta_categoria` WRITE;
 /*!40000 ALTER TABLE `etiqueta_categoria` DISABLE KEYS */;
-INSERT INTO `etiqueta_categoria` VALUES (1,1),(2,1),(3,1),(4,2),(5,2),(6,3),(7,4),(8,4),(9,2),(10,3);
+INSERT INTO `etiqueta_categoria` VALUES (1,1),(2,1),(3,1),(4,2),(5,2),(6,3),(7,4),(8,4),(9,2),(10,3),(11,5);
 /*!40000 ALTER TABLE `etiqueta_categoria` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -685,4 +685,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-24  1:06:04
+-- Dump completed on 2025-11-28 22:41:00
