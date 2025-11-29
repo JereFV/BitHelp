@@ -179,7 +179,8 @@ class TicketModel
                         t.descripcion,
                         et.nombre AS estado,
                         pt.nombre AS prioridad,
-                        c.nombre AS categoria,
+                        t.idCategoria,
+                        c.nombre AS categoria,                       
                         t.slaResolucion,
                         TIMESTAMPDIFF(HOUR, NOW(), t.slaResolucion) AS tiempoRestante,
                         -- 🚨 CAMPOS AGREGADOS PARA EL TÉCNICO

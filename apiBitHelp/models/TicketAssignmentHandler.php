@@ -195,9 +195,8 @@ class TicketAssignmentHandler
             $idMetodoAsignacion = self::ID_METODO_ASIGNACION_AUTOMATICO;
             $responseDate = date("Y-m-d H:i:s");
 
-            $fechaRespuesta = date("Y-m-d H:i:s");
-            $stmtTicket = $conn->prepare("UPDATE tiquete SET idEstado = ?, idTecnicoAsignado = ?,slaRespuesta= ?,cumplimientoSlaRespuesta=1 ,idMetodoAsignacion = ? WHERE idTiquete = ?");
-            $stmtTicket->bind_param("iisii", $idNuevoEstado, $idTecnico, $fechaRespuesta, $idMetodoAsignacion, $idTicket);
+            $stmtTicket = $conn->prepare("UPDATE tiquete SET idEstado = ?, idTecnicoAsignado = ?,slaRespuesta= DATE_ADD(NOW(), INTERVAL FLOOR(5 + (RAND() * (15 - 5)))),cumplimientoSlaRespuesta=1 ,idMetodoAsignacion = ? WHERE idTiquete = ?");
+            $stmtTicket->bind_param("iiii", $idNuevoEstado, $idTecnico, $idMetodoAsignacion, $idTicket);
             if (!$stmtTicket->execute()) throw new Exception("Error al actualizar el tiquete.");
             $stmtTicket->close();  
             error_log("DEBUG: 2. Tiquete $idTicket actualizado a Estado $idNuevoEstado y Método $idMetodoAsignacion.");
@@ -216,7 +215,7 @@ class TicketAssignmentHandler
             $observacionHistorial = $justificacion;
             
             $stmtHist = $conn->prepare("INSERT INTO historial_tiquete (idHistorialTiquete, idTiquete, fecha, idUsuario, observacion, idEstado) 
-                                         VALUES (?, ?, NOW(), ?, ?, ?)");
+                                         VALUES (?, ?, DATE_ADD(NOW(), INTERVAL FLOOR(5 + (RAND() * (15 - 5)))), ?, ?, ?)");
             $stmtHist->bind_param("iissi", $nextHistoryId, $idTicket, $idUsuarioSistema, $observacionHistorial, $idNuevoEstado);
             if (!$stmtHist->execute()) throw new Exception("Error al registrar el historial.");
             $stmtHist->close();
