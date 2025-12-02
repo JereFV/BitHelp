@@ -239,7 +239,7 @@ export function TicketDetail()
         break;
       //Si el caso está resuelto, renderiza únicamente para el cliente que reportó el tiquete.
       case ID_RESOLVED_STATE:
-        if (userSession.idRol == ID_CLIENT_ROLE) {
+        if (userSession.idRol == ID_CLIENT_ROLE || userSession.idRol == ID_ADMINISTRATOR_ROLE) {
           setDisplayNewMovSection(true);
           display = true;
         }
@@ -348,9 +348,8 @@ export function TicketDetail()
         //Variable auxiliar para obtener el estado del tiquete a partir de la respuesta de la petición.
         const idTicketState = response.data?.estadoTiquete?.idEstadoTiquete;
 
-        //Invoca el renderizado del formulario de nuevo movimiento en tiquete a excepción de que el usuario en sesión sea un administrador.
-        if (userSession?.idRol != ID_ADMINISTRATOR_ROLE)
-          validateDisplayNewMovSection(idTicketState);
+        //Invoca el renderizado del formulario de nuevo movimiento en tiquete
+        validateDisplayNewMovSection(idTicketState);
 
         //Renderiza la sección de valoración del tiquete al estar en un estado cerrado.
         if (idTicketState == ID_CLOSED_STATE) 
@@ -666,7 +665,6 @@ export function TicketDetail()
 
                   <Stack width={{ xs: "100%", sm: "50%" }}>
                     {/* Obtener colores basados en el estado (usando slaRespuestaDisplay.color) */}
-                    {/* Asumo que slaRespuestaDisplay.color devuelve 'success', 'error', etc. */}
                     {(() => {
                       const { backgroundColor, iconColor, textColor } =
                         getColorMap(theme, slaRespuestaDisplay.color);
