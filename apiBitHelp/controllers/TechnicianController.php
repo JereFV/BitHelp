@@ -177,7 +177,7 @@ class technician
             $data = json_decode(file_get_contents('php://input'), true);
 
             // Validar datos requeridos para la tabla 'tecnico'
-            if (!isset($data['idDisponibilidad']) || !isset($data['cargaTrabajo']) || !isset($data['estado'])) {
+            if (!isset($data['idDisponibilidad']) || !isset($data['estado'])) {
                 $response->error(400, 'Faltan campos de actualización (idDisponibilidad, cargaTrabajo, estado).');
                 return;
             }
@@ -188,7 +188,6 @@ class technician
             $isUpdated = $technicianModel->updateTechnician(
                 (int)$id,
                 (int)$data['idDisponibilidad'],
-                $data['cargaTrabajo'],
                 (int)$data['estado'],
                 $especialidades
             );

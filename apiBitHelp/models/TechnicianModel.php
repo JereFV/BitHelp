@@ -397,7 +397,7 @@ class TechnicianModel
      * @param array $especialidades Array de IDs de especialidad.
      * @return bool True si la actualización fue exitosa.
      */
-    public function updateTechnician(int $idTecnico, int $idDisponibilidad, string $cargaTrabajo, int $estado, array $especialidades = [])
+    public function updateTechnician(int $idTecnico, int $idDisponibilidad, int $estado, array $especialidades = [])
     {
         try {
             $this->connection->connect();
@@ -407,8 +407,8 @@ class TechnicianModel
             $conn->begin_transaction();
 
             // 1. Actualizar la tabla 'tecnico'
-            $stmtTech = $conn->prepare("UPDATE tecnico SET idDisponibilidad = ?, cargaTrabajo = ?, estado = ? WHERE idTecnico = ?");
-            $stmtTech->bind_param("isii", $idDisponibilidad, $cargaTrabajo, $estado, $idTecnico);
+            $stmtTech = $conn->prepare("UPDATE tecnico SET idDisponibilidad = ?, estado = ? WHERE idTecnico = ?");
+            $stmtTech->bind_param("iii", $idDisponibilidad,  $estado, $idTecnico);
             $stmtTech->execute();
             $stmtTech->close();
 

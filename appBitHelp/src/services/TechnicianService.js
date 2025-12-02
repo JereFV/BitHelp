@@ -44,7 +44,7 @@ class TechnicianService
      * Actualiza la configuración de un técnico existente (Disponibilidad, Carga, Especialidades).
      * PUT /technicians/{id}
      * @param {number} id El idTecnico a actualizar.
-     * @param {object} technicianData {idDisponibilidad: 2, cargaTrabajo: "05:30:00", especialidades: [...]}
+     * @param {object} technicianData {idDisponibilidad: 2, especialidades: [...]}
      */
     updateTechnician(idTecnico, payload)
     {

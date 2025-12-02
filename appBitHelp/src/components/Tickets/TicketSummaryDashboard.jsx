@@ -52,6 +52,11 @@ const statItems = [
     color: 'success.main', // Color verde (success) porque ya está terminado
   },
   {
+    title: 'Devuelto',
+    icon: RefreshCircle,
+    color: 'secondary.main', // Color Morado 
+  },
+  {
     title: 'Cerrado',
     icon: Archive,
     color: 'text.secondary', // Gris (color secundario) para estados archivados
@@ -158,6 +163,7 @@ export function TicketSummaryDashboard({ tickets = [], filtroActivo, onFiltroCha
       Asignado: 0,
       'En Proceso': 0,
       Resuelto: 0,
+      Devuelto:0,
       Cerrado: 0,
     };
     

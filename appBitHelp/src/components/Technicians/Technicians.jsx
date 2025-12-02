@@ -289,8 +289,7 @@ export const TechniciansDataGridWithModal = () => {
         try {
             if (isEditMode) {
                 const updatePayload = {
-                    idDisponibilidad: Number(payload.idDisponibilidad),
-                    cargaTrabajo: '00:00:00', 
+                    idDisponibilidad: Number(payload.idDisponibilidad), 
                     estado: Number(payload.estado),
                     especialidades: payload.especialidades,
                 };
@@ -585,7 +584,7 @@ export const TechniciansDataGridWithModal = () => {
 
                             <TextField
                                 fullWidth
-                                label="Carga de Trabajo (Tickets asignados)"
+                                label="Carga de Trabajo (Medida en horas)"
                                 type="number"
                                 value={formData.cargaTrabajo}
                                 onChange={(e) => handleInputChange('cargaTrabajo', e.target.value)}
