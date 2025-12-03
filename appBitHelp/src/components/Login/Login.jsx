@@ -1,6 +1,8 @@
 import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext.jsx';
+import { NotificationContext } from '../../context/NotificationContext';
+import { useTranslation } from 'react-i18next';
 import toast, { Toaster } from 'react-hot-toast';
 import {
   Box,
@@ -13,9 +15,9 @@ import {
   IconButton
 } from '@mui/material';
 import { Visibility, VisibilityOff, Login as LoginIcon } from '@mui/icons-material';
-import { NotificationContext } from '../../context/NotificationContext';
 
 const Login = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { login, isAuthenticated } = useContext(AuthContext);
   const { refreshCount } = useContext(NotificationContext);
@@ -44,7 +46,7 @@ const Login = () => {
     e.preventDefault();
 
     if (!formData.credential || !formData.password) {
-      toast.error('Por favor complete todos los campos');
+      toast.error(t('auth.completeAllFields'));
       return;
     }
 
@@ -55,19 +57,19 @@ const Login = () => {
     toast.promise(
       loginPromise,
       {
-        loading: 'Iniciando sesión...',
+        loading: t('auth.loggingIn'),
         success: (result) => {
           if (result.success) {
             setTimeout(() => {
-              refreshCount(); // Refrescar contador
+              refreshCount();
               navigate('/');
             }, 1000);
-            return 'Inicio de sesión exitoso';
+            return t('auth.loginSuccess');
           } else {
-            throw new Error(result.message || 'Credenciales inválidas');
+            throw new Error(result.message || t('auth.invalidCredentials'));
           }
         },
-        error: (err) => err.message || 'Error al iniciar sesión'
+        error: (err) => err.message || t('auth.loginFailed')
       }
     ).finally(() => setLoading(false));
   };
@@ -92,14 +94,14 @@ const Login = () => {
               BitHelp
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Ingrese sus credenciales para acceder
+              {t('auth.enterCredentials')}
             </Typography>
           </Box>
 
           <form onSubmit={handleSubmit}>
             <TextField
               fullWidth
-              label="Usuario o Correo"
+              label={t('auth.usernameOrEmail')}
               name="credential"
               value={formData.credential}
               onChange={handleChange}
@@ -111,7 +113,7 @@ const Login = () => {
 
             <TextField
               fullWidth
-              label="Contraseña"
+              label={t('auth.password')}
               name="password"
               type={showPassword ? 'text' : 'password'}
               value={formData.password}
@@ -141,7 +143,7 @@ const Login = () => {
               disabled={loading}
               sx={{ mt: 3, mb: 2 }}
             >
-              Iniciar Sesión
+              {t('auth.login')}
             </Button>
           </form>
         </CardContent>

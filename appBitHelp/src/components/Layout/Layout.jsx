@@ -17,6 +17,8 @@ import { AuthContext } from '../../context/AuthContext.jsx';
 import { Toaster } from 'react-hot-toast';
 import NotificationBadge from '../Notifications/NotificationBadge';
 import NotificationPanel from '../Notifications/NotificationPanel';
+import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 Layout.propTypes = { children: PropTypes.node.isRequired }; 
 
@@ -40,6 +42,7 @@ function getUserRoleId() {
 }
 
 export function Layout({ children }) { 
+  const { t } = useTranslation();
   const { user, logout } = useContext(AuthContext);
   const [notificationPanelOpen, setNotificationPanelOpen] = React.useState(false);
   const [refreshCountCallback, setRefreshCountCallback] = React.useState(null);
@@ -55,12 +58,12 @@ export function Layout({ children }) {
   const navigate = useNavigate();
 
   //  Generación dinámica del objeto de navegación (basado en el rol)
- const dynamicNavigation = React.useMemo(() => {
+  const dynamicNavigation = React.useMemo(() => {
     // Definición base de los hijos de 'Tiquetes'
     const ticketChildren = [
       {
         segment: 'ticketsList',   
-        title: 'Lista de Tiquetes',  
+        title: t('navigation.ticketsList'),  
       },
     ];
 
@@ -69,49 +72,44 @@ export function Layout({ children }) {
       // Agrega 'Asignaciones' para Técnicos y Administradores
       ticketChildren.push({
         segment: 'assignments',
-        title: 'Asignaciones',    
+        title: t('navigation.assignments'),    
       });
     } else if (userRoleId == ROLE_ID_USER) {
       // Agrega 'Crear Tiquete' solo para Usuarios/Clientes
       ticketChildren.push({
         segment: 'createTicket',
-        title: 'Crear Tiquete',    
+        title: t('navigation.createTicket'),    
       });
     }
 
     // Estructura base de la navegación
     const baseNavigation = [
-      { kind: 'header', title: 'Menú Principal' },
-      { segment: 'Home', title: 'Inicio', icon: <DashboardIcon /> },
+      { kind: 'header', title: t('navigation.mainMenu') },
+      { segment: 'Home', title: t('navigation.home'), icon: <DashboardIcon /> },
       {
         segment: 'tickets',
-        title: 'Tiquetes',
+        title: t('navigation.tickets'),
         icon: <AssignmentIcon />,
         children: ticketChildren,
       },
       { kind: 'divider' },
-      // Mantenimientos visibles para todos los roles (Técnicos y Categorías)
-      { kind: 'header', title: 'Administración' },
-      // Si no quieres que todos vean el mantenimiento de Técnicos, deberías aplicar
-      // una lógica similar a la de 'Usuarios' aquí, tal vez solo para Admin/Técnico.
-      { segment: 'technician', title: 'Técnicos', icon: <GroupIcon /> },
+      { kind: 'header', title: t('navigation.administration') },
+      { segment: 'technician', title: t('navigation.technicians'), icon: <GroupIcon /> },
       { kind: 'divider' },
-      { segment: 'categories', title: 'Categorías', icon: <ViewListIcon/> },
+      { segment: 'categories', title: t('navigation.categories'), icon: <ViewListIcon/> },
       { kind: 'divider' },
-
-      
     ];
     
     // Lógica Condicional: Agregar 'Usuarios' solo si es Administrador
     if (userRoleId == ROLE_ID_ADMIN) {
-        baseNavigation.push(
-            { segment: 'users', title: 'Usuarios', icon: <GroupIcon /> }
-        );
+      baseNavigation.push(
+        { segment: 'users', title: t('navigation.users'), icon: <GroupIcon /> }
+      );
     }
     
     return baseNavigation;
 
-  }, [isTechnician, userRoleId]);
+  }, [isTechnician, userRoleId, t]);
   
   // Objeto 'router' que Toolpad necesita
   const router = React.useMemo(() => {
@@ -161,14 +159,15 @@ export function Layout({ children }) {
               setNotificationPanelOpen(true);
             }} 
           />
-
+          {/* Selector de idioma */}
+          <LanguageSwitcher />
           {user && (
             <>
               <AccountCircleIcon color="primary" />
               <Typography variant="body2" sx={{ fontWeight: 500 }}>
                 {user.nombre} {user.primerApellido}
               </Typography>
-              <Tooltip title="Cerrar sesión">
+              <Tooltip title={t('auth.logoutTooltip')}>
                 <IconButton 
                   onClick={handleLogout}
                   size="small"

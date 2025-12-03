@@ -22,36 +22,38 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import NotificationService from '../../services/NotificationService';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function NotificationPanel({ open, onClose, onRefreshCount }) {
+    const { t, i18n } = useTranslation();
     const [notifications, setNotifications] = useState([]);
     const [tabValue, setTabValue] = useState(0); // 0: No leídas, 1: Todas
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const fetchNotifications = async () => {
-    setLoading(true);
-    try {
-        const response = tabValue === 0 
-            ? await NotificationService.getUnreadNotifications()
-            : await NotificationService.getAllNotifications();
-        
-        // Validación defensiva: si data es null o undefined, usar array vacío
-        const notificationsData = response.data.data || [];
-        // Ordenar por fecha descendente (más reciente primero)
-        const sortedNotifications = notificationsData.sort((a, b) => {
-            return new Date(b.fecha) - new Date(a.fecha);
-        });
-        
-        setNotifications(sortedNotifications);
-    } catch (error) {
-        console.error('Error al obtener notificaciones:', error);
-        toast.error('Error al cargar notificaciones');
-        setNotifications([]); // Asegurar que siempre sea un array
-    } finally {
-        setLoading(false);
-    }
-};
+        setLoading(true);
+        try {
+            const response = tabValue === 0 
+                ? await NotificationService.getUnreadNotifications()
+                : await NotificationService.getAllNotifications();
+            
+            // Validación defensiva: si data es null o undefined, usar array vacío
+            const notificationsData = response.data.data || [];
+            // Ordenar por fecha descendente (más reciente primero)
+            const sortedNotifications = notificationsData.sort((a, b) => {
+                return new Date(b.fecha) - new Date(a.fecha);
+            });
+            
+            setNotifications(sortedNotifications);
+        } catch (error) {
+            console.error('Error al obtener notificaciones:', error);
+            toast.error(t('notifications.errorLoading'));
+            setNotifications([]); // Asegurar que siempre sea un array
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (open) {
@@ -62,14 +64,14 @@ export default function NotificationPanel({ open, onClose, onRefreshCount }) {
     const handleMarkAsRead = async (idNotificacion) => {
         try {
             await NotificationService.markAsRead(idNotificacion);
-            toast.success('Notificación marcada como leída');
+            toast.success(t('notifications.markedAsRead'));
             fetchNotifications();
             if (onRefreshCount) {
                 onRefreshCount();
             }
         } catch (error) {
             console.error('Error al marcar notificación:', error);
-            toast.error('Error al marcar como leída');
+            toast.error(t('notifications.errorMarking'));
         }
     };
 
@@ -82,19 +84,39 @@ export default function NotificationPanel({ open, onClose, onRefreshCount }) {
     };
 
     const getNotificationIcon = (tipoNotificacion) => {
+        // Comparar con las claves traducidas
+        const loginType = t('notifications.typeLogin');
+        const ticketType = t('notifications.typeTicketStateChange');
+        
         switch (tipoNotificacion) {
             case 'Inicio de Sesión':
+            case 'Login':
                 return <LoginIcon color="primary" />;
             case 'Cambio de Estado de Ticket':
+            case 'Ticket Status Change':
                 return <AssignmentIcon color="secondary" />;
             default:
                 return <CircleIcon fontSize="small" />;
         }
     };
 
+    const translateNotificationType = (tipo) => {
+        switch (tipo) {
+            case 'Inicio de Sesión':
+            case 'Login':
+                return t('notifications.typeLogin');
+            case 'Cambio de Estado de Ticket':
+            case 'Ticket Status Change':
+                return t('notifications.typeTicketStateChange');
+            default:
+                return tipo;
+        }
+    };
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
-        return date.toLocaleString('es-CR', {
+        const locale = i18n.language === 'es' ? 'es-CR' : 'en-US';
+        return date.toLocaleString(locale, {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -123,7 +145,7 @@ export default function NotificationPanel({ open, onClose, onRefreshCount }) {
                     borderColor: 'divider'
                 }}>
                     <Typography variant="h6">
-                        Notificaciones
+                        {t('notifications.title')}
                     </Typography>
                     <IconButton onClick={onClose}>
                         <CloseIcon />
@@ -137,8 +159,8 @@ export default function NotificationPanel({ open, onClose, onRefreshCount }) {
                         onChange={(e, newValue) => setTabValue(newValue)}
                         variant="fullWidth"
                     >
-                        <Tab label="No leídas" />
-                        <Tab label="Todas" />
+                        <Tab label={t('notifications.unread')} />
+                        <Tab label={t('notifications.all')} />
                     </Tabs>
                 </Box>
 
@@ -146,11 +168,11 @@ export default function NotificationPanel({ open, onClose, onRefreshCount }) {
                 <Box sx={{ flexGrow: 1, overflow: 'auto', p: 1 }}>
                     {loading ? (
                         <Typography sx={{ p: 2, textAlign: 'center' }}>
-                            Cargando...
+                            {t('notifications.loading')}
                         </Typography>
                     ) : notifications.length === 0 ? (
                         <Typography sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
-                            No hay notificaciones
+                            {t('notifications.noNotifications')}
                         </Typography>
                     ) : (
                         <List>
@@ -185,7 +207,7 @@ export default function NotificationPanel({ open, onClose, onRefreshCount }) {
                                         }}>
                                             {getNotificationIcon(notification.tipoNotificacion)}
                                             <Chip 
-                                                label={notification.tipoNotificacion}
+                                                label={translateNotificationType(notification.tipoNotificacion)}
                                                 size="small"
                                                 sx={{ ml: 1 }}
                                             />
@@ -206,7 +228,7 @@ export default function NotificationPanel({ open, onClose, onRefreshCount }) {
                                             secondary={
                                                 <>
                                                     <Typography variant="caption" display="block">
-                                                        Por: {notification.usuarioRemitente}
+                                                        {t('notifications.by')}: {notification.usuarioRemitente}
                                                     </Typography>
                                                     <Typography variant="caption" color="text.secondary">
                                                         {formatDate(notification.fecha)}
@@ -234,7 +256,7 @@ export default function NotificationPanel({ open, onClose, onRefreshCount }) {
                                                 }}
                                                 sx={{ mt: 1 }}
                                             >
-                                                Marcar como leída
+                                                {t('notifications.markAsRead')}
                                             </Button>
                                         )}
                                     </ListItem>

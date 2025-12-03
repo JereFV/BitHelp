@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import toast, { Toaster } from 'react-hot-toast';
 import CategorieService from '../../services/CategorieService';
-import { esES } from '@mui/x-data-grid/locales';
+import { esES, enUS } from '@mui/x-data-grid/locales';
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import VerifiedIcon from '@mui/icons-material/Verified';
@@ -18,22 +18,12 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { AuthContext } from '../../context/AuthContext.jsx';
+import { useTranslation } from 'react-i18next';
 
 const ROLE_ID_ADMIN = 3;
 
-const getStatusChip = (estado) => {
-    const isActive = estado === '1' || estado === 1;
-    return (
-        <Chip
-            label={isActive ? 'Activo' : 'Inactivo'}
-            color={isActive ? 'success' : 'error'}
-            variant="outlined"
-            size="small"
-        />
-    );
-};
-
 export const CategoriesDataGridWithModal = () => {
+    const { t, i18n } = useTranslation();
     const { user } = useContext(AuthContext);
     const isAdmin = user?.idRol === ROLE_ID_ADMIN || user?.idRol === '3';
 
@@ -61,6 +51,21 @@ export const CategoriesDataGridWithModal = () => {
     const [specialties, setSpecialties] = useState([]);
     const [tags, setTags] = useState([]);
     const [slas, setSlas] = useState([]);
+
+    // Determinar locale del DataGrid según idioma actual
+    const dataGridLocale = i18n.language === 'es' ? esES : enUS;
+
+    const getStatusChip = (estado) => {
+        const isActive = estado === '1' || estado === 1;
+        return (
+            <Chip
+                label={isActive ? t('common.active') : t('common.inactive')}
+                color={isActive ? 'success' : 'error'}
+                variant="outlined"
+                size="small"
+            />
+        );
+    };
 
     useEffect(() => {
         fetchCategories();
@@ -94,7 +99,7 @@ export const CategoriesDataGridWithModal = () => {
             setRows(categoriesData);
         } catch (error) {
             console.error("Error al obtener las categorías:", error);
-            toast.error('Error al cargar las categorías');
+            toast.error(t('messages.errorLoadingCategories'));
         } finally {
             setLoading(false);
         }
@@ -179,27 +184,27 @@ export const CategoriesDataGridWithModal = () => {
     const handleSubmit = async () => {
         // Validaciones
         if (!formData.nombre.trim()) {
-            toast.error('El nombre es requerido');
+            toast.error(t('messages.nameRequired'));
             return;
         }
         if (!formData.idSla) {
-            toast.error('El SLA es requerido');
+            toast.error(t('messages.slaRequired'));
             return;
         }
 
         try {
             if (isEditMode) {
                 await CategorieService.updateCategory(formData.id, formData);
-                toast.success('Categoría actualizada exitosamente');
+                toast.success(t('messages.categoryUpdatedSuccess'));
             } else {
                 await CategorieService.createCategory(formData);
-                toast.success('Categoría creada exitosamente');
+                toast.success(t('messages.categoryCreatedSuccess'));
             }
             handleCloseFormModal();
             fetchCategories();
         } catch (error) {
             console.error("Error:", error);
-            toast.error('Error al guardar la categoría');
+            toast.error(t('messages.errorSavingCategory'));
         }
     };
 
@@ -222,22 +227,35 @@ export const CategoriesDataGridWithModal = () => {
 
         try {
             await CategorieService.deleteCategory(categoryToDeleteId);
-            toast.success('Categoría eliminada exitosamente');
+            toast.success(t('messages.categoryDeletedSuccess'));
             fetchCategories();
         } catch (error) {
             console.error("Error al eliminar:", error);
-            toast.error('Error al eliminar la categoría');
+            toast.error(t('messages.errorDeletingCategory'));
         } finally {
             setCategoryToDeleteId(null);
         }
     };
 
     const columns = [
-        { field: 'id', headerName: 'ID', width: 80, headerAlign: 'center', align: 'center' },
-        { field: 'nombre', headerName: 'Categoria', flex: 1, minWidth: 200, headerAlign: 'center', align: 'center' },
+        { 
+            field: 'id', 
+            headerName: t('categories.id'), 
+            width: 80, 
+            headerAlign: 'center', 
+            align: 'center' 
+        },
+        { 
+            field: 'nombre', 
+            headerName: t('categories.category'), 
+            flex: 1, 
+            minWidth: 200, 
+            headerAlign: 'center', 
+            align: 'center' 
+        },
         {
             field: 'estado',
-            headerName: 'Estado',
+            headerName: t('categories.status'),
             width: 120,
             headerAlign: 'center',
             align: 'center',
@@ -245,7 +263,7 @@ export const CategoriesDataGridWithModal = () => {
         },
         {
             field: 'actions',
-            headerName: 'Opciones',
+            headerName: t('categories.options'),
             width: 150,
             headerAlign: 'center',
             align: 'center',
@@ -253,15 +271,30 @@ export const CategoriesDataGridWithModal = () => {
             filterable: false,
             renderCell: (params) => (
                 <Stack direction="row" spacing={1} justifyContent="center">
-                    <IconButton color="primary" size="small" onClick={() => handleOpenModal(params.row)} aria-label="Ver detalles">
+                    <IconButton 
+                        color="primary" 
+                        size="small" 
+                        onClick={() => handleOpenModal(params.row)} 
+                        aria-label={t('common.view')}
+                    >
                         <VisibilityIcon />
                     </IconButton>
                     {isAdmin && (
                         <>
-                            <IconButton color="primary" size="small" onClick={() => handleOpenFormModal(true, params.row)} aria-label="Editar">
+                            <IconButton 
+                                color="primary" 
+                                size="small" 
+                                onClick={() => handleOpenFormModal(true, params.row)} 
+                                aria-label={t('common.edit')}
+                            >
                                 <EditIcon />
                             </IconButton>
-                            <IconButton color="error" size="small" onClick={() => confirmDelete(params.row.id)} aria-label="Eliminar">
+                            <IconButton 
+                                color="error" 
+                                size="small" 
+                                onClick={() => confirmDelete(params.row.id)} 
+                                aria-label={t('common.delete')}
+                            >
                                 <DeleteIcon />
                             </IconButton>
                         </>
@@ -282,13 +315,13 @@ export const CategoriesDataGridWithModal = () => {
                         startIcon={<AddIcon />}
                         onClick={() => handleOpenFormModal(false)}
                     >
-                        Crear Categoría
+                        {t('categories.createNew')}
                     </Button>
                 </Box>
             )}
 
             {loading ? (
-                <Typography variant="h6">Cargando categorías...</Typography>
+                <Typography variant="h6">{t('categories.loading')}</Typography>
             ) : (
                 <DataGrid
                     rows={rows}
@@ -298,7 +331,7 @@ export const CategoriesDataGridWithModal = () => {
                         pagination: { paginationModel: { pageSize: 10 } }
                     }}
                     disableRowSelectionOnClick
-                    localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+                    localeText={dataGridLocale.components.MuiDataGrid.defaultProps.localeText}
                     sx={{ borderRadius: 2, boxShadow: 2 }}
                 />
             )}
@@ -317,7 +350,7 @@ export const CategoriesDataGridWithModal = () => {
                     p: 4,
                 }}>
                     <Typography variant="h5" component="h2" mb={1} fontWeight={600}>
-                        Detalles de la Categoría
+                        {t('categories.categoryDetails')}
                     </Typography>
                     <Divider sx={{ mb: 2 }} />
 
@@ -332,30 +365,30 @@ export const CategoriesDataGridWithModal = () => {
 
                             <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                                 <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
-                                    MÉTRICAS DE SERVICIO
+                                    {t('categories.serviceMetrics')}
                                 </Typography>
                                 <Box display="flex" alignItems="center" mb={1}>
                                     <WorkHistoryIcon color="action" sx={{ mr: 1, fontSize: 18 }} />
                                     <Typography fontSize={14}>
-                                        <strong>Tiempo Máximo de Respuesta:</strong> {selectedRow.tiempoMaxRespuesta} h
+                                        <strong>{t('categories.maxResponseTime')}:</strong> {selectedRow.tiempoMaxRespuesta} h
                                     </Typography>
                                 </Box>
                                 <Box display="flex" alignItems="center">
                                     <WorkHistoryIcon color="action" sx={{ mr: 1, fontSize: 18 }} />
                                     <Typography fontSize={14}>
-                                        <strong>Tiempo Máximo de Resolución:</strong> {selectedRow.tiempoMaxResolucion} h
+                                        <strong>{t('categories.maxResolutionTime')}:</strong> {selectedRow.tiempoMaxResolucion} h
                                     </Typography>
                                 </Box>
                             </Paper>
 
                             <Paper variant="outlined" sx={{ p: 2 }}>
                                 <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
-                                    ASIGNACIONES
+                                    {t('categories.assignments')}
                                 </Typography>
                                 <Box mb={2}>
                                     <Box display="flex" alignItems="center" mb={1}>
                                         <VerifiedIcon color="action" sx={{ mr: 1, fontSize: 18 }} />
-                                        <Typography fontWeight="bold" fontSize={14}>Especialidades:</Typography>
+                                        <Typography fontWeight="bold" fontSize={14}>{t('categories.specialties')}:</Typography>
                                     </Box>
                                     <Stack direction="row" flexWrap="wrap" spacing={1}>
                                         {selectedRow.especialidades && selectedRow.especialidades.length > 0 ? (
@@ -364,7 +397,7 @@ export const CategoriesDataGridWithModal = () => {
                                             ))
                                         ) : (
                                             <Typography fontSize={14} color="text.secondary" sx={{ml: 0.5}}>
-                                                No tiene especialidades asignadas.
+                                                {t('categories.noSpecialtiesAssigned')}
                                             </Typography>
                                         )}
                                     </Stack>
@@ -373,7 +406,7 @@ export const CategoriesDataGridWithModal = () => {
                                 <Box>
                                     <Box display="flex" alignItems="center" mb={1}>
                                         <LocalOfferIcon color="action" sx={{ mr: 1, fontSize: 18 }} />
-                                        <Typography fontWeight="bold" fontSize={14}>Etiquetas:</Typography>
+                                        <Typography fontWeight="bold" fontSize={14}>{t('categories.tags')}:</Typography>
                                     </Box>
                                     <Stack direction="row" flexWrap="wrap" spacing={1}>
                                         {selectedRow.etiquetas && selectedRow.etiquetas.length > 0 ? (
@@ -382,7 +415,7 @@ export const CategoriesDataGridWithModal = () => {
                                             ))
                                         ) : (
                                             <Typography fontSize={14} color="text.secondary" sx={{ml: 0.5}}>
-                                                No tiene etiquetas asignadas.
+                                                {t('categories.noTagsAssigned')}
                                             </Typography>
                                         )}
                                     </Stack>
@@ -392,7 +425,7 @@ export const CategoriesDataGridWithModal = () => {
                     )}
 
                     <Button onClick={handleCloseModal} variant="contained" sx={{ mt: 3, float: 'right' }}>
-                        Cerrar
+                        {t('common.close')}
                     </Button>
                 </Box>
             </Modal>
@@ -412,13 +445,13 @@ export const CategoriesDataGridWithModal = () => {
                         p: 4,
                     }}>
                         <Typography variant="h5" component="h2" mb={1} fontWeight={600}>
-                            {isEditMode ? 'Editar Categoría' : 'Crear Categoría'}
+                            {isEditMode ? t('categories.edit') : t('categories.createNew')}
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
 
                         <Stack spacing={3}>
                             <TextField
-                                label="Nombre de la Categoría"
+                                label={t('categories.categoryName')}
                                 fullWidth
                                 required
                                 value={formData.nombre}
@@ -426,27 +459,27 @@ export const CategoriesDataGridWithModal = () => {
                             />
 
                             <FormControl fullWidth required>
-                                <InputLabel>SLA</InputLabel>
+                                <InputLabel>{t('categories.sla')}</InputLabel>
                                 <Select
                                     value={formData.idSla}
-                                    label="SLA"
+                                    label={t('categories.sla')}
                                     onChange={(e) => handleInputChange('idSla', e.target.value)}
                                 >
                                     {slas.map((sla) => (
                                         <MenuItem key={sla.idSla} value={sla.idSla}>
-                                            Respuesta: {sla.tiempoMaxRespuesta} | Resolución: {sla.tiempoMaxResolucion}
+                                            {t('categories.response')}: {sla.tiempoMaxRespuesta} | {t('categories.resolution')}: {sla.tiempoMaxResolucion}
                                         </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
 
                             <FormControl fullWidth>
-                                <InputLabel>Especialidades</InputLabel>
+                                <InputLabel>{t('categories.specialties')}</InputLabel>
                                 <Select
                                     multiple
                                     value={formData.especialidades}
                                     onChange={(e) => handleInputChange('especialidades', e.target.value)}
-                                    input={<OutlinedInput label="Especialidades" />}
+                                    input={<OutlinedInput label={t('categories.specialties')} />}
                                     renderValue={(selected) => (
                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                             {selected.map((value) => {
@@ -467,12 +500,12 @@ export const CategoriesDataGridWithModal = () => {
                             </FormControl>
 
                             <FormControl fullWidth>
-                                <InputLabel>Etiquetas</InputLabel>
+                                <InputLabel>{t('categories.tags')}</InputLabel>
                                 <Select
                                     multiple
                                     value={formData.etiquetas}
                                     onChange={(e) => handleInputChange('etiquetas', e.target.value)}
-                                    input={<OutlinedInput label="Etiquetas" />}
+                                    input={<OutlinedInput label={t('categories.tags')} />}
                                     renderValue={(selected) => (
                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                             {selected.map((value) => {
@@ -499,16 +532,16 @@ export const CategoriesDataGridWithModal = () => {
                                         onChange={(e) => handleInputChange('estado', e.target.checked ? 1 : 0)}
                                     />
                                 }
-                                label={formData.estado === 1 ? 'Activo' : 'Inactivo'}
+                                label={formData.estado === 1 ? t('common.active') : t('common.inactive')}
                             />
                         </Stack>
 
                         <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                             <Button onClick={handleCloseFormModal} variant="outlined" color="error">
-                                Cancelar
+                                {t('common.cancel')}
                             </Button>
                             <Button onClick={handleSubmit} variant="contained" color="primary">
-                                {isEditMode ? 'Guardar Cambios' : 'Crear Categoría'}
+                                {isEditMode ? t('common.update') : t('categories.createNew')}
                             </Button>
                         </Box>
                     </Box>
@@ -524,21 +557,21 @@ export const CategoriesDataGridWithModal = () => {
                     aria-describedby="alert-dialog-description"
                 >
                     <DialogTitle id="alert-dialog-title" sx={{ color: 'error.main' }}>
-                        Confirmar Eliminación
+                        {t('categories.confirmDelete')}
                     </DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
                             <Typography variant="body1" sx={{mb: 1}}>
-                                ¿Está seguro de eliminar esta categoría?
+                                {t('categories.deleteConfirmMessage')}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Esta acción eliminará la categoría y todas sus relaciones con especialidades y etiquetas.
+                                {t('categories.deleteWarningMessage')}
                             </Typography>
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleCancelDelete} variant="outlined" color="primary">
-                            Cancelar
+                            {t('common.cancel')}
                         </Button>
                         <Button 
                             onClick={executeDelete} 
@@ -546,7 +579,7 @@ export const CategoriesDataGridWithModal = () => {
                             color="error" 
                             autoFocus 
                         >
-                            Aceptar
+                            {t('common.accept')}
                         </Button>
                     </DialogActions>
                 </Dialog>
