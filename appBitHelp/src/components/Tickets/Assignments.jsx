@@ -5,8 +5,7 @@ import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import es from 'date-fns/locale/es';
-//import { differenceInHours} from 'date-fns';
-//import "react-big-calendar/lib/css/react-big-calendar.css";
+import enUS from 'date-fns/locale/en-US';
 import "../../styles/AssignmentsCalendar.scss";
 import TicketService from "../../services/TicketService";
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
@@ -23,44 +22,45 @@ import { Link } from 'react-router-dom';
 import { alpha } from '@mui/material/styles';
 import PropTypes from 'prop-types';
 import CheckIcon from '@mui/icons-material/Check';
+import { useTranslation } from 'react-i18next';
 
-//Validación de propiedades.
 CustomEvent.propTypes = {
   event: PropTypes.object,
 };
 
-export function Assignments() 
-{
-  //Región cultural a utilizar.
+export function Assignments() {
+  const { t, i18n } = useTranslation();
+  
+  // Región cultural según idioma
   const locales = {
     'es': es,
-  }
+    'en': enUS,
+  };
 
-  //Formateador de fecha según la cultura definida
   const localizer = dateFnsLocalizer({
     format,
     parse,
     startOfWeek,
     getDay,
     locales,
-  })
+  });
 
-  //Configura el valor de las etiquetas mostradas en los botones del calendario.
+  // Configuración de etiquetas del calendario según idioma
   const messages = {
-    week: "Semana",
-    work_week: "Semana de trabajo",
-    day: "Día",
-    month: "Mes",
-    previous: "Anterior",
-    next: "Siguiente",
-    today: "Hoy",
-    agenda: "Agenda",
-    date: "Fecha",
-    time: "Horario",
-    event: "Tiquete",
+    week: t('tickets.week'),
+    work_week: t('tickets.workWeek'),
+    day: t('tickets.day'),
+    month: t('tickets.month'),
+    previous: t('tickets.previous'),
+    next: t('tickets.next'),
+    today: t('tickets.today'),
+    agenda: t('tickets.agenda'),
+    date: t('tickets.date'),
+    time: t('tickets.time'),
+    event: t('tickets.event'),
     noEventsInRange: (
       <Alert severity="info" sx={{fontSize: "1rem", fontWeight: "bold"}}>
-        No existen tiquetes registrados para la semana seleccionada.
+        {t('tickets.noTicketsInWeek')}
       </Alert>
     )
   };
@@ -86,9 +86,7 @@ export function Assignments()
     //Agregar eventos al calendario a partir de la obtención de tiquetes para el técnico en sesión.
     TicketService.getTicketsByRolUser(JSON.parse(localStorage.getItem('userSession')))
       .then((response) => {
-        //Arreglo auxiliar para almacenar los eventos a mostrar en el calendar.
-        const eventsCalendar = response.data.map(ticket => 
-        {
+        const eventsCalendar = response.data.map(ticket => ({
           /*Asigna como fecha de inicio el momento en que el tiquete haya sido asignado al técnico, filtrando el historial del tiquete por el id
           del técnico y el estado "Asignado".(2)*/ 
           //const fechaInicio = new Date(ticket.historialTiquete.find((movement) => movement.usuario.idUsuario == ticket.idTecnicoAsignado && movement.idEstado == 2).fecha);
@@ -96,18 +94,15 @@ export function Assignments()
           //const horasRestantes = differenceInHours(new Date(ticket.slaResolucion), new Date())
 
           //Crea la estructura de evento esperada por el calendar para el tiquete en iteración.
-          return {
-              idTicket: ticket.id,
-              ticketTitle: ticket.titulo,
-              categorie: ticket.categoria,
-              status: ticket.estado,
-              remainingTime: ticket.tiempoRestante,
-              start: new Date(ticket.fechaAsignacion),
-              end: new Date(ticket.slaResolucion),
-              title: `#${ticket.idTiquete} ${ticket.titulo}`,
-          };       
-        });
-
+          idTicket: ticket.id,
+          ticketTitle: ticket.titulo,
+          categorie: ticket.categoria,
+          status: ticket.estado,
+          remainingTime: ticket.tiempoRestante,
+          start: new Date(ticket.fechaAsignacion),
+          end: new Date(ticket.slaResolucion),
+          title: `#${ticket.idTiquete} ${ticket.titulo}`,
+        }));
         //Finalmente, vuelve a renderizar el calendario a partir del arreglo auxiliar de eventos.
         setTickets(eventsCalendar);
       })
@@ -117,7 +112,6 @@ export function Assignments()
   }, []);
 
   return (
-
     <Box
       sx={{
         "& .rbc-header": {
@@ -143,18 +137,16 @@ export function Assignments()
         style={{ height: "85vh" }}
         messages={messages}       
         min={new Date(1900, 1, 1, 6, 0, 0)}
-        culture="es"
+        culture={i18n.language}
         views={["agenda"]}
         components={{
           event: CustomEvent,
           toolbar: CustomToolbar,
-           
         }}      
         timeslots={1}
         length={7}  
         date={date}
         onNavigate={onNavigate}
-        
       />
     </Box>
   );
@@ -162,30 +154,52 @@ export function Assignments()
 
 //Renderiza un componente visual personalizado para mostrar cada uno de los eventos del calendario.
 function CustomEvent({ event }) {
+  const { t } = useTranslation();
   //const { title, categoria, estado, tiempoRestante, idticket } = event.extendedProps || {};
   const theme = useTheme();
   const colorScheme = useColorScheme();
 
-  // Asignación de colores para los chips de ESTADO
-  const getStateColor = (estado) => {
-    switch (estado) {
-      case 'Pendiente':
-        return 'error';
-      case 'Asignado':
-        return 'warning';
-      case 'En Proceso':
-        return 'info';
-      case 'Resuelto':
-        return 'success';
-      case 'Cerrado':
-        return 'default';
-      default:
-        return 'default';
-    }
+  // Traducir estados del backend
+  const translateStatus = (status) => {
+    const statusMap = {
+      'Pendiente': t('tickets.pending'),
+      'Pending': t('tickets.pending'),
+      'Asignado': t('tickets.assigned'),
+      'Assigned': t('tickets.assigned'),
+      'En Proceso': t('tickets.inProgress'),
+      'In Progress': t('tickets.inProgress'),
+      'Resuelto': t('tickets.resolved'),
+      'Resolved': t('tickets.resolved'),
+      'Cerrado': t('tickets.closed'),
+      'Closed': t('tickets.closed'),
+      'Devuelto': t('tickets.returned'),
+      'Returned': t('tickets.returned'),
+    };
+    return statusMap[status] || status;
   };
 
+  // Asignación de colores para los chips de ESTADO
+  const getStateColor = (estado) => {
+    const stateMap = {
+      'Pendiente': 'error',
+      'Pending': 'error',
+      'Asignado': 'warning',
+      'Assigned': 'warning',
+      'En Proceso': 'info',
+      'In Progress': 'info',
+      'Resuelto': 'success',
+      'Resolved': 'success',
+      'Cerrado': 'default',
+      'Closed': 'default',
+      'Devuelto': 'secondary',
+      'Returned': 'secondary',
+    };
+    return stateMap[estado] || 'default';
+  };
   //Almacena el color a mostrar en el chip del estado.
   const stateColor = getStateColor(event.status);
+  const isCompleted = event.status === 'Resuelto' || event.status === 'Resolved' || 
+                     event.status === 'Cerrado' || event.status === 'Closed';
   
   return (
     <Box
@@ -287,7 +301,7 @@ function CustomEvent({ event }) {
               }
             />
           }
-          label={event.status}
+          label={translateStatus(event.status)}
           size="medium"
           sx={{
             fontSize: "0.8rem",
@@ -322,23 +336,23 @@ function CustomEvent({ event }) {
       >
         <Chip
           icon={
-            event.status === "Resuelto" || event.status === "Cerrado" ? (
+            isCompleted ? (
               <CheckIcon color="white" />
             ) : (
               <WatchLaterIcon color="white" />
             )
           }
           label={
-            event.status === "Resuelto" || event.status === "Cerrado"
-              ? "Completado"
-              : `${event.remainingTime}h restantes`
+            isCompleted
+              ? t('tickets.completed')
+              : `${event.remainingTime}h ${t('tickets.remaining')}`
           }
           size="medium"
           sx={{
             fontSize: "0.8rem",
             color: "white",
             backgroundColor:
-              event.status === "Resuelto" || event.status === "Cerrado"
+              isCompleted
                 ? theme.palette.success.main
                 : theme.palette.primary.main,
             minWidth: { xs: "100%", sm: "7rem", lg: "9rem" },
@@ -359,7 +373,7 @@ function CustomEvent({ event }) {
           mt: { xs: 0.5, lg: 0 },
         }}
       >
-        <Tooltip title="Ver detalle">
+        <Tooltip title={t('common.view') + ' ' + t('tickets.ticketDetail')}>
           <IconButton
             size="medium"
             to={`/ticket/${event.idTicket}`}
@@ -378,6 +392,7 @@ function CustomEvent({ event }) {
 }
 
 function CustomToolbar({ date, onNavigate }) {
+  const { t, i18n } = useTranslation();
 
   //Constantes que definen el intervalo de fechas semanal seleccionado
   const start = new Date(startOfWeek(date, {weekStartsOn: 1}));
@@ -387,12 +402,13 @@ function CustomToolbar({ date, onNavigate }) {
   start.setDate(start.getDate());
   end.setDate(start.getDate() + 6);
 
-  //Formato definido para la construcción del label de fechas según selección.
-  const format = (date) =>
-    date.toLocaleDateString("es-CR", {
+  const formatDate = (date) => {
+    const locale = i18n.language === 'es' ? 'es-CR' : 'en-US';
+    return date.toLocaleDateString(locale, {
       day: "numeric",
       month: "long",
     });
+  };
 
   return (
     <Box
@@ -407,24 +423,18 @@ function CustomToolbar({ date, onNavigate }) {
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1}}>
-        {/* Botón Anterior */}
-        <IconButton  onClick={() => onNavigate("PREV")}>
+        <IconButton onClick={() => onNavigate("PREV")}>
           <SkipPreviousIcon fontSize="large" color="primary"/>       
-        </IconButton >
+        </IconButton>
 
-        {/* <CalendarMonthIcon fontSize="medium" color="primary" /> */}
         <Typography variant="h5" sx={{ fontWeight: "600", borderRadius: "4px" }}>
-          Semana del {format(start)} al {format(end)}
+          {t('tickets.weekFrom')} {formatDate(start)} {t('tickets.to')} {formatDate(end)}
         </Typography>
 
-        {/* Botón Siguiente */}
-        <IconButton  onClick={() => onNavigate("NEXT")}>
+        <IconButton onClick={() => onNavigate("NEXT")}>
           <SkipNextIcon fontSize="large" color="primary"/>       
-        </IconButton >
+        </IconButton>
       </Box>     
     </Box>
   );
 }
-
- 
-
