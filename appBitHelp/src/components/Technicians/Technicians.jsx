@@ -7,7 +7,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions 
 } from '@mui/material';
 import toast, { Toaster } from 'react-hot-toast';
-import { esES } from '@mui/x-data-grid/locales'; 
+import { esES, enUS } from '@mui/x-data-grid/locales'; 
 import TechnicianService from '../../services/TechnicianService'; 
 import { AccountCircle, Mail, Phone, Work, Verified } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
@@ -16,6 +16,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import UserService from '../../services/userService';
 import { AuthContext } from '../../context/AuthContext.jsx';
+import { useTranslation } from 'react-i18next';
 
 const ROLE_ID_ADMIN = 3;
 
@@ -32,33 +33,8 @@ const modalStyle = {
     p: 4,
 };
 
-// Helper para renderizar el Chip de estado
-const getStatusChip = (estado) => {
-    const isActive = estado === '1' || estado === 1;
-    return (
-        <Chip
-            label={isActive ? 'Activo' : 'Inactivo'}
-            color={isActive ? 'success' : 'error'}
-            variant="outlined"
-            size="small"
-        />
-    );
-};
-
-// Helper 2: Disponibilidad (Disponible/Ocupado)
-const getAvailabilityChip = (disponibilidad) => {
-    const isAvailable = disponibilidad === 'Disponible';
-    return (
-        <Chip
-            label={disponibilidad}
-            color={isAvailable ? 'info' : 'warning'}
-            variant="filled"
-            size="small"
-        />
-    );
-};
-
 export const TechniciansDataGridWithModal = () => {
+    const { t, i18n } = useTranslation();
     const { user } = useContext(AuthContext);
     const isAdmin = user?.idRol === ROLE_ID_ADMIN || user?.idRol === '3';
 
@@ -86,6 +62,42 @@ export const TechniciansDataGridWithModal = () => {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [technicianToDeleteId, setTechnicianToDeleteId] = useState(null);
     
+    // Determinar locale del DataGrid según idioma actual
+    const dataGridLocale = i18n.language === 'es' ? esES : enUS;
+
+    // Helper para renderizar el Chip de estado
+    const getStatusChip = (estado) => {
+        const isActive = estado === '1' || estado === 1;
+        return (
+            <Chip
+                label={isActive ? t('common.active') : t('common.inactive')}
+                color={isActive ? 'success' : 'error'}
+                variant="outlined"
+                size="small"
+            />
+        );
+    };
+
+    // Helper 2: Disponibilidad (Disponible/Ocupado)
+    const getAvailabilityChip = (disponibilidad) => {
+        const translateAvailability = (disp) => {
+            if (disp === 'Disponible' || disp === 'Available') return t('technicians.available');
+            if (disp === 'Ocupado' || disp === 'Busy') return t('technicians.busy');
+            if (disp === 'No Disponible' || disp === 'Offline') return t('technicians.offline');
+            return disp;
+        };
+
+        const isAvailable = disponibilidad === 'Disponible' || disponibilidad === 'Available';
+        return (
+            <Chip
+                label={translateAvailability(disponibilidad)}
+                color={isAvailable ? 'info' : 'warning'}
+                variant="filled"
+                size="small"
+            />
+        );
+    };
+
     const technicianUserIds = useMemo(() => rows.map(r => r.idUsuario), [rows]);
 
     const availableUsers = useMemo(() => {
@@ -112,7 +124,7 @@ export const TechniciansDataGridWithModal = () => {
             setAvailabilityList(availabilityResponse.data.result || availabilityResponse.data || []);
         } catch (error) {
             console.error("Error al cargar datos externos:", error.response?.data?.message || error.message);
-            toast.error('Error al cargar listas de selección. Revise la consola.');
+            toast.error(t('messages.errorLoadingSelectionLists'));
         }
     };
 
@@ -128,7 +140,7 @@ export const TechniciansDataGridWithModal = () => {
 
             if (!Array.isArray(apiData)) {
                 console.error("Respuesta de la API no es un array:", apiData);
-                toast.error('Formato de datos de técnicos inesperado.');
+                toast.error(t('messages.unexpectedDataFormat'));
                 apiData = [];
             }
 
@@ -150,7 +162,7 @@ export const TechniciansDataGridWithModal = () => {
             setRows(techniciansData);
         } catch (error) {
             console.error("Error al obtener los técnicos:", error.response?.data?.message || error.message);
-            toast.error('Error al cargar los técnicos desde la API.');
+            toast.error(t('messages.errorLoadingTechnicians'));
         } finally {
             setLoading(false);
         }
@@ -166,17 +178,17 @@ export const TechniciansDataGridWithModal = () => {
         let isValid = true;
 
         if (!isEditMode && !formData.idUsuario) {
-            errors.idUsuario = 'Debe seleccionar un usuario.';
+            errors.idUsuario = t('validation.mustSelectUser');
             isValid = false;
         }
 
         if (formData.especialidades.length === 0) {
-            errors.especialidades = 'Debe seleccionar al menos una especialidad.';
+            errors.especialidades = t('validation.mustSelectSpecialty');
             isValid = false;
         }
 
         if (!isEditMode && (formData.cargaTrabajo < 0 || formData.cargaTrabajo === undefined || formData.cargaTrabajo === null)) {
-             errors.cargaTrabajo = 'La carga de trabajo inicial no puede ser negativa.';
+             errors.cargaTrabajo = t('validation.workloadNonNegative');
              isValid = false;
         }
         
@@ -203,7 +215,7 @@ export const TechniciansDataGridWithModal = () => {
                 const data = response.data.result || response.data;
                 
                 if (!data || !data.idTecnico) {
-                    toast.error('No se pudieron cargar los datos del técnico para edición.');
+                    toast.error(t('messages.errorLoadingTechnicianForEdit'));
                     return;
                 }
 
@@ -236,7 +248,7 @@ export const TechniciansDataGridWithModal = () => {
 
             }).catch(error => {
                 console.error("Error al obtener el técnico para edición:", error);
-                toast.error('Error al cargar los detalles del técnico para edición.');
+                toast.error(t('messages.errorLoadingTechnicianDetails'));
             });
 
         } else {
@@ -280,7 +292,7 @@ export const TechniciansDataGridWithModal = () => {
 
     const handleSubmit = async () => {
         if (!validateForm()) {
-            toast.error('Por favor, corrija los errores en el formulario.');
+            toast.error(t('messages.correctFormErrors'));
             return;
         }
         
@@ -295,7 +307,7 @@ export const TechniciansDataGridWithModal = () => {
                 };
 
                 await TechnicianService.updateTechnician(payload.idTecnico, updatePayload);
-                toast.success('Técnico actualizado exitosamente');
+                toast.success(t('messages.technicianUpdatedSuccess'));
                 
             } else {
                 let creationPayload = {
@@ -307,7 +319,7 @@ export const TechniciansDataGridWithModal = () => {
                 };
 
                 await TechnicianService.createTechnician(creationPayload);
-                toast.success('Técnico creado exitosamente');
+                toast.success(t('messages.technicianCreatedSuccess'));
             }
             
             handleCloseFormModal();
@@ -315,7 +327,7 @@ export const TechniciansDataGridWithModal = () => {
         } catch (error) {
             console.error("Error al guardar (payload enviado):", isEditMode ? updatePayload : creationPayload);
             console.error("Detalles del Error:", error.response?.data?.message || error.message);
-            toast.error(`Error al guardar: ${error.response?.data?.message || 'Revisar la consola para el payload enviado.'}`);
+            toast.error(`${t('messages.errorSavingTechnician')}: ${error.response?.data?.message || ''}`);
         }
     };
 
@@ -335,22 +347,29 @@ export const TechniciansDataGridWithModal = () => {
 
         try {
             await TechnicianService.deleteTechnician(technicianToDeleteId);
-            toast.success('Técnico despromovido exitosamente');
+            toast.success(t('messages.technicianDemotedSuccess'));
             fetchTechnicians();
         } catch (error) {
             console.error("Error al despromover:", error.response?.data?.message || error.message);
-            toast.error(`Error al despromover el técnico: ${error.response?.data?.message || 'Error de conexión'}`);
+            toast.error(`${t('messages.errorDemotingTechnician')}: ${error.response?.data?.message || ''}`);
         } finally {
             setTechnicianToDeleteId(null); 
         }
     };
 
     const columns = [
-        { field: 'nombreCompleto', headerName: 'Técnico', minWidth: 240, headerAlign: 'center', align: 'center', flex: 0.7, },
+        { 
+            field: 'nombreCompleto', 
+            headerName: t('technicians.technician'), 
+            minWidth: 240, 
+            headerAlign: 'center', 
+            align: 'center', 
+            flex: 0.7, 
+        },
         
         { 
             field: 'disponibilidad', 
-            headerName: 'Disponibilidad', 
+            headerName: t('technicians.availability'), 
             minWidth: 150, 
             headerAlign: 'center', 
             align: 'center', 
@@ -360,7 +379,7 @@ export const TechniciansDataGridWithModal = () => {
 
         {
             field: 'estado',
-            headerName: 'Estado',
+            headerName: t('technicians.status'),
             minWidth: 170,
             headerAlign: 'center',
             align: 'center',
@@ -369,7 +388,7 @@ export const TechniciansDataGridWithModal = () => {
         },
         {
             field: 'actions',
-            headerName: 'Opciones',
+            headerName: t('technicians.options'),
             minWidth: 140,
             headerAlign: 'center',
             align: 'center',
@@ -378,15 +397,30 @@ export const TechniciansDataGridWithModal = () => {
             flex: 0.6,
             renderCell: (params) => (
                 <Stack direction="row" spacing={2} justifyContent="center">
-                    <IconButton color="primary" size="small" onClick={() => handleOpenModal(params.row)} aria-label="Ver detalles">
+                    <IconButton 
+                        color="primary" 
+                        size="small" 
+                        onClick={() => handleOpenModal(params.row)} 
+                        aria-label={t('common.view')}
+                    >
                         <VisibilityIcon />
                     </IconButton>
                     {isAdmin && (
                         <>
-                            <IconButton color="primary" size="small" onClick={() => handleOpenFormModal(true, params.row)} aria-label="Editar">
+                            <IconButton 
+                                color="primary" 
+                                size="small" 
+                                onClick={() => handleOpenFormModal(true, params.row)} 
+                                aria-label={t('common.edit')}
+                            >
                                 <EditIcon />
                             </IconButton>
-                            <IconButton color="error" size="small" onClick={() => confirmDelete(params.row.id)} aria-label="Eliminar/Despromover">
+                            <IconButton 
+                                color="error" 
+                                size="small" 
+                                onClick={() => confirmDelete(params.row.id)} 
+                                aria-label={t('common.delete')}
+                            >
                                 <DeleteIcon />
                             </IconButton>
                         </>
@@ -407,13 +441,13 @@ export const TechniciansDataGridWithModal = () => {
                         startIcon={<AddIcon />}
                         onClick={() => handleOpenFormModal(false)}
                     >
-                        Crear Técnico
+                        {t('technicians.createNew')}
                     </Button>
                 </Box>
             )}
             
             {loading ? (
-                <Typography variant="h6">Cargando técnicos...</Typography>
+                <Typography variant="h6">{t('technicians.loading')}</Typography>
             ) : (
                 <DataGrid
                     rows={rows}
@@ -424,7 +458,7 @@ export const TechniciansDataGridWithModal = () => {
                         pagination: { paginationModel: { pageSize: 10 } }
                     }}
                     disableRowSelectionOnClick
-                    localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+                    localeText={dataGridLocale.components.MuiDataGrid.defaultProps.localeText}
                     sx={{
                         borderRadius: 2,
                         boxShadow: 2,
@@ -440,7 +474,7 @@ export const TechniciansDataGridWithModal = () => {
             >
                 <Box sx={modalStyle}>
                     <Typography id="technician-modal-title" variant="h5" component="h2" mb={1} color="text.primary" fontWeight={600}>
-                        Detalles del Técnico
+                        {t('technicians.technicianDetails')}
                     </Typography>
                     
                     <Divider sx={{ mb: 2 }} />
@@ -457,7 +491,7 @@ export const TechniciansDataGridWithModal = () => {
 
                             <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                                 <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
-                                    CONTACTO
+                                    {t('technicians.contact')}
                                 </Typography>
                                 <Box display="flex" alignItems="center" mb={1}>
                                     <Mail color="action" sx={{ mr: 1, fontSize: 18 }} />
@@ -471,11 +505,11 @@ export const TechniciansDataGridWithModal = () => {
                             
                             <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                                 <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
-                                    MÉTRICAS DE TRABAJO
+                                    {t('technicians.workMetrics')}
                                 </Typography>
                                 <Box display="flex" alignItems="center" mb={1}>
                                     <Work color="action" sx={{ mr: 1, fontSize: 18 }} />
-                                    <Typography variant="body2">Carga de Trabajo: {selectedRow.cargaTrabajo}</Typography>
+                                    <Typography variant="body2">{t('technicians.workload')}: {selectedRow.cargaTrabajo}</Typography>
                                 </Box>
                                 <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
                                     {getAvailabilityChip(selectedRow.disponibilidad)}
@@ -486,7 +520,7 @@ export const TechniciansDataGridWithModal = () => {
                                 <Box mb={1} display="flex" alignItems="center">
                                     <Verified color="action" sx={{ mr: 1, fontSize: 18, verticalAlign: 'middle'}}/>
                                     <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
-                                        ESPECIALIDADES
+                                        {t('technicians.specialties').toUpperCase()}
                                     </Typography>
                                 </Box>
                                 <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
@@ -502,14 +536,16 @@ export const TechniciansDataGridWithModal = () => {
                                         ))
                                     ) : (
                                         <Typography fontSize={14} color="text.secondary" sx={{ml: 0.5}}>
-                                            No tiene especialidades asignadas.
+                                            {t('technicians.noSpecialtiesAssigned')}
                                         </Typography>
                                     )}
                                 </Stack>
                             </Paper>
                         </Box>
                     )}
-                    <Button onClick={handleCloseModal} variant="contained" sx={{ mt: 3, float: 'right' }}>Cerrar</Button>
+                    <Button onClick={handleCloseModal} variant="contained" sx={{ mt: 3, float: 'right' }}>
+                        {t('common.close')}
+                    </Button>
                 </Box>
             </Modal>
 
@@ -522,7 +558,7 @@ export const TechniciansDataGridWithModal = () => {
                 >
                     <Box sx={modalStyle} component="form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
                         <Typography id="technician-form-modal-title" variant="h5" component="h2" mb={1} color="text.primary" fontWeight={600}>
-                            {isEditMode ? 'Editar Técnico' : 'Crear Nuevo Técnico'}
+                            {isEditMode ? t('technicians.edit') : t('technicians.createNew')}
                         </Typography>
                         
                         <Divider sx={{ mb: 2 }} />
@@ -534,19 +570,19 @@ export const TechniciansDataGridWithModal = () => {
                                 error={!!formErrors.idUsuario}
                                 disabled={isEditMode}
                             >
-                                <InputLabel id="user-select-label">Usuario</InputLabel>
+                                <InputLabel id="user-select-label">{t('technicians.user')}</InputLabel>
                                 <Select
                                     labelId="user-select-label"
                                     id="idUsuario"
                                     value={formData.idUsuario} 
-                                    label="Usuario"
+                                    label={t('technicians.user')}
                                     onChange={(e) => handleInputChange('idUsuario', e.target.value)}
                                     {...(isEditMode && currentTechnicianUser ? {
                                         renderValue: () => `${currentTechnicianUser.usuario} - ${currentTechnicianUser.nombre} ${currentTechnicianUser.primerApellido}`
                                     } : {})}
                                 >
                                     <MenuItem value="">
-                                    <em>Seleccione un Usuario</em>
+                                        <em>{t('technicians.selectUser')}</em>
                                     </MenuItem>
                                     
                                     {isEditMode && currentTechnicianUser && (
@@ -562,36 +598,36 @@ export const TechniciansDataGridWithModal = () => {
                                     ))}
                                 </Select>
                                 {formErrors.idUsuario && <Typography color="error" variant="caption" sx={{ml: 2, mt: 0.5}}>{formErrors.idUsuario}</Typography>}
-                                {isEditMode && <Typography variant="caption" color="text.secondary" sx={{ml: 2, mt: 0.5}}>El usuario asociado no puede cambiarse al editar.</Typography>}
+                                {isEditMode && <Typography variant="caption" color="text.secondary" sx={{ml: 2, mt: 0.5}}>{t('technicians.userCannotChange')}</Typography>}
                             </FormControl>
 
                             <FormControl fullWidth>
-                                <InputLabel id="availability-select-label">Disponibilidad</InputLabel>
+                                <InputLabel id="availability-select-label">{t('technicians.availability')}</InputLabel>
                                 <Select
                                     labelId="availability-select-label"
                                     id="idDisponibilidad"
                                     value={formData.idDisponibilidad}
-                                    label="Disponibilidad"
+                                    label={t('technicians.availability')}
                                     onChange={(e) => handleInputChange('idDisponibilidad', e.target.value)}
                                 >
                                     {availabilityList.map((item) => (
-                                    <MenuItem key={item.idDisponibilidad} value={item.idDisponibilidad}>
-                                        {item.nombre}
-                                    </MenuItem>
+                                        <MenuItem key={item.idDisponibilidad} value={item.idDisponibilidad}>
+                                            {item.nombre}
+                                        </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
 
                             <TextField
                                 fullWidth
-                                label="Carga de Trabajo (Medida en horas)"
+                                label={t('technicians.workloadHours')}
                                 type="number"
                                 value={formData.cargaTrabajo}
                                 onChange={(e) => handleInputChange('cargaTrabajo', e.target.value)}
                                 InputProps={{ inputProps: { min: 0 } }}
                                 disabled={true}
                                 error={!!formErrors.cargaTrabajo}
-                                helperText={formErrors.cargaTrabajo || (isEditMode ? 'Esta métrica se actualiza automáticamente por el sistema.' : 'Carga de trabajo inicial.')}
+                                helperText={formErrors.cargaTrabajo || (isEditMode ? t('technicians.workloadAutoUpdate') : t('technicians.workloadInitial'))}
                             />
 
                             <FormControl 
@@ -599,31 +635,31 @@ export const TechniciansDataGridWithModal = () => {
                                 required 
                                 error={!!formErrors.especialidades}
                             >
-                                <InputLabel id="specialty-multiple-label">Especialidades</InputLabel>
+                                <InputLabel id="specialty-multiple-label">{t('technicians.specialties')}</InputLabel>
                                 <Select
                                     labelId="specialty-multiple-label"
                                     multiple
                                     value={formData.especialidades} 
                                     onChange={(e) => handleInputChange('especialidades', e.target.value)}
-                                    input={<OutlinedInput id="select-multiple-chip" label="Especialidades" />}
+                                    input={<OutlinedInput id="select-multiple-chip" label={t('technicians.specialties')} />}
                                     renderValue={(selected) => (
-                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                        {selected.map((value) => {
-                                        const specialty = specialtiesList.find(s => s.idEspecialidad === value);
-                                        return (
-                                            <Chip key={value} label={specialty ? specialty.nombre : `ID: ${value}`} size="small" />
-                                        );
-                                        })}
-                                    </Box>
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                            {selected.map((value) => {
+                                                const specialty = specialtiesList.find(s => s.idEspecialidad === value);
+                                                return (
+                                                    <Chip key={value} label={specialty ? specialty.nombre : `ID: ${value}`} size="small" />
+                                                );
+                                            })}
+                                        </Box>
                                     )}
                                 >
                                     {specialtiesList.map((specialty) => (
-                                    <MenuItem 
-                                        key={specialty.idEspecialidad} 
-                                        value={specialty.idEspecialidad}
-                                    >
-                                        {specialty.nombre}
-                                    </MenuItem>
+                                        <MenuItem 
+                                            key={specialty.idEspecialidad} 
+                                            value={specialty.idEspecialidad}
+                                        >
+                                            {specialty.nombre}
+                                        </MenuItem>
                                     ))}
                                 </Select>
                                 {formErrors.especialidades && <Typography color="error" variant="caption" sx={{ml: 2, mt: 0.5}}>{formErrors.especialidades}</Typography>}
@@ -632,30 +668,30 @@ export const TechniciansDataGridWithModal = () => {
                             <FormControlLabel
                                 control={
                                     <Switch
-                                    checked={formData.estado === 1}
-                                    onChange={(e) => handleInputChange('estado', e.target.checked)}
-                                    name="estado"
-                                    color="primary"
+                                        checked={formData.estado === 1}
+                                        onChange={(e) => handleInputChange('estado', e.target.checked)}
+                                        name="estado"
+                                        color="primary"
                                     />
                                 }
-                                label={formData.estado === 1 ? 'Activo' : 'Inactivo'}
+                                label={formData.estado === 1 ? t('common.active') : t('common.inactive')}
                             />
                         </Stack>
 
                         <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                             <Button 
-                            onClick={handleCloseFormModal} 
-                            variant="outlined" 
-                            color="error"
+                                onClick={handleCloseFormModal} 
+                                variant="outlined" 
+                                color="error"
                             >
-                            Cancelar
+                                {t('common.cancel')}
                             </Button>
                             <Button 
-                            type="submit" 
-                            variant="contained" 
-                            color="primary"
+                                type="submit" 
+                                variant="contained" 
+                                color="primary"
                             >
-                            {isEditMode ? 'Guardar Cambios' : 'Crear Técnico'}
+                                {isEditMode ? t('common.update') : t('technicians.createNew')}
                             </Button>
                         </Box>
                     </Box>
@@ -671,21 +707,21 @@ export const TechniciansDataGridWithModal = () => {
                     aria-describedby="alert-dialog-description"
                 >
                     <DialogTitle id="alert-dialog-title" sx={{ color: 'error.main' }}>
-                        {"Confirmar Eliminación"}
+                        {t('technicians.confirmDelete')}
                     </DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
                             <Typography variant="body1" sx={{mb: 1}}>
-                                ¿Está seguro de eliminar este técnico (despromoverlo)?
+                                {t('technicians.deleteConfirmMessage')}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Esta acción es irreversible y el usuario dejará de ser considerado técnico.
+                                {t('technicians.deleteWarningMessage')}
                             </Typography>
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleCancelDelete} variant="outlined" color="primary">
-                            Cancelar
+                            {t('common.cancel')}
                         </Button>
                         <Button 
                             onClick={executeDelete} 
@@ -693,7 +729,7 @@ export const TechniciansDataGridWithModal = () => {
                             color="error" 
                             autoFocus 
                         >
-                            Aceptar
+                            {t('common.accept')}
                         </Button>
                     </DialogActions>
                 </Dialog>

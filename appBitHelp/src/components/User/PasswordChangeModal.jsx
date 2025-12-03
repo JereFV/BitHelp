@@ -7,26 +7,17 @@ import {
 import LockResetIcon from '@mui/icons-material/LockReset';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-// Asegúrate de que esta ruta sea correcta
 import UserService from '../../services/userService'; 
+import { useTranslation } from 'react-i18next';
 
-/**
- * Modal para cambiar la contraseña de un usuario específico.
- * * @param {object} props
- * @param {boolean} props.open - Si el modal está abierto.
- * @param {function(boolean, string): void} props.handleClose - Función para cerrar el modal. 
- * Pasa (true, mensaje) si fue exitoso, (false, null) si se canceló.
- * @param {number} props.userId - ID del usuario cuya contraseña se va a cambiar.
- * @param {string} props.userName - Nombre del usuario para mostrar en el título.
- */
 export default function PasswordChangeModal({ open, handleClose, userId, userName }) {
+    const { t } = useTranslation();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showPassword, setShowPassword] = useState(false);
 
-    // Reinicia el estado al abrir o cerrar el modal
     const resetForm = () => {
         setPassword('');
         setConfirmPassword('');
@@ -37,7 +28,7 @@ export default function PasswordChangeModal({ open, handleClose, userId, userNam
 
     const handleLocalClose = () => {
         resetForm();
-        handleClose(false, null); // Cierra sin mensaje de éxito
+        handleClose(false, null);
     };
 
     const handleClickShowPassword = () => {
@@ -46,15 +37,15 @@ export default function PasswordChangeModal({ open, handleClose, userId, userNam
 
     const validate = () => {
         if (!password || !confirmPassword) {
-            setError('Todos los campos son obligatorios.');
+            setError(t('validation.allFieldsRequired'));
             return false;
         }
         if (password.length < 6) {
-            setError('La nueva contraseña debe tener al menos 6 caracteres.');
+            setError(t('validation.passwordMinLength'));
             return false;
         }
         if (password !== confirmPassword) {
-            setError('Las contraseñas no coinciden.');
+            setError(t('validation.passwordsNotMatch'));
             return false;
         }
         setError(null);
@@ -69,18 +60,16 @@ export default function PasswordChangeModal({ open, handleClose, userId, userNam
 
         setLoading(true);
         try {
-            // Llamada al servicio que creamos en el primer paso
             await UserService.updatePassword(userId, password); 
 
-            const successMessage = `Contraseña del usuario ${userName} cambiada exitosamente.`;
+            const successMessage = t('users.passwordChangedSuccess', { userName });
             
-            // Cierra el modal y notifica al componente padre del éxito
             handleClose(true, successMessage); 
             resetForm();
 
         } catch (err) {
             console.error("Error al cambiar la contraseña:", err.response?.data || err);
-            setError(err.response?.data?.message || 'Error desconocido al intentar cambiar la contraseña.');
+            setError(err.response?.data?.message || t('messages.errorOccurred'));
         } finally {
             setLoading(false);
         }
@@ -96,19 +85,19 @@ export default function PasswordChangeModal({ open, handleClose, userId, userNam
         >
             <DialogTitle id="password-modal-title" sx={{ display: 'flex', alignItems: 'center', color: '#00796b', fontWeight: 'bold' }}>
                 <LockResetIcon sx={{ mr: 1, color: 'warning.main' }} />
-                Cambiar Contraseña
+                {t('users.changePassword')}
             </DialogTitle>
             
             <Box component="form" onSubmit={handleSubmit}>
                 <DialogContent>
                     <Typography variant="body2" mb={2}>
-                        Estableciendo nueva contraseña para {userName}.
+                        {t('users.settingNewPassword')} {userName}.
                     </Typography>
 
                     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
                     <TextField
-                        label="Nueva Contraseña"
+                        label={t('users.newPassword')}
                         type={showPassword ? 'text' : 'password'}
                         fullWidth
                         margin="normal"
@@ -132,7 +121,7 @@ export default function PasswordChangeModal({ open, handleClose, userId, userNam
                     />
 
                     <TextField
-                        label="Confirmar Contraseña"
+                        label={t('users.confirmPassword')}
                         type={showPassword ? 'text' : 'password'}
                         fullWidth
                         margin="normal"
@@ -146,7 +135,7 @@ export default function PasswordChangeModal({ open, handleClose, userId, userNam
 
                 <DialogActions sx={{ p: 3, pt: 0 }}>
                     <Button onClick={handleLocalClose} color="inherit" disabled={loading}>
-                        Cancelar
+                        {t('common.cancel')}
                     </Button>
                     <Button 
                         type="submit" 
@@ -155,7 +144,7 @@ export default function PasswordChangeModal({ open, handleClose, userId, userNam
                         disabled={loading || !password || !confirmPassword}
                         startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <LockResetIcon />}
                     >
-                        {loading ? 'Guardando...' : 'Cambiar Contraseña'}
+                        {loading ? t('users.saving') : t('users.changePassword')}
                     </Button>
                 </DialogActions>
             </Box>

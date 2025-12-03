@@ -1,97 +1,40 @@
-// Este componente es el dashboard de resumen que muestra el conteo de tiquetes por estado.
-// También actúa como el control de filtro para la lista de abajo.
-
-// Importaciones base de React
-// useMemo: Lo usamos para que los conteos de tiquetes solo se recalculen si la lista de tiquetes cambia (por eficiencia).
-// eslint-disable-next-line no-unused-vars
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-
-// Componentes de Material-UI para el layout y la interacción
 import { Grid, Paper, Typography, Box, ButtonBase, Chip, TextField, IconButton } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { Cancel } from '@mui/icons-material';
-
-// Importamos los iconos de Iconoir que representan cada estado y el total
 import {
-  RefreshCircle,      // Icono para Pendiente (como si estuviera recargando)
-  UserBadgeCheck,    // Icono para Asignado (como un usuario verificado)
-  Settings,          // Icono para En Proceso (como si estuviera configurando/trabajando)
-  ClipboardCheck,    // Icono para Resuelto (como un check en una nota)
-  Archive,           // Icono para Cerrado (como un archivo)
-  DatabaseStats,     // Icono para Total (como una base de datos de estadísticas)
+  RefreshCircle,
+  UserBadgeCheck,
+  Settings,
+  ClipboardCheck,
+  Archive,
+  DatabaseStats,
 } from 'iconoir-react';
+import { useTranslation } from 'react-i18next';
 
-
-// Definimos la estructura y los colores de las tarjetas del dashboard.
-// El 'title' DEBE COINCIDIR EXACTAMENTE con el string de estado que viene del backend.
-const statItems = [
-  {
-    title: 'Total',
-    icon: DatabaseStats,
-    color: 'primary.main', // Color principal de la app para el Total
-  },
-  {
-    title: 'Pendiente',
-    icon: RefreshCircle,
-    color: 'error.main', // Color rojo (error) porque necesita atención inmediata
-  },
-  {
-    title: 'Asignado',
-    icon: UserBadgeCheck,
-    color: 'warning.main', // Color naranja (warning) porque está esperando ser tomado
-  },
-  {
-    title: 'En Proceso',
-    icon: Settings,
-    color: 'info.main', // Color celeste (info) para indicar actividad
-  },
-  {
-    title: 'Resuelto',
-    icon: ClipboardCheck,
-    color: 'success.main', // Color verde (success) porque ya está terminado
-  },
-  {
-    title: 'Devuelto',
-    icon: RefreshCircle,
-    color: 'secondary.main', // Color Morado 
-  },
-  {
-    title: 'Cerrado',
-    icon: Archive,
-    color: 'text.secondary', // Gris (color secundario) para estados archivados
-  },
-];
-
-
-// Este componente renderiza una sola tarjeta de estadística y la hace clicable
 function StatCard({ title, count, Icon, color, isActive, onClick }) {
-  
-  // Define estilos extra para cuando esta tarjeta está activa (seleccionada como filtro)
   const activeStyle = isActive ? {
-    // Le pone un borde azul fuerte y un efecto de escala sutil
     boxShadow: (theme) => `0 0 0 3px ${theme.palette.primary.main}`,
     transform: 'scale(1.03)',
   } : {
-    // Sombra normal si no está activa
     boxShadow: (theme) => theme.shadows[2], 
   };
 
   return (
-    // ButtonBase envuelve todo para manejar el efecto de clic y la accesibilidad
     <ButtonBase
-      onClick={onClick} // Llama a la función de filtro que viene del padre
+      onClick={onClick}
       sx={{
         width: '100%',
         height: '100%',
         borderRadius: 2,
         textAlign: 'left',
-        transition: 'transform 0.2s, box-shadow 0.2s', // Transición suave para el efecto
-        ...activeStyle, // Aplica el estilo activo/inactivo
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        ...activeStyle,
       }}
     >
       <Paper
-        elevation={0} // La sombra se la dimos al ButtonBase, no a este Paper
+        elevation={0}
         sx={{
           p: 2,
           display: 'flex',
@@ -100,7 +43,6 @@ function StatCard({ title, count, Icon, color, isActive, onClick }) {
           borderRadius: 2,
           width: '100%',
           height: '100%',
-          // Hacemos la tarjeta ligeramente transparente si no es el filtro activo
           opacity: isActive ? 1 : 0.75, 
         }}
       >
@@ -117,7 +59,6 @@ function StatCard({ title, count, Icon, color, isActive, onClick }) {
                     color: theme.palette.background.paper,
                   }
                 : {
-                    // Son los otros chips (Pendiente, Resuelto, etc.)
                     color: color,
                     backgroundColor: alpha(theme.palette[color.split('.')[0]].main, 0.15),
                   }),
@@ -125,10 +66,9 @@ function StatCard({ title, count, Icon, color, isActive, onClick }) {
           />
 
           <Typography variant="h4" fontWeight="bold">
-            {count} {/* El número de tiquetes */}
+            {count}
           </Typography>
         </Box>
-        {/* Renderizamos el icono de Iconoir */}
         <Icon 
           height={38} 
           width={38} 
@@ -141,7 +81,6 @@ function StatCard({ title, count, Icon, color, isActive, onClick }) {
   );
 }
 
-// Prop-types para StatCard (Validación de tipos de datos)
 StatCard.propTypes = {
   title: PropTypes.string.isRequired,
   count: PropTypes.number.isRequired,
@@ -151,49 +90,86 @@ StatCard.propTypes = {
   onClick: PropTypes.func.isRequired,
 };
 
-
-// Componente Principal: Recibe todos los tiquetes y el estado de filtro del padre
 export function TicketSummaryDashboard({ tickets = [], filtroActivo, onFiltroChange, searchId, onSearchIdChange }) {
+  const { t } = useTranslation();
 
-  // useMemo: Calcula los conteos de tiquetes por estado de forma eficiente
+  const statItems = useMemo(() => [
+    {
+      title: t('tickets.total'),
+      key: 'Total',
+      icon: DatabaseStats,
+      color: 'primary.main',
+    },
+    {
+      title: t('tickets.pending'),
+      key: 'Pendiente',
+      icon: RefreshCircle,
+      color: 'error.main',
+    },
+    {
+      title: t('tickets.assigned'),
+      key: 'Asignado',
+      icon: UserBadgeCheck,
+      color: 'warning.main',
+    },
+    {
+      title: t('tickets.inProgress'),
+      key: 'En Proceso',
+      icon: Settings,
+      color: 'info.main',
+    },
+    {
+      title: t('tickets.resolved'),
+      key: 'Resuelto',
+      icon: ClipboardCheck,
+      color: 'success.main',
+    },
+    {
+      title: t('tickets.returned'),
+      key: 'Devuelto',
+      icon: RefreshCircle,
+      color: 'secondary.main',
+    },
+    {
+      title: t('tickets.closed'),
+      key: 'Cerrado',
+      icon: Archive,
+      color: 'text.secondary',
+    },
+  ], [t]);
+
   const counts = useMemo(() => {
-    // Contadores iniciales
     const initialCounts = {
       Pendiente: 0,
       Asignado: 0,
       'En Proceso': 0,
       Resuelto: 0,
-      Devuelto:0,
+      Devuelto: 0,
       Cerrado: 0,
     };
     
-    // Recorremos los tiquetes una sola vez (reduce) para contarlos
     const stateCounts = tickets.reduce((acc, ticket) => {
       const estado = ticket.estado;
-      // Chequeamos si el estado existe antes de sumar para evitar errores
-      // eslint-disable-next-line no-prototype-builtins
       if (acc.hasOwnProperty(estado)) {
         acc[estado]++;
       }
       return acc;
     }, initialCounts);
 
-    // Devolvemos el conteo individual + el total
     return {
       ...stateCounts,
       Total: tickets.length,
     };
-  }, [tickets]); // Solo se ejecuta si la lista de tiquetes cambia
+  }, [tickets]);
 
   return (
     <Box sx={{ mb: 4 }}>
-      {/* Campo de búsqueda por ID */}
       <Box sx={{ mb: 2 }}>
         <TextField
           fullWidth
           size="small"
-          label="Buscar por ID"
-          placeholder="Ingrese el ID del ticket"
+          label={t('tickets.searchById')}
+          placeholder={t('tickets.enterTicketId')}
           value={searchId}
           onChange={(e) => onSearchIdChange(e.target.value)}
           sx={{ maxWidth: 300 }}
@@ -208,16 +184,15 @@ export function TicketSummaryDashboard({ tickets = [], filtroActivo, onFiltroCha
       </Box>
 
       <Grid container spacing={2}>
-        {/* Mapeamos la lista fija de statItems para crear la grilla de tarjetas */}
         {statItems.map((item) => (
-          <Grid item xs={12} sm={6} md={4} lg={2} key={item.title}>
+          <Grid item xs={12} sm={6} md={4} lg={2} key={item.key}>
             <StatCard
               title={item.title}
-              count={counts[item.title] || 0} // Usamos el conteo calculado
+              count={counts[item.key] || 0}
               Icon={item.icon}
               color={item.color}
-              isActive={filtroActivo === item.title} // Comprueba si esta tarjeta es el filtro activo
-              onClick={() => onFiltroChange(item.title)} // Define la acción al hacer clic
+              isActive={filtroActivo === item.key}
+              onClick={() => onFiltroChange(item.key)}
             />
           </Grid>
         ))}
@@ -226,7 +201,6 @@ export function TicketSummaryDashboard({ tickets = [], filtroActivo, onFiltroCha
   );
 }
 
-// Prop-types para el Dashboard
 TicketSummaryDashboard.propTypes = {
   tickets: PropTypes.array,
   filtroActivo: PropTypes.string.isRequired,

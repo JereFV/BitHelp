@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-unused-vars
 import React, { useState } from 'react';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
@@ -14,6 +13,7 @@ import { Chip, Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import Tooltip from '@mui/material/Tooltip';
 import ManualAssignmentModal from './ManualAssignmentModal';
+import { useTranslation } from 'react-i18next';
 
 ListCardTickets.propTypes = {
   data: PropTypes.array,
@@ -21,65 +21,94 @@ ListCardTickets.propTypes = {
   currentUser: PropTypes.object,
 };
 
-// Asignación de colores para los chips de PRIORIDAD
-const getPriorityColor = (prioridad) => {
-  switch (prioridad) {
-    case 'Crítica':
-      return 'error';
-    case 'Alta':
-      return 'warning';
-    case 'Media':
-      return 'info';
-    case 'Baja':
-      return 'success';
-    default:
-      return 'default';
-  }
-};
-
-// Asignación de colores para los chips de ESTADO
-const getStateColor = (estado) => {
-  switch (estado) {
-    case 'Pendiente':
-      return 'error';
-    case 'Asignado':
-      return 'warning';
-    case 'En Proceso':
-      return 'info';
-    case 'Resuelto':
-      return 'success';
-    case 'Cerrado':
-      return 'default';
-    case 'Devuelto':
-      return 'secondary';
-    default:
-      return 'default';
-  }
-};
-
 export function ListCardTickets({ data = [], onTicketAssigned, currentUser }) {
+  const { t } = useTranslation();
   // 1. Estado para controlar la visibilidad del modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   // 2. Estado para saber qué tiquete se va a asignar
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const ADMIN_ROL_ID = 3;
+
+  const getPriorityColor = (prioridad) => {
+    const priorityMap = {
+      'Crítica': 'error',
+      'Critical': 'error',
+      'Alta': 'warning',
+      'High': 'warning',
+      'Media': 'info',
+      'Medium': 'info',
+      'Baja': 'success',
+      'Low': 'success',
+    };
+    return priorityMap[prioridad] || 'default';
+  };
+
+  const getStateColor = (estado) => {
+    const stateMap = {
+      'Pendiente': 'error',
+      'Pending': 'error',
+      'Asignado': 'warning',
+      'Assigned': 'warning',
+      'En Proceso': 'info',
+      'In Progress': 'info',
+      'Resuelto': 'success',
+      'Resolved': 'success',
+      'Cerrado': 'default',
+      'Closed': 'default',
+      'Devuelto': 'secondary',
+      'Returned': 'secondary',
+    };
+    return stateMap[estado] || 'default';
+  };
+
+  const translateStatus = (status) => {
+    const statusMap = {
+      'Pendiente': t('tickets.pending'),
+      'Pending': t('tickets.pending'),
+      'Asignado': t('tickets.assigned'),
+      'Assigned': t('tickets.assigned'),
+      'En Proceso': t('tickets.inProgress'),
+      'In Progress': t('tickets.inProgress'),
+      'Resuelto': t('tickets.resolved'),
+      'Resolved': t('tickets.resolved'),
+      'Cerrado': t('tickets.closed'),
+      'Closed': t('tickets.closed'),
+      'Devuelto': t('tickets.returned'),
+      'Returned': t('tickets.returned'),
+    };
+    return statusMap[status] || status;
+  };
+
+  const translatePriority = (priority) => {
+    const priorityMap = {
+      'Crítica': t('common.critical'),
+      'Critical': t('common.critical'),
+      'Alta': t('common.high'),
+      'High': t('common.high'),
+      'Media': t('common.medium'),
+      'Medium': t('common.medium'),
+      'Baja': t('common.low'),
+      'Low': t('common.low'),
+    };
+    return priorityMap[priority] || priority;
+  };
+
   // 3. Función para abrir el modal
-  // 3. Función para abrir el modal
-const handleOpenModal = (ticketId) => {
+  const handleOpenModal = (ticketId) => {
     // 💡 CORRECCIÓN ROBUSTA: Usar parseInt(value, 10) para garantizar
     // que el valor es un número entero de JavaScript.
     const numericId = parseInt(ticketId, 10);
     
     // Verificamos que sea un número válido y positivo.
     if (!isNaN(numericId) && numericId > 0) {
-        setSelectedTicketId(numericId);
-        setIsModalOpen(true);
+      setSelectedTicketId(numericId);
+      setIsModalOpen(true);
     } else {
-        // En caso de que item.id sea inválido (p. ej., null o "N/A")
-        console.error("Intento de abrir modal con ID de tiquete inválido:", ticketId);
-        setSelectedTicketId(null);
+      // En caso de que item.id sea inválido (p. ej., null o "N/A")
+      console.error("Intento de abrir modal con ID de tiquete inválido:", ticketId);
+      setSelectedTicketId(null);
     }
-};
+  };
 
   // 4. Función para cerrar el modal
   const handleCloseModal = () => {
@@ -97,14 +126,12 @@ const handleOpenModal = (ticketId) => {
       sx={{
         p: 2,
         display: 'grid',
-        gap: 3, // Espaciado entre tarjetas
-        
-        // Layout responsivo de la grilla
+        gap: 3,
         gridTemplateColumns: {
-          xs: 'repeat(1, 1fr)', // movil
-          sm: 'repeat(2, 1fr)', // tablet
-          md: 'repeat(3, 1fr)', // desktop
-          lg: 'repeat(4, 1fr)', // desktop grande
+          xs: 'repeat(1, 1fr)',
+          sm: 'repeat(2, 1fr)',
+          md: 'repeat(3, 1fr)',
+          lg: 'repeat(4, 1fr)',
         },
       }}
     >
@@ -153,12 +180,12 @@ const handleOpenModal = (ticketId) => {
             {/* Chips de Estado y Prioridad */}
             <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
               <Chip
-                label={item.estado ?? 'N/A'} 
+                label={translateStatus(item.estado ?? 'N/A')} 
                 size="small"
                 sx={(theme) => {
-                  const colorName = getStateColor(item.estado); // 'error', 'warning', 'default', etc.
+                  const colorName = getStateColor(item.estado);
                   
-                  if (item.estado === 'Cerrado') { // Lógica especial para "Cerrado"
+                  if (item.estado === 'Cerrado' || item.estado === 'Closed') {
                     return (theme.palette.mode === 'light'
                       // MODO CLARO: Fondo Negro, Fuente Blanca
                       ? {
@@ -184,7 +211,7 @@ const handleOpenModal = (ticketId) => {
                 }}
               />
               <Chip
-                label={item.prioridad ?? 'N/A'}
+                label={translatePriority(item.prioridad ?? 'N/A')}
                 color={getPriorityColor(item.prioridad)}
                 size="small"
                 variant="outlined"
@@ -193,47 +220,44 @@ const handleOpenModal = (ticketId) => {
 
             {/* Contenedor Flex para el Tiempo Restante y el Botón de Detalles */}
             <Box 
-                sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    pr: 1, 
-                }}
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                pr: 1, 
+              }}
             >
-                <Typography variant="body2" color="text.secondary">
-                    <strong>Tiempo restante:</strong>{' '}
-                    {item.tiempoRestante ?? '—'} {item.tiempoRestante ? 'horas' : ''}
-                </Typography>
-                
-                {/* 5. Botón de Asignación Manual con Invocación */}
-                {/* solo si el usuario actual existe Y tiene el rol 3 */}
-                {(currentUser && currentUser.idRol == ADMIN_ROL_ID) && (
-                    <Tooltip title="Asignación Manual" placement="bottom-end" >
-                        <IconButton
-                            aria-label="Asignación Manual"
-                            color='warning' 
-                            // 👇 Aquí se invoca la función para abrir el modal con el ID del tiquete
-                            onClick={() => handleOpenModal(item.id)}
-                            size="small"
-                            sx={{marginLeft:"7%"}}
-                        >
-                            <ManageAccountsIcon fontSize="small"/>
-                        </IconButton>
-                    </Tooltip>
-                )}
-                
-                <Tooltip title="Ver detalle" placement="bottom-start">
+              <Typography variant="body2" color="text.secondary">
+                <strong>{t('tickets.timeRemaining')}:</strong>{' '}
+                {item.tiempoRestante ?? '—'} {item.tiempoRestante ? t('tickets.hours') : ''}
+              </Typography>
+              
+              {(currentUser && currentUser.idRol == ADMIN_ROL_ID) && (
+                <Tooltip title={t('tickets.manualAssignment')} placement="bottom-end">
                   <IconButton
-                      aria-label="Detalle"
-                      to={`/ticket/${item.id}`}
-                      component={Link}
-                      color="primary"
-                      size="small" 
-                      sx={{marginLeft:"-2%"}}
+                    aria-label={t('tickets.manualAssignment')}
+                    color='warning' 
+                    onClick={() => handleOpenModal(item.id)}
+                    size="small"
+                    sx={{marginLeft:"7%"}}
                   >
-                      <Info fontSize="small" />                    
+                    <ManageAccountsIcon fontSize="small"/>
                   </IconButton>
-                </Tooltip> 
+                </Tooltip>
+              )}
+              
+              <Tooltip title={t('common.view') + ' ' + t('tickets.ticketDetail')} placement="bottom-start">
+                <IconButton
+                  aria-label={t('tickets.ticketDetail')}
+                  to={`/ticket/${item.id}`}
+                  component={Link}
+                  color="primary"
+                  size="small" 
+                  sx={{marginLeft:"-2%"}}
+                >
+                  <Info fontSize="small" />                    
+                </IconButton>
+              </Tooltip> 
             </Box>
           </CardContent>
 

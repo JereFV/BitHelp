@@ -1,4 +1,4 @@
-import { useState,} from "react";
+import { useState } from "react";
 import {
   IconButton,
   Alert,
@@ -13,6 +13,7 @@ import { styled } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import SendIcon from "@mui/icons-material/Send";
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 //Validación de propiedades para el historial del tiquete
 ImagesSelector.propTypes = {
@@ -79,7 +80,7 @@ export default function ImagesSelector({ newTicket, images, setImages }) {
               color="primary"
               style={{ marginRight: "1%" }}
             />
-            Imágenes Adjuntas
+            {t('tickets.attachedImages')}
           </Stack>
         </Typography>
       ) : null}
@@ -108,7 +109,7 @@ export default function ImagesSelector({ newTicket, images, setImages }) {
             >
               <img
                 src={img.preview}
-                alt={`Adjunto ${index + 1}`}
+                alt={`${t('common.attachment')} ${index + 1}`}
                 onClick={() => setSelectedImage(img.preview)}
                 style={{
                   width: "100%",
@@ -137,7 +138,7 @@ export default function ImagesSelector({ newTicket, images, setImages }) {
             severity="info"
             sx={{ fontSize: "1rem", fontWeight: "bold", width: "100%" }}
           >
-            {newTicket ? "No existen imágenes adjuntas para el tiquete en creación." : "No existen imágenes adjuntas para el nuevo movimiento del tiquete."} 
+            {newTicket ? t('tickets.noAttachedImages') : t('tickets.noAttachedImagesMovement')} 
           </Alert>
         )}
       </Box>
@@ -151,7 +152,7 @@ export default function ImagesSelector({ newTicket, images, setImages }) {
           tabIndex={-1}
           startIcon={<CloudUploadIcon />}
         >
-          Seleccionar Imágenes
+          {t('tickets.selectImages')}
           <VisuallyHiddenInput
             type="file"
             onChange={handleSeleccion}
@@ -166,7 +167,7 @@ export default function ImagesSelector({ newTicket, images, setImages }) {
           startIcon={<SendIcon />}
           color="success"
         >
-          {newTicket ? "Crear Tiquete" : "Guardar Movimiento"}
+          {newTicket ? t('tickets.createTicket') : t('tickets.saveMovement')}
         </Button>
       </Box>
 
@@ -191,7 +192,7 @@ export default function ImagesSelector({ newTicket, images, setImages }) {
           {selectedImage && (
             <img
               src={selectedImage}
-              alt="Vista ampliada"
+              alt={t('tickets.enlargedView')}
               style={{
                 width: "100%",
                 maxHeight: "90vh",
@@ -209,7 +210,7 @@ export default function ImagesSelector({ newTicket, images, setImages }) {
             size="small"
             onClick={() => setSelectedImage(null)}
           >
-            Cerrar
+            {t('common.close')}
           </Button>
         </Box>
       </Modal>

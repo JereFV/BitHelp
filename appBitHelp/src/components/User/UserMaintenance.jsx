@@ -4,10 +4,7 @@ import { Button,Chip,Paper,IconButton, Stack, Box, Alert,
   CircularProgress, Typography, Snackbar, Dialog, DialogTitle, 
   DialogContent, DialogContentText, DialogActions,Modal, Divider
 } from '@mui/material';
-
-// --- Importar react-hot-toast ---
 import toast, { Toaster } from 'react-hot-toast';
-
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -22,14 +19,14 @@ import TechnicianService from '../../services/TechnicianService';
 import UserService from '../../services/userService'; 
 import UserFormModal from './UserFormModal'; 
 import PasswordChangeModal from './PasswordChangeModal';
+import { useTranslation } from 'react-i18next';
+import { esES, enUS } from '@mui/x-data-grid/locales';
 
-// --- FUNCIONES HELPER ---
-// 1. Chip para el Estado (Activo/Inactivo)
-const getStatusChip = (estado) => {
+const getStatusChip = (estado, t) => {
   const isActive = estado === '1' || estado === 1; 
   return (
     <Chip
-      label={isActive ? 'Activo' : 'Inactivo'}
+      label={isActive ? t('common.active') : t('common.inactive')}
       color={isActive ? 'success' : 'error'}
       variant="filled" 
       size="small"
@@ -38,10 +35,9 @@ const getStatusChip = (estado) => {
   );
 };
 
-// 2. Chip para la Disponibilidad del Técnico
-const getAvailabilityChip = (idDisponibilidad) => {
+const getAvailabilityChip = (idDisponibilidad, t) => {
   const isAvailable = Number(idDisponibilidad) === 1;
-  const label = isAvailable ? 'DISPONIBLE' : 'OCUPADO';
+  const label = isAvailable ? t('users.available') : t('users.busy');
   const color = isAvailable ? 'info' : 'warning';
   
   if (!idDisponibilidad) {
@@ -58,33 +54,45 @@ const getAvailabilityChip = (idDisponibilidad) => {
   );
 };
 
-// --- 1. DEFINICIÓN DE COLUMNAS (Se modificó el onClick del botón eliminar) ---
-const getColumns = (handleOpenDetailModal, handleEdit, handleDelete,handleOpenPasswordModal) => [
-  { field: 'idUsuario', headerName: 'ID', width: 90, headerAlign: 'center', align: 'center' ,type: 'number' },
+const getColumns = (handleOpenDetailModal, handleEdit, handleDelete, handleOpenPasswordModal, t) => [
   { 
-    field: 'nombreCompleto', headerAlign: 'center', align: 'center' , 
-    headerName: 'Nombre Completo', 
+    field: 'idUsuario', 
+    headerName: t('users.userId'), 
+    width: 90, 
+    headerAlign: 'center', 
+    align: 'center',
+    type: 'number' 
+  },
+  { 
+    field: 'nombreCompleto', 
+    headerAlign: 'center', 
+    align: 'center', 
+    headerName: t('users.fullName'), 
     minWidth: 250,
     flex: 1,
-    
-  },
-  { field: 'correo', 
-   headerName: 'Correo Electrónico',
-   minWidth: 250, 
-   flex: 1, 
-   headerAlign: 'center', 
-   align: 'center' 
   },
   { 
-    field: 'nombreRol', headerAlign: 'center', align: 'center' , 
-    headerName: 'Rol', 
+    field: 'correo', 
+    headerName: t('users.email'),
+    minWidth: 250, 
+    flex: 1, 
+    headerAlign: 'center', 
+    align: 'center' 
+  },
+  { 
+    field: 'nombreRol', 
+    headerAlign: 'center', 
+    align: 'center', 
+    headerName: t('users.role'), 
     minWidth: 150,
     width: 250,
     flex: 0.6, 
   },
   {
-    field: 'actions', headerAlign: 'center', align: 'center' ,
-    headerName: 'Acciones',
+    field: 'actions', 
+    headerAlign: 'center', 
+    align: 'center',
+    headerName: t('common.actions'),
     minWidth: 250,
     sortable: false,
     renderCell: (params) => (
@@ -115,6 +123,7 @@ const getColumns = (handleOpenDetailModal, handleEdit, handleDelete,handleOpenPa
 ];
 
 export default function UserMaintenance() {
+  const { t, i18n } = useTranslation();
   
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -124,12 +133,11 @@ export default function UserMaintenance() {
   const [openDetailModal, setOpenDetailModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null); 
   const [detailLoading, setDetailLoading] = useState(false);
-
-  // MODIFICACIÓN: userToDelete guarda un objeto { id, nombre }
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null); // { id: number, nombre: string }
+  const [userToDelete, setUserToDelete] = useState(null);
 
-  // --- ESTILO DEL MODAL (Mantiene igual) ---
+  const dataGridLocale = i18n.language === 'es' ? esES : enUS;
+
   const modalStyle = {
     position: 'absolute',
     top: '50%',
@@ -144,7 +152,6 @@ export default function UserMaintenance() {
     overflowY: 'auto',
   };
 
-
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
@@ -158,12 +165,12 @@ export default function UserMaintenance() {
       setUsers(mappedUsers); 
     } catch (err) {
       console.error("Error al cargar usuarios:", err);
-      toast.error("No se pudieron cargar los usuarios. Verifica la conexión a la API.");
+      toast.error(t('users.errorLoadingUsers'));
       setUsers([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchUsers();
@@ -191,9 +198,6 @@ export default function UserMaintenance() {
     }
   }, []);
 
-  /**
-  * Apertura del modal de detalles con carga de datos adicionales si es Técnico.
-  */
   const handleOpenDetailModal = useCallback(async (user) => { 
     setSelectedUser(user);
     setOpenDetailModal(true);
@@ -240,16 +244,14 @@ export default function UserMaintenance() {
     setIsModalOpen(true);
   }, []);
 
-    // MODIFICACIÓN: Recibe el objeto completo y guarda ID y Nombre
   const handleDelete = useCallback((user) => {
     setUserToDelete({
-            id: user.idUsuario,
-            nombre: user.nombreCompleto
-        });
+      id: user.idUsuario,
+      nombre: user.nombreCompleto
+    });
     setIsConfirmOpen(true); 
   }, []);
 
-    // MODIFICACIÓN: Usa userToDelete.id para eliminar y userToDelete.nombre para el toast
   const handleConfirmDelete = async () => {
     setIsConfirmOpen(false);
     
@@ -261,10 +263,10 @@ export default function UserMaintenance() {
     try {
       await UserService.deleteUser(userId); 
       await fetchUsers(); 
-      toast.success(`Usuario "${userName}" eliminado correctamente.`);
+      toast.success(t('users.userDeletedSuccess', { userName }));
     } catch (err) {
       console.error("Error al eliminar usuario:", err);
-      toast.error("Hubo un error al intentar eliminar el usuario.");
+      toast.error(t('users.errorDeletingUser'));
     } finally {
       setUserToDelete(null);
     }
@@ -280,15 +282,11 @@ export default function UserMaintenance() {
       toast.success(message);
     }
   }, [fetchUsers]);
-  
 
-
-  // --- RENDERIZADO ---
-  const columns = getColumns(handleOpenDetailModal, handleEdit,handleDelete,handleOpenPasswordModal);
+  const columns = getColumns(handleOpenDetailModal, handleEdit, handleDelete, handleOpenPasswordModal, t);
 
   return (
     <Box sx={{ p: 0, height: '100%' }}>
-      {/* Componente Toaster */}
       <Toaster position="top-center" />
       
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-start' }}>
@@ -298,7 +296,7 @@ export default function UserMaintenance() {
           onClick={handleNewUser}
           startIcon={<AddIcon />}
         >
-          Crear Usuario
+          {t('users.createUser')}
         </Button>
       </Box>
       
@@ -314,14 +312,15 @@ export default function UserMaintenance() {
             columns={columns}
             initialState={{ 
               pagination: { paginationModel: { pageSize: 10 } },
-              
             }}
-            pageSizeOptions={[5, 10, 25,50]}
+            pageSizeOptions={[5, 10, 25, 50]}
             disableSelectionOnClick
-            localeText={{ noRowsLabel: 'No hay usuarios registrados' }}
+            localeText={{
+              ...dataGridLocale.components.MuiDataGrid.defaultProps.localeText,
+              noRowsLabel: t('users.noUsersRegistered')
+            }}
             sx={{ border: 0 }}
           />
-          
         )}
       </Box>
       
@@ -333,14 +332,13 @@ export default function UserMaintenance() {
 
       {selectedUser && (
         <PasswordChangeModal 
-        open={passModalOpen}
-        handleClose={handlePassModalClose}
-        userId={selectedUser.idUsuario}
-        userName={selectedUser.nombreCompleto || selectedUser.nombre} 
+          open={passModalOpen}
+          handleClose={handlePassModalClose}
+          userId={selectedUser.idUsuario}
+          userName={selectedUser.nombreCompleto || selectedUser.nombre} 
         />
       )}
 
-      {/* MODAL DE VISUALIZACIÓN DE DETALLES (Mantiene igual) */}
       <Modal
         open={openDetailModal}
         onClose={handleCloseDetailModal}
@@ -348,7 +346,7 @@ export default function UserMaintenance() {
       >
         <Box sx={modalStyle}>
           <Typography id="user-details-modal-title" variant="h5" component="h2" mb={1} sx={{ color: '#00796b', fontWeight: 'bold' }}>
-            Detalles del Usuario
+            {t('users.userDetails')}
           </Typography>
           
           <Divider sx={{ mb: 2 }} />
@@ -356,28 +354,27 @@ export default function UserMaintenance() {
           {detailLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress size={30} />
-              <Typography variant="body1" sx={{ ml: 2, alignSelf: 'center' }}>Cargando detalles de técnico...</Typography>
+              <Typography variant="body1" sx={{ ml: 2, alignSelf: 'center' }}>
+                {t('users.loadingTechnicianDetails')}
+              </Typography>
             </Box>
           ) : selectedUser && (
             <Box id="modal-modal-description">
               
-              {/* Fila de Nombre y Estado */}
               <Box display="flex" alignItems="center" mb={1}>
                 <AccountCircle color="primary" sx={{ mr: 1, fontSize: 30 }} />
                 <Typography variant="h6" fontWeight="bold" mr={1}>
                   {selectedUser.nombreCompleto} ({selectedUser.nombreRol})
                 </Typography>
-                {getStatusChip(selectedUser.estado)}
+                {getStatusChip(selectedUser.estado, t)}
               </Box>
               <Typography variant="body2" color="text.secondary" sx={{ml: 0.5, mb: 2}}>
-                ID: {selectedUser.idUsuario} | Usuario: {selectedUser.usuario}
+                {t('users.userId')}: {selectedUser.idUsuario} | {t('users.userName')}: {selectedUser.usuario}
               </Typography>
 
-
-              {/* Detalle Contacto */}
               <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                 <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
-                  CONTACTO
+                  {t('users.contact')}
                 </Typography>
                 <Box display="flex" alignItems="center" mb={1}>
                   <Mail color="action" sx={{ mr: 1, fontSize: 18 }} />
@@ -389,31 +386,28 @@ export default function UserMaintenance() {
                 </Box>
               </Paper>
               
-              {/* Bloques de Técnico (Solo si es Rol Técnico) */}
               {(selectedUser.idRol === '2' || selectedUser.nombreRol === 'Técnico') && (
                 <>
-                  {/* Detalle Carga/Disponibilidad */}
                   <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                     <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
-                      MÉTRICAS DE TRABAJO
+                      {t('users.workMetrics')}
                     </Typography>
                     <Box display="flex" alignItems="center" mb={1}>
                       <Work color="action" sx={{ mr: 1, fontSize: 18 }} />
                       <Typography variant="body2">
-                        Carga de Trabajo: <strong>{selectedUser.cargaTrabajo || '00:00:00'}</strong>
+                        {t('users.workload')}: <strong>{selectedUser.cargaTrabajo || '00:00:00'}</strong>
                       </Typography>
                     </Box>
                     <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
-                      {getAvailabilityChip(selectedUser.idDisponibilidad)} 
+                      {getAvailabilityChip(selectedUser.idDisponibilidad, t)} 
                     </Box>
                   </Paper>
 
-                  {/* Detalle Especialidades */}
                   <Paper variant="outlined" sx={{ p: 2 }}>
                     <Box mb={1} display="flex" alignItems="center">
                       <Verified color="action" sx={{ mr: 1, fontSize: 18, verticalAlign: 'middle'}}/>
                       <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
-                        ESPECIALIDADES
+                        {t('technicians.specialties').toUpperCase()}
                       </Typography>
                     </Box>
                     <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
@@ -429,7 +423,7 @@ export default function UserMaintenance() {
                         ))
                       ) : (
                         <Typography fontSize={14} color="text.secondary" sx={{ml: 0.5}}>
-                          No tiene especialidades asignadas.
+                          {t('technicians.noSpecialtiesAssigned')}
                         </Typography>
                       )}
                     </Stack>
@@ -439,31 +433,32 @@ export default function UserMaintenance() {
 
             </Box>
           )}
-          <Button onClick={handleCloseDetailModal} variant="contained" sx={{ mt: 3, float: 'right', backgroundColor: '#00796b' }}>Cerrar</Button>
+          <Button onClick={handleCloseDetailModal} variant="contained" sx={{ mt: 3, float: 'right', backgroundColor: '#00796b' }}>
+            {t('common.close')}
+          </Button>
         </Box>
       </Modal>
 
-      {/* DIALOGO DE CONFIRMACIÓN PARA ELIMINAR UN USUARIO */}
       <Dialog
         open={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
       >
         <DialogTitle sx={{ color: 'error.main' }}>
-          {"Confirmar Eliminación"}
+          {t('users.confirmDelete')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            ¿Estás seguro de que deseas eliminar al usuario  <span></span>
-             {userToDelete?.nombre}? 
-            Esta acción no se puede deshacer.
+            {t('users.deleteConfirmMessage', { userName: userToDelete?.nombre })}
+            <br />
+            {t('users.deleteWarningMessage')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setIsConfirmOpen(false)} color="primary">
-            Cancelar
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus>
-            Eliminar
+            {t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

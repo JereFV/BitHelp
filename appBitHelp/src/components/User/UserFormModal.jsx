@@ -4,16 +4,12 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup'; 
 import { userSchema } from '../../Utilities/validationSchemas'; 
 import UserService from '../../services/userService';
-import { use } from 'react';
 import PropTypes from 'prop-types';
-
-
+import { useTranslation } from 'react-i18next';
 
 UserFormModal.propTypes = {
-
     open: PropTypes.bool.isRequired, 
     handleClose: PropTypes.func.isRequired,
-    
     userToEdit: PropTypes.shape({
         idUsuario: PropTypes.number,
         nombre: PropTypes.string,
@@ -23,9 +19,7 @@ UserFormModal.propTypes = {
         telefono: PropTypes.string,
         idRol: PropTypes.number, 
         estado: PropTypes.number,
-       
     }), 
-    
 };
 
 const style = {
@@ -40,7 +34,6 @@ const style = {
     borderRadius: 1,
 };
 
-// Valores por defecto para el formulario de RHF
 const defaultValues = {
     nombre: '', 
     primerApellido: '', 
@@ -53,6 +46,7 @@ const defaultValues = {
 };
 
 export default function UserFormModal({ open, handleClose, userToEdit }) {
+    const { t } = useTranslation();
     const isEditing = !!userToEdit;
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState(null);
@@ -64,14 +58,12 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
         formState: { errors, isSubmitting } 
     } = useForm({
         defaultValues,
-        resolver: yupResolver(userSchema), // Conexión  al Yup
-        context: { isEditing } // Contexto para validación condicional (contraseña)
+        resolver: yupResolver(userSchema),
+        context: { isEditing }
     });
 
-    // Efecto para cargar datos y resetear 
     useEffect(() => {
         if (open) {
-            // Prepara los datos del usuario para RHF
             if (isEditing) {
                 reset({
                     nombre: userToEdit.nombre || '',
@@ -80,64 +72,52 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                     correo: userToEdit.correo || '',
                     telefono: userToEdit.telefono || '',
                     idRol: userToEdit.idRol || '1',
-                    contrasenna: '', // Siempre vacío
+                    contrasenna: '',
                     estado: userToEdit.estado || 1,
                 });
             } else {
-                reset(defaultValues); // Reset a valores por defecto para crear
+                reset(defaultValues);
             }
         }
         setError(null);
     }, [userToEdit, isEditing, open, reset]);
 
-
-    //  Lógica de envío (ahora manejada por RHF) 
     const onSubmit = async (data) => {
         setLoading(true);
         setError(null);
 
-        // Crear el objeto base (contiene strings para idRol y estado)
         let dataToSend = { ...data };
 
-        // Ambas propiedades deben ser números para la API (SQL)
         dataToSend.idRol = Number(dataToSend.idRol);
         
-        // El 'estado' solo viene si estamos editando, pero siempre debe ser numérico.
-        // Aunque el campo 'estado' esté como string en RHF, lo convertimos a number aquí.
         if (dataToSend.estado !== undefined && dataToSend.estado !== null) {
             dataToSend.estado = Number(dataToSend.estado);
         }
 
-
         if (isEditing) {
-            // LIMPIEZA DE CONTRASEÑA 
-            // Elimina 'contrasenna' si viene vacía (como está oculto, siempre estará vacía)
             if (dataToSend.contrasenna === '' || dataToSend.contrasenna === null) {
                 delete dataToSend.contrasenna;
             }
             
-            // INCLUIR idUsuario (Necesario para el SQL UPDATE)
             dataToSend.idUsuario = userToEdit.idUsuario;
         }
 
         try {
             let message = '';
             if (isEditing) {
-                // Llama al servicio con el ID en la URL y el objeto limpio y convertido
                 await UserService.updateUser(userToEdit.idUsuario, dataToSend);
-                message = `Usuario ${userToEdit.idUsuario} actualizado correctamente.`;
+                message = t('users.userUpdatedSuccess', { userId: userToEdit.idUsuario });
             } else {
                 await UserService.createUser(dataToSend);
-                message = `Usuario creado correctamente.`;
+                message = t('users.userCreatedSuccess');
             }
             
             handleClose(true, message);
         } catch (err) {
-            // Revisa la consola: el error de la API (err.response?.data)  dirá la razón exacta.
             console.error("Error de API:", err.response?.data);
             console.error("Payload enviado:", dataToSend);
-            const apiError = err.response?.data?.message || err.response?.data?.error || 'Verifica la conexión o los datos.';
-            setError(`Error al guardar: ${apiError}`);
+            const apiError = err.response?.data?.message || err.response?.data?.error || t('users.verifyConnection');
+            setError(`${t('users.errorSaving')}: ${apiError}`);
         } finally {
             setLoading(false);
         }
@@ -145,22 +125,20 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
 
     return (
         <Modal open={open} onClose={() => handleClose(false)}>
-            {/* RHF maneja el onSubmit */}
             <Box sx={style} component="form" onSubmit={handleSubmit(onSubmit)}>
                 <Typography variant="h5" component="h2" gutterBottom>
-                    {isEditing ? ' Editar Usuario' : '➕ Crear Nuevo Usuario'}
+                    {isEditing ? t('users.editUser') : t('users.createNewUser')}
                 </Typography>
                 
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-                {/* --- CAMPO NOMBRE --- */}
                 <Controller
                     name="nombre"
                     control={control}
                     render={({ field }) => (
                         <TextField
                             {...field}
-                            label="Nombre"
+                            label={t('users.firstName')}
                             fullWidth
                             required
                             margin="normal"
@@ -170,14 +148,13 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                     )}
                 />
 
-                {/* --- CAMPO PRIMER APELLIDO --- */}
                 <Controller
                     name="primerApellido"
                     control={control}
                     render={({ field }) => (
                         <TextField
                             {...field}
-                            label="Primer Apellido"
+                            label={t('users.firstLastName')}
                             fullWidth
                             required
                             margin="normal"
@@ -187,14 +164,13 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                     )}
                 />
                 
-                {/* --- CAMPO SEGUNDO APELLIDO --- */}
                 <Controller
                     name="segundoApellido"
                     control={control}
                     render={({ field }) => (
                         <TextField
                             {...field}
-                            label="Segundo Apellido (Opcional)"
+                            label={t('users.secondLastNameOptional')}
                             fullWidth
                             margin="normal"
                             error={!!errors.segundoApellido}
@@ -203,14 +179,13 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                     )}
                 />
                 
-                {/* --- CAMPO CORREO --- */}
                 <Controller
                     name="correo"
                     control={control}
                     render={({ field }) => (
                         <TextField
                             {...field}
-                            label="Correo Electrónico (Email)"
+                            label={t('users.emailAddress')}
                             type="email"
                             fullWidth
                             required
@@ -221,37 +196,34 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                     )}
                 />
                 
-                {/* --- CAMPO TELÉFONO --- */}
                 <Controller
                     name="telefono"
                     control={control}
                     render={({ field }) => (
                         <TextField
                             {...field}
-                            label="Teléfono"
+                            label={t('technicians.phone')}
                             fullWidth
                             margin="normal"
                             error={!!errors.telefono}
                             helperText={errors.telefono?.message}
-                            // Usamos onChange custom para manejar el valor como null si está vacío
                             onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
                             value={field.value || ''}
                         />
                     )}
                 />
                 
-                {/* --- CAMPO CONTRASEÑA --- */}
-                {!isEditing && ( // <--- SOLO AL CREAR
+                {!isEditing && (
                     <Controller
                         name="contrasenna"
                         control={control}
                         render={({ field }) => (
                             <TextField
                                 {...field}
-                                label="Contraseña"
+                                label={t('auth.password')}
                                 type="password"
                                 fullWidth
-                                required={!isEditing} // Condicionalmente requerido
+                                required={!isEditing}
                                 margin="normal"
                                 error={!!errors.contrasenna}
                                 helperText={errors.contrasenna?.message}
@@ -260,23 +232,22 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                     />
                 )}
 
-                {/* --- CAMPO ESTADO (SELECT, SOLO EDITAR) --- */}
                 {isEditing && (
                     <Controller
                         name="estado"
                         control={control}
                         render={({ field }) => (
                             <FormControl fullWidth margin="normal" required error={!!errors.estado}>
-                                <InputLabel id="estado-select-label">Estado</InputLabel>
+                                <InputLabel id="estado-select-label">{t('common.status')}</InputLabel>
                                 <Select
                                     {...field}
                                     labelId="estado-select-label"
                                     id="estado-select"
-                                    label="Estado"                                    
+                                    label={t('common.status')}                                    
                                     value={field.value !== undefined ? field.value : 1}                                    
                                 >
-                                    <MenuItem value={1}>Activo</MenuItem>
-                                    <MenuItem value={0}>Inactivo</MenuItem>
+                                    <MenuItem value={1}>{t('common.active')}</MenuItem>
+                                    <MenuItem value={0}>{t('common.inactive')}</MenuItem>
                                 </Select>
                                 {errors.estado && <Typography color="error" variant="caption" sx={{ml: 2}}>{errors.estado.message}</Typography>}
                             </FormControl>
@@ -284,29 +255,26 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                     />
                 )}
 
-                {/* --- CAMPO ROL (SELECT) --- */}
                 <Controller
                     name="idRol"
                     control={control}
                     render={({ field }) => (
                         <FormControl fullWidth margin="normal" required error={!!errors.idRol}>
-                            <InputLabel id="rol-select-label">Rol</InputLabel>
+                            <InputLabel id="rol-select-label">{t('users.role')}</InputLabel>
                             <Select
                                 {...field}
                                 labelId="rol-select-label"
                                 id="rol-select"
-                                label="Rol"
+                                label={t('users.role')}
                             >
-                                <MenuItem value={"1"}>Cliente</MenuItem>
-                                <MenuItem value={"2"}>Técnico</MenuItem>
-                                <MenuItem value={"3"}>Administrador</MenuItem>
+                                <MenuItem value={"1"}>{t('users.client')}</MenuItem>
+                                <MenuItem value={"2"}>{t('users.technician')}</MenuItem>
+                                <MenuItem value={"3"}>{t('users.administrator')}</MenuItem>
                             </Select>
                             {errors.idRol && <Typography color="error" variant="caption" sx={{ml: 2}}>{errors.idRol.message}</Typography>}
                         </FormControl>
                     )}
                 />
-
-                
 
                 <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
                     <Button 
@@ -314,7 +282,7 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                         variant="outlined"
                         disabled={loading || isSubmitting}
                     >
-                        Cancelar
+                        {t('common.cancel')}
                     </Button>
                     <Button 
                         type="submit" 
@@ -323,7 +291,7 @@ export default function UserFormModal({ open, handleClose, userToEdit }) {
                         disabled={loading || isSubmitting}
                         startIcon={(loading || isSubmitting) ? <CircularProgress size={20} color="inherit" /> : null}
                     >
-                        {isEditing ? 'Actualizar' : 'Guardar'}
+                        {isEditing ? t('common.update') : t('common.save')}
                     </Button>
                 </Box>
             </Box>

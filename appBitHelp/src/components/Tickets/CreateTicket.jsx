@@ -43,27 +43,26 @@ import toast from 'react-hot-toast';
 import TicketImageService from "../../services/TicketImageService"; 
 import ImagesSelector from "./ImagesSelector";
 import { NotificationContext } from '../../context/NotificationContext';
+import { useTranslation } from 'react-i18next';
 
 export function CreateTicket() {
+  const { t, i18n } = useTranslation();
   const { refreshCount } = useContext(NotificationContext);
-  //Variable que contiene los campos del formulario en un formato de llave -> valor.
   let formData = new FormData();
 
-  //Almacena los datos del usuario en sesión a partir de la información de localStorage.
   const userSession = JSON.parse(localStorage.getItem("userSession"));
 
-  //Estilos definidos para el contenedor padre.
   const styleParentBox = {
     position: "absolute",
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
     width: {
-      xs: "90%", // 90% width on extra-small screens
-      sm: "80%", // 80% width on small screens
-      md: "70%", // 70% width on medium screens
-      lg: "60%", // 60% width on large screens
-      xl: "50%", // 50% width on extra-large screens
+      xs: "90%",
+      sm: "80%",
+      md: "70%",
+      lg: "60%",
+      xl: "50%",
     },
     maxHeight: "90vh",
     bgcolor: "background.paper",
@@ -80,25 +79,24 @@ export function CreateTicket() {
   const ticketSchema = yup.object({
     title: yup
           .string()
-          .required("El título es requerido.")
-          .max(45, "El título debe tener un máximo de 45 caractereres."),
+          .required(t('validation.titleRequired'))
+          .max(45, t('validation.titleMaxLength')),
     description: yup
           .string()
-          .required("La descripción es requerida.")
-          .min(30, "La descripción debe tener un mínimo de 30 caracteres.")
-          .max(300, "La descripción debe tener un máximo de 300 caracteres."),
+          .required(t('validation.descriptionRequired'))
+          .min(30, t('validation.descriptionMinLength'))
+          .max(300, t('validation.descriptionMaxLength')),
     idPriority: yup
           .number()
-          .typeError("La prioridad del caso es requerida."),
+          .typeError(t('validation.priorityRequired')),
     idTag: yup
           .number()        
-          .typeError("La etiqueta es requerida para la categorización del caso."),         
+          .typeError(t('validation.tagRequired')),         
     categorie: yup
           .string()
-          .required("La categoría es requerida, por favor seleccione alguna etiqueta."),
+          .required(t('validation.categoryRequired')),
   });
 
-  //Incializacióm del formulario junto con el valor predefinido de los campos.
   const {
     control,
     setValue,
@@ -153,29 +151,24 @@ export function CreateTicket() {
         //Almacena los datos de la categoria en los campos del formulario respectivos.
         setValue("idCategorie", response.data.idCategoria);
         setValue("categorie", response.data.nombre, {shouldValidate: true});
-
-        toast.success("Categoría obtenida automáticamente a partir de la etiqueta seleccionada.", {duration: 3500});
+        toast.success(t('messages.categoryObtainedSuccess'), {duration: 3500});
       })
       .catch((error) => {
         console.log(error);
-        toast.error("Ha ocurrido un error al intentar obtener la categoría asociada a la etiqueta seleccionada. Por favor seleccione otra o contacte al administrador del sistema.", {duration: 3500});
+        toast.error(t('messages.errorGettingCategory'), {duration: 3500});
       });
   }; 
 
-  //Evento submit del formulario
   const onSubmit = (DataForm) => {
-    try 
-    {
+    try {
       //Valida que los campos del formulario cumplan con las especificaciones requeridas.
-      if (ticketSchema.isValid()) 
-      {
+      if (ticketSchema.isValid()) {
         //Creación del tiquete
         TicketService.createTicket(DataForm)
           .then((response) => {
             //Valida que exista algún valor en la respuesta.
-            if (response.data != null) 
-            {
-              //Arma la estructura de entrada para el almacenamiento de imágenes.            
+            if (response.data != null) {
+              //Arma la estructura de entrada para el almacenamiento de imágenes. 
               formData.append("idTicket", response.data);
 
               //Recorre cada una de las imágenes adjuntas para añadirlas en el arreglo.
@@ -187,39 +180,37 @@ export function CreateTicket() {
               TicketImageService.uploadImages(formData)
                 .then(() => {
                   toast.success(
-                    `Se ha creado correctamente el tiquete #${response.data} - ${DataForm.title}`,
+                    `${t('messages.ticketCreatedSuccess')} #${response.data} - ${DataForm.title}`,
                     {
                       duration: 4000,
                       position: "top-center",
                     }
                   );
-
-                  refreshCount(); // Actualiza el contador de notificaciones
-
+                  // Actualiza el contador de notificaciones
+                  refreshCount();
                   //Al haber agregado el registro exitosamente, redirreciona hacia el listado.
                   return navigate("/tickets/ticketsList");
                 })
                 .catch((error) => {
-                  toast.error("Ha ocurrido un error al intentar crear el tiquete.");
+                  toast.error(t('messages.errorCreatingTicket'));
                   console.error(error);
                 });
             }
           })
           .catch((error) => {
-            toast.error("Ha ocurrido un error al intentar crear el tiquete.");
+            toast.error(t('messages.errorCreatingTicket'));
             console.error(error);
           });
       }
-    } 
-    catch (error) {
-      toast.error("Ha ocurrido un error al intentar crear el tiquete.");
+    } catch (error) {
+      toast.error(t('messages.errorCreatingTicket'));
       console.error(error);
     }
   };
 
   //Evento error del formulario.
   const onError = (errors, e) => {
-    toast.error("Ha ocurrido un error al intentar crear el tiquete.");
+    toast.error(t('messages.errorCreatingTicket'));
     console.log(errors, e);
   }    
 
@@ -231,7 +222,7 @@ export function CreateTicket() {
         setTicketPriorities(response.data);
       })
       .catch((error) => {
-        toast.error("Ha ocurrido un error al obtener el catálogo de prioridades. Por favor contacte al administrador del sistema.", {duration: 3500});
+        toast.error(t('messages.errorGettingPriorities'), {duration: 3500});
         console.log(error);
       });
 
@@ -242,20 +233,20 @@ export function CreateTicket() {
         setTicketTags(response.data);
       })
       .catch((error) => {
-        toast.error("Ha ocurrido un error al obtener el catálogo de etiquetas. Por favor contacte al administrador del sistema.", {duration: 3500});
+        toast.error(t('messages.errorGettingTags'), {duration: 3500});
         console.log(error);
       });
 
-    try 
-    {
+    try {
       //Asigna el id del usuario al campo del formulario respectivo.
       setValue("idRequestUser", userSession.idUsuario);
-    } 
-    catch (error) {
-      toast.error("Ha ocurrido un error al intentar obtener los datos del usuario en sesión. Por favor contacte al administrador del sistema.", { duration: 3500 });
+    } catch (error) {
+      toast.error(t('messages.errorGettingUserSession'), { duration: 3500 });
       console.error(error);
     }
   }, [routeParams.id]);
+
+  const dateFormat = i18n.language === 'es' ? 'DD/MM/YYYY' : 'MM/DD/YYYY';
 
   return (
     <Modal
@@ -263,7 +254,6 @@ export function CreateTicket() {
       onClose={(reason) => {
         //Previene el cerrado del modal al clickear el backdrop autogenerado.
         if (reason === "backdropClick") return;
-
         handleClose;
       }}
       aria-labelledby="modal-modal-title"
@@ -294,7 +284,7 @@ export function CreateTicket() {
                   color="primary"
                   style={{ marginRight: "1%" }}
                 />
-                Nuevo Tiquete
+                {t('tickets.newTicket')}
               </Stack>
             </Typography>
 
@@ -310,7 +300,7 @@ export function CreateTicket() {
                   color="primary"
                   style={{ marginRight: "1%" }}
                 />
-                Información General
+                {t('tickets.generalInfo')}
               </Stack>
             </Typography>
 
@@ -322,7 +312,7 @@ export function CreateTicket() {
                   <TextField
                     {...field}
                     id="title"
-                    label="Título"
+                    label={t('tickets.title')}
                     fullWidth
                     error={Boolean(errors.title)}
                     helperText={errors.title ? errors.title.message : ""}
@@ -341,10 +331,10 @@ export function CreateTicket() {
 
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateTimeField
-                  label="Fecha de Creación"
+                  label={t('tickets.creationDate')}
                   value={dayjs(new Date())}
                   readOnly={true}
-                  format="DD/MM/YYYY"
+                  format={dateFormat}
                   fullWidth
                   slotProps={{
                     textField: {
@@ -371,7 +361,7 @@ export function CreateTicket() {
                     <TextField
                       {...field}
                       id="description"
-                      label="Descripción"
+                      label={t('tickets.description')}
                       fullWidth
                       multiline
                       maxRows={4}
@@ -388,9 +378,9 @@ export function CreateTicket() {
               <Stack direction="column" spacing={"1rem"} width={"50%"}>
                 <TextField
                   id="outlined-read-only-input"
-                  label="Estado Inicial"
+                  label={t('tickets.initialState')}
                   fullWidth
-                  value={"Pendiente"}
+                  value={t('tickets.pending')}
                   slotProps={{
                     input: {
                       readOnly: true,
@@ -409,13 +399,12 @@ export function CreateTicket() {
                     control={control}
                     render={({ field }) => (
                       <>
-                        <InputLabel id="id">Prioridad</InputLabel>
+                        <InputLabel id="id">{t('common.priority')}</InputLabel>
                         <Select
                           {...field}
                           labelId="idPriority"
                           value={field.value}
-                          label="Prioridad"
-                          //onChange={handlePriorityChange}
+                          label={t('common.priority')}
                           fullWidth
                           error={Boolean(errors.idPriority)}
                         >
@@ -453,7 +442,7 @@ export function CreateTicket() {
                   color="primary"
                   style={{ marginRight: "1%" }}
                 />
-                Información Usuario Solicitante
+                {t('tickets.requesterInfo')}
               </Stack>
             </Typography>
 
@@ -502,7 +491,7 @@ export function CreateTicket() {
                   color="primary"
                   style={{ marginRight: "1%" }}
                 />
-                Categorización del Tiquete
+                {t('tickets.categorization')}
               </Stack>
             </Typography>
 
@@ -513,12 +502,12 @@ export function CreateTicket() {
                   control={control}
                   render={({ field }) => (
                     <>
-                      <InputLabel id="id">Etiqueta</InputLabel>
+                      <InputLabel id="id">{t('tickets.tag')}</InputLabel>
                       <Select
                         {...field}
                         labelId="idTag"
                         value={field.value}
-                        label="Etiqueta"
+                        label={t('tickets.tag')}
                         onChange={(event) =>
                           handleTagChange(event, field.onChange)
                         }
@@ -538,7 +527,7 @@ export function CreateTicket() {
                       <FormHelperText error={errors.idTag}>
                         {errors.idTag
                           ? errors.idTag.message
-                          : "Seleccione la etiqueta más adecuada según su problema."}
+                          : t('tickets.selectAppropriateTag')}
                       </FormHelperText>
                     </>
                   )}
@@ -556,7 +545,7 @@ export function CreateTicket() {
                     <TextField
                       {...field}
                       id="categorie"
-                      label="Categoría"
+                      label={t('categories.category')}
                       fullWidth
                       error={Boolean(errors.categorie)}
                       slotProps={{
@@ -575,7 +564,7 @@ export function CreateTicket() {
                 <FormHelperText error={errors.categorie}>
                   {errors.categorie
                     ? errors.categorie.message
-                    : "Obtenida a partir de la etiqueta seleccionada."}
+                    : t('tickets.categoryObtainedFromTag')}
                 </FormHelperText>
               </FormControl>
             </Stack>
@@ -603,4 +592,3 @@ export function CreateTicket() {
     </Modal>
   );
 }
-
