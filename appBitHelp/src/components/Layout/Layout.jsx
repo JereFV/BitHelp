@@ -189,7 +189,24 @@ export function Layout({ children }) {
 
         <PageContainer title='' breadcrumbs={[]} maxWidth={false}>
           {children}
-        </PageContainer>     
+        </PageContainer>
+        {/* Footer */}
+        <Box sx={{ 
+          borderTop: 1, 
+          borderColor: 'divider',
+          py: 2,
+          px: 3,
+          mt: 'auto',
+          textAlign: 'center',
+          backgroundColor: 'background.paper'
+        }}>
+          <Typography variant="caption" color="text.secondary">
+            ISW-613 PROGRAMACIÓN EN AMBIENTE WEB I
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+            Jeyson Alfaro Ríos • Jeremy Fuentes Venegas • Rodrigo Herrera Castillo
+          </Typography>
+        </Box>
       </DashboardLayout>
     </AppProvider>
   ); 

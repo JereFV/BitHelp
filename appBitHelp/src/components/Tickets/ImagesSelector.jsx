@@ -23,6 +23,7 @@ ImagesSelector.propTypes = {
 }
 
 export default function ImagesSelector({ newTicket, images, setImages }) {
+  const { t } = useTranslation();
   //Almacena la imagen seleccionada de los adjuntos para ser ampliada en otra vista.
   const [selectedImage, setSelectedImage] = useState(null);
 
