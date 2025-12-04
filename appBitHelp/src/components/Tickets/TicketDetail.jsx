@@ -517,7 +517,7 @@ export function TicketDetail() {
                   id="outlined-read-only-input-closed-time"
                   label={t('tickets.closingTime')} // mostrar el tiempo de cierre
                   fullWidth
-                  value={formatClosingTime(ticket.fechaCreacion, ticket.fechaCierre)} // Usamos una función para el cálculo
+                  value={formatClosingTime(ticket.fechaCreacion, ticket.slaResolucion)} // Usamos una función para el cálculo
                   sx={{ flex: 1 }}
                   slotProps={{
                     input: {
