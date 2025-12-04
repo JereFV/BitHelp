@@ -28,6 +28,7 @@ import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import AddIcon from '@mui/icons-material/Add';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Controller, useForm } from "react-hook-form";
 import ImagesSelector from './ImagesSelector';
 import TicketStatusFlowService from '../../services/TicketStatusFlowService';
@@ -81,6 +82,63 @@ const getColorMap = (theme, severity) => {
                 textColor: '#0D47A1',
             };
     }
+};
+
+/**
+ * Calcula y formatea el tiempo transcurrido entre la fecha de creación y la fecha de cierre.
+ * Muestra el tiempo en horas/minutos si es menos de 1 día, o en días si es más.
+ * * @param {Date | number} creationDate - Fecha de creación.
+ * @param {Date | number} closingDate - Fecha de cierre.
+ * @returns {string} El tiempo transcurrido formateado.
+ */
+const formatClosingTime = (creationDate, closingDate) => {
+  if (!creationDate || !closingDate) {
+    return "N/A";
+  }
+
+  const start = new Date(creationDate);
+  const end = new Date(closingDate);
+
+  // 1. Calcular la diferencia absoluta en milisegundos (ms)
+  const diffTimeMs = Math.abs(end.getTime() - start.getTime());
+
+  // Constantes de tiempo
+  const MS_PER_DAY = 1000 * 60 * 60 * 24;
+  const MS_PER_HOUR = 1000 * 60 * 60;
+  const MS_PER_MINUTE = 1000 * 60;
+
+  // --- Lógica de Formato ---
+
+  if (diffTimeMs < MS_PER_DAY) {
+    // Es menos de 1 día: Mostrar en horas y minutos
+
+    // Calcular horas
+    const hours = Math.floor(diffTimeMs / MS_PER_HOUR);
+    // Calcular minutos restantes
+    const remainingMsAfterHours = diffTimeMs % MS_PER_HOUR;
+    const minutes = Math.round(remainingMsAfterHours / MS_PER_MINUTE);
+
+    // Formatear el resultado
+    let result = "";
+    if (hours > 0) {
+      result += `${hours} hora(s) `;
+    }
+    if (minutes > 0) {
+      result += `${minutes} minuto(s)`;
+    }
+    
+    // Si es muy rápido (e.g., menos de un minuto), podrías mostrar "Menos de 1 min"
+    if (result === "") {
+        return "Cierre instantáneo";
+    }
+
+    return result.trim();
+
+  } else {
+    // Es 1 día o más: Mostrar en días
+    const diffDays = Math.round(diffTimeMs / MS_PER_DAY);
+    return `${diffDays} día(s)`;
+  }
 };
 
 export function TicketDetail() {
@@ -427,6 +485,54 @@ export function TicketDetail() {
             </Stack>
 
             <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
+
+            {ticket.fechaCierre != null ? (
+              // ESTADO CERRADO (Si la condición es verdadera)
+              <Stack
+                direction="row"
+                spacing={2}
+                sx={{ flex: 1 }}
+              >
+                {/* Campo Status */}
+                <TextField
+                  id="outlined-read-only-input"
+                  label={t('tickets.status')}
+                  fullWidth
+                  value={ticket.estadoTiquete?.nombre ?? ""}
+                  sx={{ flex: 1 }}
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <NotificationsIcon color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+
+                {/* Campo Tiempo de Cierre (Cálculo de días) */}
+                <TextField
+                  id="outlined-read-only-input-closed-time"
+                  label={t('tickets.closingTime')} // mostrar el tiempo de cierre
+                  fullWidth
+                  value={formatClosingTime(ticket.fechaCreacion, ticket.fechaCierre)} // Usaremos una función para el cálculo
+                  sx={{ flex: 1 }}
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <AccessTimeIcon color="primary" /> 
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </Stack>
+            ) : (
+              // ESTADO ABIERTO (Si la condición es falsa - no hay fecha de cierre)
               <TextField
                 id="outlined-read-only-input"
                 label={t('tickets.status')}
@@ -444,57 +550,61 @@ export function TicketDetail() {
                   },
                 }}
               />
+            )}
 
-              <Stack
-                direction="row"
-                spacing={2}
+            {/* Los siguientes campos se renderizan SIEMPRE, ya que están fuera del ternario */}
+            <Stack
+              direction="row"
+              spacing={2}
+              sx={{ flex: 1 }}
+            >
+              {/* Campo Prioridad */}
+              <TextField
+                id="outlined-read-only-input-priority" 
+                label={t('tickets.priority')}
+                fullWidth
+                value={ticket.prioridad?.nombre ?? ""}
                 sx={{ flex: 1 }}
-              >
-                <TextField
-                  id="outlined-read-only-input"
-                  label={t('tickets.priority')}
-                  fullWidth
-                  value={ticket.prioridad?.nombre ?? ""}
-                  sx={{ flex: 1 }}
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <PriorityHighIcon color="primary" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PriorityHighIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
 
-                <TextField
-                  id="outlined-read-only-input-asignation-method"
-                  label={t('tickets.assignmentMethod')}
-                  fullWidth
-                  value={
-                    ticket.metodoAsignacion
-                      ? ticket.metodoAsignacion?.nombre
-                      : t('tickets.notAssigned')
-                  }
-                  sx={{ flex: 1 }}
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <StarsIcon color="primary" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-              </Stack>
+              {/* Campo Método de Asignación */}
+              <TextField
+                id="outlined-read-only-input-asignation-method"
+                label={t('tickets.assignmentMethod')}
+                fullWidth
+                value={
+                  ticket.metodoAsignacion
+                    ? ticket.metodoAsignacion?.nombre
+                    : t('tickets.notAssigned')
+                }
+                sx={{ flex: 1 }}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <StarsIcon color="primary" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
             </Stack>
+          </Stack>
 
             <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
               <TextField
-                id="outlined-read-only-input"
+                id="outlined-read-only-input-assigned-technician"
                 label={t('tickets.assignedTechnician')}
                 fullWidth
                 value={
