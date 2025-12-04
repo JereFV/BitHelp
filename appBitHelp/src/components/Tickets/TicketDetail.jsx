@@ -499,7 +499,7 @@ export function TicketDetail() {
                   label={t('tickets.status')}
                   fullWidth
                   value={ticket.estadoTiquete?.nombre ?? ""}
-                  sx={{ flex: 1 }}
+                  sx={{ flex: 0.77 }}
                   slotProps={{
                     input: {
                       readOnly: true,
@@ -517,14 +517,14 @@ export function TicketDetail() {
                   id="outlined-read-only-input-closed-time"
                   label={t('tickets.closingTime')} // mostrar el tiempo de cierre
                   fullWidth
-                  value={formatClosingTime(ticket.fechaCreacion, ticket.fechaCierre)} // Usaremos una función para el cálculo
+                  value={formatClosingTime(ticket.fechaCreacion, ticket.fechaCierre)} // Usamos una función para el cálculo
                   sx={{ flex: 1 }}
                   slotProps={{
                     input: {
                       readOnly: true,
                       startAdornment: (
                         <InputAdornment position="start">
-                          <AccessTimeIcon color="primary" /> 
+                          <AccessTimeIcon color="primary" sx={{marginLeft:"-6px",  marginRight:"-5px",}}/> 
                         </InputAdornment>
                       ),
                     },
