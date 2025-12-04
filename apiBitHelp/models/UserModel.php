@@ -32,6 +32,47 @@ class UserModel
 
 		return $string;
 	}
+
+	/**
+ * Verifica si un correo ya existe en la base de datos
+ * @param string $correo El correo a verificar
+ * @param int|null $idUsuario ID del usuario a excluir (para updates)
+ * @return bool true si el correo ya existe
+ */
+private function correoExists($correo, $idUsuario = null) {
+    $sql = "SELECT COUNT(*) AS count FROM usuario WHERE correo = '$correo'";
+    
+    if ($idUsuario !== null) {
+        $sql .= " AND idUsuario != $idUsuario";
+    }
+    
+    $resultado = $this->enlace->ExecuteSQL($sql);
+    return $resultado[0]->count > 0;
+}
+
+/**
+ * Valida que la contraseña cumpla con requisitos de complejidad
+ * Nivel medio: mínimo 8 caracteres, 1 mayúscula, 1 minúscula, 1 número
+ * @param string $password La contraseña a validar
+ * @throws Exception Si no cumple los requisitos
+ */
+private function validatePasswordComplexity($password) {
+    if (strlen($password) < 8) {
+        throw new Exception("La contraseña debe tener al menos 8 caracteres.");
+    }
+    
+    if (!preg_match('/[A-Z]/', $password)) {
+        throw new Exception("La contraseña debe contener al menos una letra mayúscula.");
+    }
+    
+    if (!preg_match('/[a-z]/', $password)) {
+        throw new Exception("La contraseña debe contener al menos una letra minúscula.");
+    }
+    
+    if (!preg_match('/[0-9]/', $password)) {
+        throw new Exception("La contraseña debe contener al menos un número.");
+    }
+}
 	
 	public function all()
 	{
@@ -203,22 +244,29 @@ class UserModel
 
 	public function create($objeto)
 	{
-		try {			
+		try {
+			// Validar correo único
+			if ($this->correoExists($objeto->correo)) {
+				throw new Exception("El correo electrónico ya está registrado en el sistema.");
+			}
+			
+			// Validar y hashear contraseña
 			if (isset($objeto->contrasenna) && !empty($objeto->contrasenna)) {
+				$this->validatePasswordComplexity($objeto->contrasenna);
 				$crypt = password_hash($objeto->contrasenna, PASSWORD_BCRYPT);
 				$objeto->contrasenna = $crypt;
 			} else {
 				throw new Exception("La contraseña es obligatoria para crear un usuario.");
 			}
 			
-			// 1. GENERAR EL NOMBRE DE USUARIO ÚNICO
+			// Generar el nombre de usuario único
 			$objeto->usuario = $this->generateUniqueUsername(
 				$objeto->nombre, 
 				$objeto->primerApellido, 
 				$objeto->segundoApellido
 			);
 			
-			// 2. Consulta SQL (usando los nombres de campos de frontend corregidos en el paso anterior)
+			// Consulta SQL
 			$vSql = "INSERT INTO usuario (usuario, nombre, primerApellido, segundoApellido, correo, telefono, contrasenna, estado, idRol)
 					VALUES (
 						'$objeto->usuario', 
@@ -240,27 +288,32 @@ class UserModel
 	}
 
 	public function update($objeto)
-    {
-        try {
+	{
+		try {
+			// Validar correo único (excluyendo el propio usuario)
+			if ($this->correoExists($objeto->correo, $objeto->idUsuario)) {
+				throw new Exception("El correo electrónico ya está registrado por otro usuario.");
+			}
+			
 			$telefono = (is_null($objeto->telefono) || $objeto->telefono === '') ? 'NULL' : "'" . $objeto->telefono . "'";
-        	$segundoApellido = (is_null($objeto->segundoApellido) || $objeto->segundoApellido === '') ? 'NULL' : "'" . $objeto->segundoApellido . "'";
-            // Consulta SQL usando los nombres de columna exactos de tu DB y idUsuario para WHERE:
-            $vSql = "UPDATE usuario SET                         
-                        nombre = '$objeto->nombre', 
-                        primerApellido = '$objeto->primerApellido',
-                        segundoApellido = '$objeto->segundoApellido',
-                        correo = '$objeto->correo', 
-                        telefono = '$objeto->telefono',
-                        estado = $objeto->estado, 
-                        idRol = $objeto->idRol
-                    WHERE idUsuario = $objeto->idUsuario";
-	
-            $this->enlace->executeSQL_DML($vSql);
-            return $this->get($objeto->idUsuario);
-        } catch (Exception $e) {
-            handleException($e);
-        }
-    }
+			$segundoApellido = (is_null($objeto->segundoApellido) || $objeto->segundoApellido === '') ? 'NULL' : "'" . $objeto->segundoApellido . "'";
+			
+			$vSql = "UPDATE usuario SET                         
+						nombre = '$objeto->nombre', 
+						primerApellido = '$objeto->primerApellido',
+						segundoApellido = $segundoApellido,
+						correo = '$objeto->correo', 
+						telefono = $telefono,
+						estado = $objeto->estado, 
+						idRol = $objeto->idRol
+					WHERE idUsuario = $objeto->idUsuario";
+
+			$this->enlace->executeSQL_DML($vSql);
+			return $this->get($objeto->idUsuario);
+		} catch (Exception $e) {
+			handleException($e);
+		}
+	}
 
 	/**
      * Actualiza la contraseña hasheada de un usuario.
@@ -270,43 +323,37 @@ class UserModel
      * @throws Exception Si la contraseña es muy corta o la actualización falla en DB.
      */
     public function updatePassword($idUsuario, $newPassword)
-    {
-        try {
-            if (empty($newPassword) || strlen($newPassword) < 6) {
-                // Validación de longitud (aunque el frontend también la hace)
-                throw new Exception("La nueva contraseña debe tener al menos 6 caracteres.");
-            }
-            
-            // Hashear la nueva contraseña
-            $crypt = password_hash($newPassword, PASSWORD_BCRYPT);
-            
-            // Consulta SQL para actualizar solo la columna 'contrasenna'
-            $vSql = "UPDATE usuario SET 
-                         contrasenna = '$crypt'
-                     WHERE idUsuario = $idUsuario";
+	{
+		try {
+			if (empty($newPassword)) {
+				throw new Exception("La nueva contraseña es requerida.");
+			}
+			
+			// Validar complejidad
+			$this->validatePasswordComplexity($newPassword);
+			
+			// Hashear la nueva contraseña
+			$crypt = password_hash($newPassword, PASSWORD_BCRYPT);
+			
+			$vSql = "UPDATE usuario SET 
+						contrasenna = '$crypt'
+					WHERE idUsuario = $idUsuario";
 
-            // Ejecuta la consulta DML
-            $result = $this->enlace->executeSQL_DML($vSql);
-            
-            // 🚨 VERIFICACIÓN CRÍTICA: Lanza un error si no se afectó ninguna fila (fallo silencioso)
-            if ($result === false) {
-                 // Aquí manejas un fallo de la query (ej. error de sintaxis)
-                 throw new Exception("Error fatal al ejecutar la consulta de actualización de contraseña.");
-            }
-            if ($result < 1) {
-                 // Aquí manejas que la query se ejecutó pero no afectó filas (ej. ID no existe)
-                 // Si el ID no existe, puede ser un 404
-                 return null;
-            }
-            
-            // Retornar el usuario actualizado
-            return $this->get($idUsuario);
-            
-        } catch (Exception $e) {
-            // Re-lanzar la excepción para que el Controller la maneje
-            throw $e; 
-        }
-    }
+			$result = $this->enlace->executeSQL_DML($vSql);
+			
+			if ($result === false) {
+				throw new Exception("Error fatal al ejecutar la consulta de actualización de contraseña.");
+			}
+			if ($result < 1) {
+				return null;
+			}
+			
+			return $this->get($idUsuario);
+			
+		} catch (Exception $e) {
+			throw $e; 
+		}
+	}
 
 
 

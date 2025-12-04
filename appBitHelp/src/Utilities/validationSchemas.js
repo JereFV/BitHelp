@@ -36,20 +36,29 @@ export const userSchema = yup.object().shape({
 
     // Contraseña:
     contrasenna: yup
-            .string()
-            .nullable() 
-            .test('min-length-if-present', 'La contraseña debe tener al menos 6 caracteres.', function(value) {
-                // Si el valor es null, undefined o cadena vacía, pasa la prueba.
-                if (!value) return true; 
-                // Si hay un valor, aplica la validación de longitud.
-                return value.length >= 6;
-            })
-            .when('$isEditing', {
-                is: false, 
-                // Crear: Requerida (y ahora .min(6) aplica porque value no será vacío)
-                then: (schema) => schema.required('La contraseña es obligatoria para nuevos usuarios.'), 
-                
-                // Editar: Es opcional y no requerida.
-                otherwise: (schema) => schema.notRequired(), 
-            }),
+        .string()
+        .nullable()
+        .test('password-complexity', 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.', function(value) {
+            // Si no hay valor, pasa (se valida como requerido en otro lugar)
+            if (!value) return true;
+            
+            // Validar longitud mínima
+            if (value.length < 8) return false;
+            
+            // Validar al menos una mayúscula
+            if (!/[A-Z]/.test(value)) return false;
+            
+            // Validar al menos una minúscula
+            if (!/[a-z]/.test(value)) return false;
+            
+            // Validar al menos un número
+            if (!/[0-9]/.test(value)) return false;
+            
+            return true;
+        })
+        .when('$isEditing', {
+            is: false, 
+            then: (schema) => schema.required('La contraseña es obligatoria para nuevos usuarios.'), 
+            otherwise: (schema) => schema.notRequired(), 
+        }),
 });
