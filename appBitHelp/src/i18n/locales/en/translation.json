@@ -153,6 +153,7 @@
     "week": "Week",
     "workWeek": "Work Week",
     "day": "Day",
+    "days": "day(s)",
     "month": "Month",
     "previous": "Previous",
     "next": "Next",
@@ -184,7 +185,9 @@
     "resolvedOn": "Resolved",
     "validationSpecialty": "**Specialty Validation:** The system will verify that the technician has the specialty required by the category.",
     "attention": "ATTENTION! The ticket is not in state",
-    "none": "None"
+    "none": "None",
+    "resolutionTime":"Resolution Time",
+    "instantClosure": "Instant Closure"
   },
   "categories": {
     "title": "Categories",

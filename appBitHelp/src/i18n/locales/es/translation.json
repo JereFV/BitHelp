@@ -120,6 +120,8 @@
     "enlargedView": "Vista ampliada",
     "timeRemaining": "Tiempo restante",
     "hours": "horas",
+    "minutes": "minutes",
+    "seconds": "segundos",
     "manualAssignment": "Asignación Manual",
     "manualAssignmentOf": "Asignación Manual de Tiquete",
     "ticketDetails": "Detalles del Tiquete",
@@ -153,6 +155,7 @@
     "week": "Semana",
     "workWeek": "Semana de trabajo",
     "day": "Día",
+    "days": "día(s)",
     "month": "Mes",
     "previous": "Anterior",
     "next": "Siguiente",
@@ -184,7 +187,9 @@
     "resolvedOn": "Resuelto",
     "validationSpecialty": "**Validación de Especialidad:** El sistema verificará que el técnico posea la especialidad requerida por la categoría.",
     "attention": "¡ATENCIÓN! El tiquete no está en estado",
-    "none": "Ninguna"
+    "none": "Ninguna",
+    "resolutionTime":"Tiempo de resolución",
+    "instantClosure": "Cierre Instantáneo"
     
   },
   "categories": {

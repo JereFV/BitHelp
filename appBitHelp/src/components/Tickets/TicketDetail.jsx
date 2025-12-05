@@ -89,9 +89,10 @@ const getColorMap = (theme, severity) => {
  * Muestra el tiempo en horas/minutos si es menos de 1 día, o en días si es más.
  * * @param {Date | number} creationDate - Fecha de creación.
  * @param {Date | number} closingDate - Fecha de cierre.
+ * @param {function} t - Función de traducción de i18next (AGREGADO).
  * @returns {string} El tiempo transcurrido formateado.
  */
-const formatClosingTime = (creationDate, closingDate) => {
+const formatClosingTime = (creationDate, closingDate, t) => {
   if (!creationDate || !closingDate) {
     return "N/A";
   }
@@ -118,26 +119,29 @@ const formatClosingTime = (creationDate, closingDate) => {
     const remainingMsAfterHours = diffTimeMs % MS_PER_HOUR;
     const minutes = Math.round(remainingMsAfterHours / MS_PER_MINUTE);
 
-    // Formatear el resultado
+    // Formatear el resultado (Usando pluralización de i18n)
     let result = "";
     if (hours > 0) {
-      result += `${hours} hora(s) `;
+      // Clave: 'tickets.hours' (manejará hora/horas)
+      result += hours+" " +t('tickets.hours');
     }
     if (minutes > 0) {
-      result += `${minutes} minuto(s)`;
+      // Añade espacio si ya hay horas
+      result += (result.length > 0 ? " " : "") + minutes +" "+ t('tickets.minutes');
     }
     
-    // Si es muy rápido (e.g., menos de un minuto), podrías mostrar "Menos de 1 min"
+    // Si es muy rápido (e.g., menos de un minuto)
     if (result === "") {
-        return "Cierre instantáneo";
+        return t('tickets.instantClosure');
     }
 
     return result.trim();
 
   } else {
-    // Es 1 día o más: Mostrar en días
+    // Es 1 día o más: Mostrar en días (Usando pluralización de i18n)
     const diffDays = Math.round(diffTimeMs / MS_PER_DAY);
-    return `${diffDays} día(s)`;
+    // Clave: 'tickets.days' (manejará día/días)
+    return diffDays + " " +t('tickets.days');
   }
 };
 
@@ -515,9 +519,9 @@ export function TicketDetail() {
                 {/* Campo Tiempo de Cierre (Cálculo de días) */}
                 <TextField
                   id="outlined-read-only-input-closed-time"
-                  label={t('tickets.closingTime')} // mostrar el tiempo de cierre
+                  label={t('tickets.resolutionTime')} // mostrar el tiempo de cierre
                   fullWidth
-                  value={formatClosingTime(ticket.fechaCreacion, ticket.slaResolucion)} // Usamos una función para el cálculo
+                  value={formatClosingTime(ticket.fechaCreacion, ticket.slaResolucion,t)} // Usamos una función para el cálculo
                   sx={{ flex: 1 }}
                   slotProps={{
                     input: {
