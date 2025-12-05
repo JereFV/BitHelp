@@ -120,6 +120,8 @@
     "enlargedView": "Enlarged view",
     "timeRemaining": "Time remaining",
     "hours": "hours",
+    "minutes": "minutes",
+    "seconds": "seconds",
     "manualAssignment": "Manual Assignment",
     "manualAssignmentOf": "Manual Assignment of Ticket",
     "ticketDetails": "Ticket Details",
