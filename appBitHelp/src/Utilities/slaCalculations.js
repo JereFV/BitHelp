@@ -33,18 +33,19 @@ export const formatTimeRemaining = (totalSeconds) => {
 /**
  * Calcula el estado de cumplimiento del SLA para su visualización en el frontend.
  *
- * @param {string} limite - Fecha y hora límite del SLA (ej: SLARespuestaLimite).
- * @param {string|null} real - Fecha y hora real de la acción (ej: FechaRespuestaReal).
- * @param {number|null} cumplimiento - Indicador de cumplimiento del backend (1: cumplido, 0: no cumplido).
+ * @param {string} limite - Fecha y hora límite del SLA.
+ * @param {string|null} real - Fecha y hora real de la acción.
+ * @param {function(string, object?): string} t - Función de traducción i18n.
  * @returns {SlaDisplayData} - Objeto con el estado, tiempo y color para mostrar.
  */
-export const getSLAStatus = (limite, real) => {
+export const getSLAStatus = (limite, real, t) => { 
     
     // Si no hay límite definido, no aplica
     if (!limite) {
         return {
-            estado: 'No Aplicable',
-            tiempoRestante: 'No hay límite de SLA definido.',
+            // Usa las claves del JSON para el estado y el mensaje
+            estado: t('sla.notApplicable'), 
+            tiempoRestante: t('sla.noLimitDefined'),
             color: 'warning'
         };
     }
@@ -54,57 +55,56 @@ export const getSLAStatus = (limite, real) => {
     const realDate = real ? dayjs(real) : null;
     const isCompleted = !!realDate;
 
-    // Utilizamos la diferencia en segundos para toda la lógica
     let diferencia;
 
-    // --- Caso 1: La acción ya se completó (Respuesta o Resolución) ---
+    // Caso 1: La acción ya se completó (Respuesta o Resolución)
     if (isCompleted) {
-        // Diferencia: (Fecha Real) - (Fecha Límite). Positivo = tarde, Cero/Negativo = a tiempo
         diferencia = realDate.diff(limiteDate, 'second'); 
 
-        // Se considera CUMPLIDO si la acción real es igual o anterior al límite (diferencia <= 0)
+        // Cumplido: real es igual o anterior al límite (diferencia <= 0)
         if (diferencia <= 0) {
             return {
-                estado: 'Cumplido',
-                tiempoRestante: 'Completado a tiempo',
+                estado: t('status.fulfilled'), // "Cumplido"
+                tiempoRestante: t('sla.completedOnTime'), // "Completado a tiempo"
                 color: 'success'
             };
         } else {
-            // No cumplido (se excedió por 1 segundo o más)
+            // No cumplido (se excedió)
             const tiempoExcedido = formatTimeRemaining(diferencia);
             return {
-                estado: 'No Cumplido',
-                tiempoRestante: `Se excedió por ${tiempoExcedido}`,
+                estado: t('status.notFulfilled'), // "No Cumplido"
+                // usamos la variable 'time' para el formato HH:MM:SS
+                tiempoRestante: t('sla.exceededBy', { time: tiempoExcedido }), // "Se excedió por HH:MM:SS"
                 color: 'error'
             };
         }
     } 
-    // --- Caso 2: La acción AÚN NO se completa ---
+    //  Caso 2: La acción AÚN NO se completa 
     else {
         // Si el límite ya pasó (la fecha límite es antes que ahora)
         if (limiteDate.isBefore(now)) {
-            // Diferencia: (Ahora) - (Fecha Límite). Esto es positivo si está vencido.
+            // Vencido
             diferencia = now.diff(limiteDate, 'second'); 
             const tiempoExcedido = formatTimeRemaining(diferencia);
             
             return {
-                estado: 'No Cumplido',
-                tiempoRestante: `Vencido hace ${tiempoExcedido}`,
+                estado: t('status.notFulfilled'), // "No Cumplido"
+                //  usamos la variable 'time' para el formato HH:MM:SS
+                tiempoRestante: t('sla.overdueSince', { time: tiempoExcedido }), // "Vencido hace HH:MM:SS"
                 color: 'error'
             };
         } 
         // Si aún está a tiempo
         else {
-            // Diferencia: (Fecha Límite) - (Ahora). Esto es positivo.
             diferencia = limiteDate.diff(now, 'second');
             const tiempoRestante = formatTimeRemaining(diferencia);
             
-            // Si falta menos de X tiempo (ej. 4 horas = 14400 segundos), es 'warning'
-            const isNearDeadline = diferencia < 14400; 
+            const isNearDeadline = diferencia < 14400; // 4 horas
 
             return {
-                estado: 'A Tiempo',
-                tiempoRestante: `${tiempoRestante} restantes`,
+                estado: t('status.onTime'), // "A Tiempo"
+                //  usamos la variable 'time' para el formato HH:MM:SS
+                tiempoRestante: t('sla.remaining', { time: tiempoRestante }), // "HH:MM:SS restantes"
                 color: isNearDeadline ? 'warning' : 'success'
             };
         }

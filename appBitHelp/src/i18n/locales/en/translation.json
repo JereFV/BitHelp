@@ -438,5 +438,18 @@
     "software": "Software",
     "accountManagement": "Account Management",
     "networkManagement": "Network Management"
+  },
+  "sla": {
+    "notApplicable": "Not Applicable",
+    "noLimitDefined": "No SLA limit defined.",
+    "completedOnTime": "Completed on time",
+    "exceededBy": "Exceeded by {{time}}",
+    "overdueSince": "Overdue since {{time}}",
+    "remaining": "{{time}} remaining"
+  },
+  "status": {
+    "onTime": "On Time",
+    "fulfilled": "Fulfilled",
+    "notFulfilled": "Not Fulfilled"
   }
 }

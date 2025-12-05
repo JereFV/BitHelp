@@ -239,13 +239,13 @@ export function TicketDetail() {
     slaRespuestaDisplay = getSLAStatus(
       slaDetails.SLARespuestaLimite,
       slaDetails.FechaRespuestaReal,
-      slaDetails.cumplimientoSlaRespuesta
+      t
     );
 
     slaResolucionDisplay = getSLAStatus(
       slaDetails.SLAResolucionLimite,
       slaDetails.FechaResolucionReal,
-      slaDetails.cumplimientoSlaResolucion
+      t
     );
   }
 
