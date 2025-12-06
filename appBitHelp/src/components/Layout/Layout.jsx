@@ -8,6 +8,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { extendTheme } from '@mui/material/styles';
 import { useColorScheme } from '@mui/material/styles';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import HomeIcon from '@mui/icons-material/Home';
 import GroupIcon from '@mui/icons-material/Group';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -85,19 +86,20 @@ export function Layout({ children }) {
     // Estructura base de la navegación
     const baseNavigation = [
       { kind: 'header', title: t('navigation.mainMenu') },
-      { segment: 'Home', title: t('navigation.home'), icon: <DashboardIcon /> },
+      { segment: 'Home', title: t('navigation.home'), icon: <HomeIcon /> },
       {
         segment: 'tickets',
         title: t('navigation.tickets'),
         icon: <AssignmentIcon />,
         children: ticketChildren,
       },
+      { segment: 'dashboard', title: t('navigation.dashboard'), icon: <DashboardIcon /> },
       { kind: 'divider' },
       { kind: 'header', title: t('navigation.administration') },
       { segment: 'technician', title: t('navigation.technicians'), icon: <GroupIcon /> },
-      { kind: 'divider' },
+      //{ kind: 'divider' },
       { segment: 'categories', title: t('navigation.categories'), icon: <ViewListIcon/> },
-      { kind: 'divider' },
+      //{ kind: 'divider' },
     ];
     
     // Lógica Condicional: Agregar 'Usuarios' solo si es Administrador
