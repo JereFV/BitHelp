@@ -28,6 +28,11 @@ class CategorieService
         return axios.get(`${BASE_URL}/getSlas`);
     }
 
+    getSpecialtyMapping()
+    {
+        return axios.get(`${BASE_URL}/getSpecialtyMapping`);
+    }
+
     getCategoryByTag(idTag)
     {
         return axios.get(`${BASE_URL}/getByTag/${idTag}`);

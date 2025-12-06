@@ -43,6 +43,31 @@ class categorie
         }
     }
 
+    public function getSpecialtyMapping()
+    {
+        try {
+            $response = new Response();
+            $categorieModel = new categorieModel();
+            
+            // Llama al nuevo método del modelo que construye el objeto de mapeo
+            $mapping = $categorieModel->getSpecialtyMapping();
+            
+            // Devuelve el objeto de mapeo como JSON
+            $response->toJson($mapping);
+        }
+        catch (Exception $ex)
+        {
+            // Manejo de errores
+            $json = array(
+                'status' => 500,
+                'result' => 'Error al obtener el mapeo de especialidades: ' . $ex->getMessage()
+            );
+            echo json_encode($json);
+            http_response_code(500);
+            handleException($ex);
+        }
+    }
+
     // Obtiene todas las especialidades disponibles
     public function getSpecialties()
     {

@@ -119,7 +119,7 @@ class TicketAssignmentHandler
                 $data->justificacion                
             );
 
-            error_log("INFO: Tiquete $idTicket asignado/reasignado manualmente con éxito.");
+            error_log("INFO: Tiquete $idTicket asignado manualmente con éxito.");
             return true;
 
         } catch (Exception $ex) {

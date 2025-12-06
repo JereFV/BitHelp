@@ -93,6 +93,56 @@ class CategorieModel
         }
     }
 
+    /**
+     * Obtiene un mapeo (Categoría: [Especialidades]) para el frontend.
+     * Esto permite el filtrado dinámico de técnicos.
+     * @return array Un array asociativo donde la clave es el nombre de la categoría y el valor es un array de nombres de especialidades.
+     */
+    public function getSpecialtyMapping()
+    {
+        try {
+            $query = "
+            SELECT 
+                c.nombre AS nombreCategoria,
+                e.nombre AS nombreEspecialidad
+            FROM 
+                categoria c
+            INNER JOIN 
+                categoria_especialidad ce ON c.idCategoria = ce.idCategoria
+            INNER JOIN 
+                especialidad e ON ce.idEspecialidad = e.idEspecialidad
+            ORDER BY
+                c.nombre, e.nombre;
+            ";
+
+            $results = $this->connection->ExecuteSQL($query);
+            
+            $mapping = [];
+            
+            // Transformar el resultado plano en el objeto de mapeo deseado
+            if ($results) {
+                foreach ($results as $row) {
+                    $categoria = $row->nombreCategoria;
+                    $especialidad = $row->nombreEspecialidad;
+                    
+                    // Inicializar el array de especialidades si es la primera vez que vemos la categoría
+                    if (!isset($mapping[$categoria])) {
+                        $mapping[$categoria] = [];
+                    }
+                    
+                    // Agregar la especialidad a la categoría
+                    $mapping[$categoria][] = $especialidad;
+                }
+            }
+            
+            return $mapping;
+        } 
+        catch (Exception $ex) {
+            handleException($ex);
+            return []; // Retornar array vacío en caso de error
+        }
+    }
+
     public function getByIdCategorie($id) 
     {
         try {

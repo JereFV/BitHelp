@@ -394,6 +394,7 @@
     "mustSelectTechnician": "You must select a technician.",
     "justificationMinLength": "The justification must be at least 10 characters.",
     "ticketCannotBeAssigned": "The ticket cannot be assigned. Its current state is:",
+    "noTechniciansForSpecialty": "No technicians available with the specialty required for the ticket category.",
     "errorLoadingAssignmentData": "Error loading data required for assignment.",
     "ticketNotFound": "Ticket not found or response is empty."
   },

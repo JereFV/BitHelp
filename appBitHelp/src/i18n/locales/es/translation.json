@@ -395,6 +395,7 @@
     "mustSelectTechnician": "Debe seleccionar un técnico.",
     "justificationMinLength": "La justificación debe tener al menos 10 caracteres.",
     "ticketCannotBeAssigned": "El tiquete no puede ser asignado. Su estado actual es:",
+    "noTechniciansForSpecialty": "No existen técnicos disponibles con la especialidad requerida para la categoría del tiquete.",
     "errorLoadingAssignmentData": "Error al cargar los datos necesarios para la asignación.",
     "ticketNotFound": "No se encontró el tiquete o la respuesta está vacía."
   },

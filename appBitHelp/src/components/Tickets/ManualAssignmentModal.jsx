@@ -7,6 +7,7 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PropTypes from 'prop-types';
 import TicketService from '../../services/TicketService';
 import TechnicianService from '../../services/TechnicianService';
+import CategorieService from '../../services/CategorieService';
 import { Person, Category, PriorityHigh, AccessAlarm, Work, Info,SupportAgent } from '@mui/icons-material';
 import toast, { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +21,7 @@ const ManualAssignmentModal = ({ open, onClose, idTicket, currentUser }) => {
     const [selectedTechnicianId, setSelectedTechnicianId] = useState('');
     const [justification, setJustification] = useState('');
     const [localError, setLocalError] = useState(null);
+    const [specialtyMapping, setSpecialtyMapping] = useState({});
 
     const idAdminUser = currentUser?.idUsuario;
 
@@ -73,34 +75,73 @@ const ManualAssignmentModal = ({ open, onClose, idTicket, currentUser }) => {
         setLocalError(null);
 
         try {
-            const [ticketRes, techRes] = await Promise.all([
-                TicketService.getTicketDetailsForAssignment(idTicket), 
-                TechnicianService.getAllTechnicians(),
-            ]);
-           
-            const ticketData = ticketRes.data || null; 
-            const allTechnicians = techRes.data.result || techRes.data || [];
+        // 1. OBTENER EL MAPEO Y LOS DATOS EN PARALELO
+        const [mappingRes, ticketRes, techRes] = await Promise.all([
+            CategorieService.getSpecialtyMapping(), // Obtener el mapeo dinámico
+            TicketService.getTicketDetailsForAssignment(idTicket), 
+            TechnicianService.getAllTechnicians(),
+        ]);
 
-            if (!ticketData) {
-                throw new Error(t('messages.ticketNotFound'));
-            }
-               
-            setTicket(ticketData);
-         
-            // 🎯 Validación Obligatoria 1: Solo estado “Pendiente”
-            if (ticketData.estado !== 'Pendiente') {
+        const dynamicSpecialtyMapping = mappingRes.data || {};
+        // ⚠️ Nota: No necesitamos llamar setSpecialtyMapping aquí si solo lo usas para filtrar AHORA.
+        // Si lo usas más tarde en el JSX para mostrar los requisitos, mantenlo:
+        setSpecialtyMapping(dynamicSpecialtyMapping); // Solo una vez
+
+        const ticketData = ticketRes.data || null;
+        const allTechnicians = techRes.data.result || techRes.data || [];
+
+        if (!ticketData) {
+            throw new Error(t('messages.ticketNotFound'));
+        }
+            
+        setTicket(ticketData);
+        
+        //  Validación Obligatoria, Solo estado “Pendiente”
+        if (ticketData.estado !== 'Pendiente') {
                 const errorMessage = t('messages.ticketCannotBeAssigned') + ' ' + ticketData.estado;
                 toast.error(errorMessage);
                 setLocalError(errorMessage);
                 setTechnicians([]);
                 setLoading(false);
                 return;
-            }
+        }
 
-            // La validación de especialidad (Obligatoria 2) se deja en el Backend (TicketAssignmentHandler)
-            // para asegurar la integridad de los datos. Aquí solo filtramos técnicos activos (asumiendo estado=1).
-            const activeTechnicians = allTechnicians.filter(tech => tech.estado == 1);            
-            setTechnicians(activeTechnicians);
+        // 2. FILTRADO USANDO EL MAPEO DINÁMICO
+        const ticketCategoryName = ticketData.categoria;
+        
+        // Uso de la variable dynamicSpecialtyMapping obtenida arriba
+        const requiredSpecialtyNames = dynamicSpecialtyMapping[ticketCategoryName] || [];
+
+        // Convertir el array de nombres de especialidad requerida a un Set
+        const requiredSpecialtiesSet = new Set(requiredSpecialtyNames);
+
+        let filteredTechnicians = allTechnicians.filter(tech => tech.estado == 1); // Solo técnicos activos
+            
+        if (requiredSpecialtiesSet.size > 0) {
+            // Si la categoría tiene especialidades requeridas, filtramos
+            filteredTechnicians = filteredTechnicians.filter(tech => {
+                const techSpecialties = Array.isArray(tech.especialidades) ? tech.especialidades : [];
+                    
+                // Verificar si el técnico tiene *al menos una* de las especialidades requeridas
+                return techSpecialties.some(techSpecialtyName => {
+                    return techSpecialtyName && requiredSpecialtiesSet.has(techSpecialtyName);
+                });
+            });
+        }
+            
+        // 3. ORDENAMIENTO
+        filteredTechnicians.sort((a, b) => {
+                // Función simple para comparar strings de tiempo 'HH:MM:SS'
+                if (a.cargaTrabajo < b.cargaTrabajo) return -1;
+                if (a.cargaTrabajo > b.cargaTrabajo) return 1;
+                return 0;
+            });
+            
+        setTechnicians(filteredTechnicians);
+        
+        if (filteredTechnicians.length === 0 && requiredSpecialtiesSet.size > 0) {
+             setLocalError(t('messages.noTechniciansForSpecialty') + ` ${t('categories.category')}: ${ticketCategoryName}`);
+        }
             
         } catch (err) {
             console.error('Error al cargar datos de asignación:', err);
