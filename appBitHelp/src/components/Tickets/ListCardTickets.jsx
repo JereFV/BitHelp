@@ -95,8 +95,6 @@ export function ListCardTickets({ data = [], onTicketAssigned, currentUser }) {
 
   // 3. Función para abrir el modal
   const handleOpenModal = (ticketId) => {
-    // 💡 CORRECCIÓN ROBUSTA: Usar parseInt(value, 10) para garantizar
-    // que el valor es un número entero de JavaScript.
     const numericId = parseInt(ticketId, 10);
     
     // Verificamos que sea un número válido y positivo.

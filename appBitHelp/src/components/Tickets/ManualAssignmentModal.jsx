@@ -83,8 +83,6 @@ const ManualAssignmentModal = ({ open, onClose, idTicket, currentUser }) => {
         ]);
 
         const dynamicSpecialtyMapping = mappingRes.data || {};
-        // ⚠️ Nota: No necesitamos llamar setSpecialtyMapping aquí si solo lo usas para filtrar AHORA.
-        // Si lo usas más tarde en el JSX para mostrar los requisitos, mantenlo:
         setSpecialtyMapping(dynamicSpecialtyMapping); // Solo una vez
 
         const ticketData = ticketRes.data || null;
@@ -122,7 +120,7 @@ const ManualAssignmentModal = ({ open, onClose, idTicket, currentUser }) => {
             filteredTechnicians = filteredTechnicians.filter(tech => {
                 const techSpecialties = Array.isArray(tech.especialidades) ? tech.especialidades : [];
                     
-                // Verificar si el técnico tiene *al menos una* de las especialidades requeridas
+                // Verificar si el técnico tiene al menos una de las especialidades requeridas
                 return techSpecialties.some(techSpecialtyName => {
                     return techSpecialtyName && requiredSpecialtiesSet.has(techSpecialtyName);
                 });
