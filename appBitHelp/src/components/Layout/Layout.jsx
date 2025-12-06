@@ -92,17 +92,26 @@ export function Layout({ children }) {
         title: t('navigation.tickets'),
         icon: <AssignmentIcon />,
         children: ticketChildren,
-      },
-      { segment: 'dashboard', title: t('navigation.dashboard'), icon: <DashboardIcon /> },
-      { kind: 'divider' },
-      { kind: 'header', title: t('navigation.administration') },
+      }
+    ];
+
+    if (userRoleId == ROLE_ID_ADMIN) {
+      baseNavigation.push(
+        { segment: 'dashboard', title: t('navigation.dashboard'), icon: <DashboardIcon /> }
+      );
+    }
+    baseNavigation.push(
+       { kind: 'divider' },
+       { kind: 'header', title: t('navigation.administration') },
+    );
+    baseNavigation.push(
       { segment: 'technician', title: t('navigation.technicians'), icon: <GroupIcon /> },
       //{ kind: 'divider' },
-      { segment: 'categories', title: t('navigation.categories'), icon: <ViewListIcon/> },
+      { segment: 'categories', title: t('navigation.categories'), icon: <ViewListIcon/> }
       //{ kind: 'divider' },
-    ];
+    );
     
-    // Lógica Condicional: Agregar 'Usuarios' solo si es Administrador
+    // Agregar 'Usuarios' y 'Panel de control' solo si es Administrador
     if (userRoleId == ROLE_ID_ADMIN) {
       baseNavigation.push(
         { segment: 'users', title: t('navigation.users'), icon: <GroupIcon /> }
