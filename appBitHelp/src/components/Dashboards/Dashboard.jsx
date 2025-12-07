@@ -18,6 +18,7 @@ const COLOR_RANKING = '#673AB7';    // Púrpura Oscuro
 const COLOR_RATING = '#FFC107';     // Amarillo Ámbar (Valoración)
 const COLOR_SLA_RESPONSE = '#64C944'; // Verde Brillante (SLA Respuesta éxito)
 const COLOR_SLA_RESOLUTION = '#64C944'; // Verde  Brillante (SLA Resolución éxito)
+const COLOR_SLA_WARNING = '#FF9800'; // Naranja para advertencias
 const COLOR_BREACH_FAIL = '#F44336'; // Rojo estándar para fallos
 
 // Paleta de colores más variada y brillante para el PieChart
@@ -61,35 +62,40 @@ const TicketsByMonthChart = ({ data }) => {
 
 // Gráficos 3, 4, 5. Promedio de valoraciones, Cumplimiento SLA (Gráfico de Medidor/Gauge)
 // Este componente no necesita useTranslation si solo recibe el 'title' ya traducido.
-const ComplianceGauge = ({ title, value, valueMax, unit, color }) => (
-    <Paper sx={{ p: 2, height: 350, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* El title ya viene traducido desde el componente Dashboard */}
-        <Typography variant="h6" gutterBottom textAlign="center">
-            {title} 
-        </Typography>
-        <div style={{ width: '90%', height: '100%', display: 'flex', justifyContent: 'center' }}>
-            <Gauge 
-                key={color}
-                value={value} 
-                startAngle={-110}
-                endAngle={110}
-                cornerRadius="50%"
-                valueMin={0}
-                valueMax={valueMax}
-                sx={{
-                    [`& .MuiGauge-valueText`]: {
-                        fontSize: 40,
-                        transform: 'translate(0px, -5px)',
-                    },
-                    [`& .MuiGauge-valueArc`]: {
-                        fill: color, // fuerza el color personalizado
-                    },
-                }}
-                text={({ value }) => `${value.toFixed(1)}${unit}`}
-                series={[{ data: [{ value: value, color: color }] }]}
-            />
-        </div>
-    </Paper>
+const ComplianceGauge = ({ title, value, valueMax, unit, color, statusText }) => (
+  <Paper sx={{ p: 2, height: 350, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <Typography variant="h6" gutterBottom textAlign="center">
+      {title} 
+    </Typography>
+    {/* Muestra el estado formal aquí */}
+    {statusText && (
+      <Typography variant="subtitle1" component="div" sx={{ mb: 1, fontWeight: 'bold', color: color }}>
+        {statusText}
+      </Typography>
+    )}
+    <div style={{ width: '90%', height: '90%', display: 'flex', justifyContent: 'center' }}>
+      <Gauge 
+        key={color}
+        value={value} 
+        startAngle={-110}
+        endAngle={110}
+        cornerRadius="50%"
+        valueMin={0}
+        valueMax={valueMax}
+        sx={{
+          [`& .MuiGauge-valueText`]: {
+            fontSize: 40,
+            transform: 'translate(0px, -5px)',
+          },
+          [`& .MuiGauge-valueArc`]: {
+            fill: color,
+          },
+        }}
+        text={({ value }) => `${value.toFixed(1)}${unit}`}
+        series={[{ data: [{ value: value, color: color }] }]}
+      />
+    </div>
+  </Paper>
 );
 
 
@@ -198,6 +204,20 @@ const Dashboard = () => {
         categories_breaches: [],
     });
 
+    // Función auxiliar para determinar el estado textual (Óptimo/Riesgo/Crítico)
+    const getComplianceStatus = (value, goodThreshold, warningThreshold) => {
+        if (value >= goodThreshold) {
+            // Se usa 'optimal' en lugar de 'good'
+            return t('status.optimal'); 
+        } else if (value >= warningThreshold) {
+            // Se usa 'acceptable' en lugar de 'warning'
+            return t('status.acceptable');
+        } else {
+            // Se usa 'critical' en lugar de 'bad'
+            return t('status.critical');
+        }
+    };
+
     // Función para obtener los datos del backend
     const fetchDashboardData = async () => {
         try {
@@ -228,6 +248,7 @@ const Dashboard = () => {
     }
     
     // Extracción de datos para simplificar el JSX
+    // Extracción y cálculo de datos
     const { 
         tickets_by_month, 
         general_rating_average, 
@@ -235,6 +256,19 @@ const Dashboard = () => {
         technician_ranking, 
         categories_breaches 
     } = dashboardData;
+
+    // Calcular los estados de cumplimiento usando los umbrales definidos
+    const statusSlaResponse = getComplianceStatus(
+        sla_compliance.respuesta.cumplido, 
+        90, // Óptimo: >= 90%
+        70  // Riesgo: 80% - 89.9%
+    );
+
+    const statusSlaResolution = getComplianceStatus(
+        sla_compliance.resolucion.cumplido, 
+        90, // Óptimo: >= 85%
+        70  // Riesgo: 70% - 84.9%
+    );
 
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -271,12 +305,16 @@ const Dashboard = () => {
                 {/* 4. Indicadores de cumplimiento SLA respuesta (Valor es el porcentaje cumplido)  */}
                 <Grid xs={12} md={4}>
                     <ComplianceGauge 
-                        // 4. TRADUCCIÓN DE TÍTULO DINÁMICO con interpolación
+                        //  TRADUCCIÓN DE TÍTULO DINÁMICO con interpolación
                         title={t('dashboard.slaResponseTitle', { total: sla_compliance.respuesta.total })} 
                         value={sla_compliance.respuesta.cumplido} 
                         valueMax={100}
                         unit="%"
-                        color={sla_compliance.respuesta.cumplido >= 90 ? COLOR_SLA_RESPONSE : COLOR_BREACH_FAIL} // Verde si > 90%
+                        color={sla_compliance.respuesta.cumplido >= 90 // Verde si > 90%  
+                            ? COLOR_SLA_RESPONSE : (sla_compliance.respuesta.cumplido >=70  // Alerta si > 70%  
+                                ? COLOR_SLA_WARNING : COLOR_BREACH_FAIL)  // Rojo si es menos de 70%
+                        }          
+                        statusText={statusSlaResponse}              
                     />
                 </Grid>
 
@@ -288,7 +326,11 @@ const Dashboard = () => {
                         value={sla_compliance.resolucion.cumplido} 
                         valueMax={100}
                         unit="%"
-                        color={sla_compliance.resolucion.cumplido >= 85 ? COLOR_SLA_RESOLUTION : COLOR_BREACH_FAIL}  // Verde si > 85%    
+                        color={sla_compliance.resolucion.cumplido >= 90 // Verde si > 90%  
+                            ? COLOR_SLA_RESOLUTION : (sla_compliance.resolucion.cumplido >=70  // Alerta si es 90%< && >70%   
+                                ? COLOR_SLA_WARNING : COLOR_BREACH_FAIL)  // Rojo si es menos de 70%
+                        }
+                        statusText={statusSlaResolution}
                     />
                 </Grid>
 

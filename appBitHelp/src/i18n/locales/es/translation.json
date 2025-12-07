@@ -455,7 +455,10 @@
   "status": {
       "onTime": "A Tiempo",
       "fulfilled": "Cumplido",
-      "notFulfilled": "No Cumplido"
+      "notFulfilled": "No Cumplido",
+      "optimal": "Óptimo",
+      "acceptable": "Aceptable",
+      "critical": "Crítico"
   },
   "dashboard": {
     "title": "Panel de Control",

@@ -454,7 +454,10 @@
   "status": {
     "onTime": "On Time",
     "fulfilled": "Fulfilled",
-    "notFulfilled": "Not Fulfilled"
+    "notFulfilled": "Not Fulfilled",
+    "optimal": "Optimal",
+    "acceptable": "Acceptable",
+    "critical": "Critical"
   },
   "dashboard": {
     "title": "Dashboard",
