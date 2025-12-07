@@ -4,7 +4,6 @@ const BASE_URL = `${import.meta.env.VITE_BASE_URL}ticket`; //cadena interpolada
 class TicketService 
 {
   getTickets() {
-    // CAMBIO APLICADO: Solo llama a la BASE_URL
     return axios.get(BASE_URL);
   }
 
@@ -32,6 +31,15 @@ class TicketService
   getTicketDetailsForAssignment(id) {
     return axios.get(`${BASE_URL}/getDetails/${id}`); 
   }
+
+  /**
+     *  Obtiene todos los datos consolidados para los gráficos e indicadores del dashboard.
+     * Corresponde al endpoint: GET /ticket/getIndicatorsData
+     * @returns {Promise<axios.Response<object>>} Promesa con la respuesta de la API.
+     */
+    getIndicatorsData() {
+        return axios.get(`${BASE_URL}/getIndicatorsData`);
+    }
 
   /**
    * Realiza la asignación manual de un tiquete a un técnico.

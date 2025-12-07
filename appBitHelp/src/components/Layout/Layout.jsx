@@ -152,16 +152,16 @@ export function Layout({ children }) {
         {/* Barra superior con notificaciones y logout */}
         <Box sx={{ 
           position: 'fixed', 
-          top: 2, 
-          right: 75, 
+          top: 4, 
+          right: 62, 
           zIndex: 1300,
           display: 'flex',
           alignItems: 'center',
           gap: 2,
           backgroundColor: 'background.paper',
-          padding: '5px 16px',
-          borderRadius: 2,
-          boxShadow: 2
+          padding: '2px 18px',
+          borderRadius: 3,
+          boxShadow: 0
         }}>
           {/* Icono de notificaciones */}
           <NotificationBadge 

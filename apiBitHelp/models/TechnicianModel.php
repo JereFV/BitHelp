@@ -536,4 +536,40 @@ class TechnicianModel
         }
     }
 
+
+    /**
+     * Indicador 5: Obtiene el Ranking de Técnicos basado en la cantidad de tickets Resueltos (4) o Cerrados (5).
+     * @return array Lista de objetos {tecnico_nombre, tickets_resueltos_cerrados}.
+     */
+    public function getTechnicianRanking()
+    {
+        try {
+            // Asumiendo que 4 es Resuelto y 5 es Cerrado.
+            // Si la clase TicketModel está disponible, es mejor usar sus constantes:
+            // $resolvedState = TicketModel::ID_RESOLVED_STATE;
+            // $closedState = TicketModel::ID_CLOSED_STATE;
+            $resolvedState = 4;
+            $closedState = 5;
+            
+            $query = "
+                SELECT
+                    CONCAT(u.nombre, ' ', u.primerApellido) AS tecnico_nombre,
+                    COUNT(t.idTiquete) AS tickets_resueltos_cerrados
+                FROM tiquete t
+                INNER JOIN tecnico tec ON t.idTecnicoAsignado = tec.idTecnico
+                INNER JOIN usuario u ON tec.idUsuario = u.idUsuario
+                WHERE t.idEstado IN (?, ?)
+                GROUP BY tecnico_nombre
+                ORDER BY tickets_resueltos_cerrados DESC
+            ";
+            $params = [(int)$resolvedState, (int)$closedState];
+            
+            // Usamos executeSQL_prepared para manejar los parámetros de estado
+            return $this->connection->executeSQL_prepared($query, $params) ?? [];
+        } catch (Exception $ex) {
+            handleException($ex);
+            return [];
+        }
+    }
+
 }

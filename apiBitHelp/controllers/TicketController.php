@@ -258,4 +258,88 @@ class ticket
             handleException($ex);
         }
     }
+
+    /**
+     * Endpoint: GET /ticket/getIndicatorsData
+     * Obtiene todos los datos consolidados para generar los gráficos de los indicadores.
+     * Requiere que TicketModel y TechnicianModel estén disponibles.
+     */
+    public function getIndicatorsData()
+    {
+        try {
+            $response = new Response();
+            $ticketModel = new TicketModel();
+            $technicianModel = new TechnicianModel(); 
+            
+            // 1. Tickets Creados por Mes
+            $ticketsByMonth = $ticketModel->getTicketsCreatedByMonth();
+            
+            // 2. Promedio de Valoraciones
+            $generalRating = $ticketModel->getGeneralRatingAverage();
+            
+            // 3. y 4. Cumplimiento SLA (Respuesta y Resolución)
+            $slaComplianceData = $ticketModel->getSlaComplianceIndicators();
+            
+            // 5. Ranking de Técnicos
+            $technicianRanking = $technicianModel->getTechnicianRanking();
+            
+            // 6. Categorías con más Incumplimientos (Top 5)
+            $categoriesBreaches = $ticketModel->getCategoriesWithMostSlaBreaches(5);
+            
+            // Consolidar, formatear y devolver los resultados
+            $indicatorsData = [
+                'tickets_by_month' => $ticketsByMonth,
+                'general_rating_average' => $generalRating ? (float)$generalRating->promedio_general : 0.0,
+                // Llama a una función auxiliar para calcular porcentajes de SLA
+                'sla_compliance' => $this->formatSlaCompliance($slaComplianceData),
+                'technician_ranking' => $technicianRanking,
+                'categories_breaches' => $categoriesBreaches,
+            ];
+
+            $response->toJson($indicatorsData);
+            
+        } catch (Exception $ex) {
+            $response = new Response(); 
+            $response->error(500, 'Error al obtener datos de indicadores: ' . $ex->getMessage());
+            handleException($ex);
+        }
+    }
+    
+    /**
+     * [FUNCIÓN AUXILIAR] Calcula y formatea los porcentajes de cumplimiento de SLA.
+     * Se puede agregar este método como privado dentro de la clase 'ticket'.
+     */
+    private function formatSlaCompliance($data)
+    {
+        if (!$data) {
+            return [
+                'respuesta' => ['cumplido' => 0.0, 'incumplido' => 0.0, 'total' => 0],
+                'resolucion' => ['cumplido' => 0.0, 'incumplido' => 0.0, 'total' => 0]
+            ];
+        }
+
+        $totalRespuesta = (int)$data->respuesta_cumplida + (int)$data->respuesta_incumplida;
+        $totalResolucion = (int)$data->resolucion_cumplida + (int)$data->resolucion_incumplida;
+
+        // Calcula porcentajes de respuesta
+        $respCumplido = $totalRespuesta > 0 ? (round(((int)$data->respuesta_cumplida / $totalRespuesta) * 100, 2)) : 0.0;
+        $respIncumplido = $totalRespuesta > 0 ? (round(((int)$data->respuesta_incumplida / $totalRespuesta) * 100, 2)) : 0.0;
+
+        // Calcula porcentajes de resolución
+        $resCumplido = $totalResolucion > 0 ? (round(((int)$data->resolucion_cumplida / $totalResolucion) * 100, 2)) : 0.0;
+        $resIncumplido = $totalResolucion > 0 ? (round(((int)$data->resolucion_incumplida / $totalResolucion) * 100, 2)) : 0.0;
+
+        return [
+            'respuesta' => [
+                'cumplido' => $respCumplido,
+                'incumplido' => $respIncumplido,
+                'total' => $totalRespuesta
+            ],
+            'resolucion' => [
+                'cumplido' => $resCumplido,
+                'incumplido' => $resIncumplido,
+                'total' => $totalResolucion
+            ]
+        ];
+    }
 }

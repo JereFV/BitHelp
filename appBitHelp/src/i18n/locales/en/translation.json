@@ -455,5 +455,20 @@
     "onTime": "On Time",
     "fulfilled": "Fulfilled",
     "notFulfilled": "Not Fulfilled"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "loadingData": "Loading Dashboard data...",
+    "ticketsByMonthTitle": "Tickets Created by Month",
+    "ticketsLabel": "Tickets",
+    "noTicketsData": "No ticket data by month.",
+    "technicianRankingTitle": "Technician Ranking (Resolved Tickets)", 
+    "resolvedTicketsLabel": "Resolved Tickets",
+    "noRankingData": "No technician ranking data available.",
+    "generalRatingTitle": "Overall Rating Average (out of 5)",
+    "slaResponseTitle": "SLA Response Compliance ({{total}} tickets)",
+    "slaResolutionTitle": "SLA Resolution Compliance ({{total}} tickets)",
+    "nonComplianceCategoriesTitle": "Top Categories with Most Breaches",
+    "noBreachesData": "No breach data available."
   }
 }
