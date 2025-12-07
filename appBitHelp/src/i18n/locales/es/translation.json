@@ -59,6 +59,7 @@
     "mainMenu": "Menú Principal",
     "home": "Inicio",
     "tickets": "Tiquetes",
+    "dashboard": "Panel de Control",
     "ticketsList": "Lista de Tiquetes",
     "assignments": "Asignaciones",
     "createTicket": "Crear Tiquete",
@@ -443,17 +444,35 @@
     "accountManagement": "Administración de cuentas",
     "networkManagement": "Administración de redes"
   },
-    "sla": {
+  "sla": {
       "notApplicable": "No Aplicable",
       "noLimitDefined": "No hay límite de SLA definido.",
       "completedOnTime": "Completado a tiempo",
       "exceededBy": "Se excedió por {{time}}",
       "overdueSince": "Vencido hace {{time}}",
       "remaining": "{{time}} restantes"
-    },
-    "status": {
+  },
+  "status": {
       "onTime": "A Tiempo",
       "fulfilled": "Cumplido",
-      "notFulfilled": "No Cumplido"
-    }
+      "notFulfilled": "No Cumplido",
+      "optimal": "Óptimo",
+      "acceptable": "Aceptable",
+      "critical": "Crítico"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "loadingData": "Cargando datos del Panel de Control...",
+    "ticketsByMonthTitle": "Tiquetes creados por mes",
+    "ticketsLabel": "Tiquetes",
+    "noTicketsData": "No hay datos de tiquetes por mes.",
+    "technicianRankingTitle": "Clasificación de Técnicos (Tiquetes Resueltos)", 
+    "resolvedTicketsLabel": "Tiquetes Resueltos",
+    "noRankingData": "No hay datos en la clasificación de técnicos.",
+    "generalRatingTitle": "Promedio de valoraciones general (sobre 5)",
+    "slaResponseTitle": "Cumplimiento SLA de Respuesta ({{total}} tiquetes)",
+    "slaResolutionTitle": "Cumplimiento SLA de Resolución ({{total}} tiquetes)",
+    "nonComplianceCategoriesTitle": "Top Categorías con más incumplimientos",
+    "noBreachesData": "No hay datos de incumplimientos."
+  }
 }

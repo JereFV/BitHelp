@@ -131,7 +131,7 @@ export default function NotificationPanel({ open, onClose, onRefreshCount }) {
             open={open}
             onClose={onClose}
             PaperProps={{
-                sx: { width: { xs: '100%', sm: 400 } }
+                sx: { width: { xs: '90%', sm: 400 }, height: '70%', borderRadius: 4}
             }}
         >
             <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

@@ -8,6 +8,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { extendTheme } from '@mui/material/styles';
 import { useColorScheme } from '@mui/material/styles';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import HomeIcon from '@mui/icons-material/Home';
 import GroupIcon from '@mui/icons-material/Group';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -85,22 +86,32 @@ export function Layout({ children }) {
     // Estructura base de la navegación
     const baseNavigation = [
       { kind: 'header', title: t('navigation.mainMenu') },
-      { segment: 'Home', title: t('navigation.home'), icon: <DashboardIcon /> },
+      { segment: 'Home', title: t('navigation.home'), icon: <HomeIcon /> },
       {
         segment: 'tickets',
         title: t('navigation.tickets'),
         icon: <AssignmentIcon />,
         children: ticketChildren,
-      },
-      { kind: 'divider' },
-      { kind: 'header', title: t('navigation.administration') },
-      { segment: 'technician', title: t('navigation.technicians'), icon: <GroupIcon /> },
-      { kind: 'divider' },
-      { segment: 'categories', title: t('navigation.categories'), icon: <ViewListIcon/> },
-      { kind: 'divider' },
+      }
     ];
+
+    if (userRoleId == ROLE_ID_ADMIN) {
+      baseNavigation.push(
+        { segment: 'dashboard', title: t('navigation.dashboard'), icon: <DashboardIcon /> }
+      );
+    }
+    baseNavigation.push(
+       { kind: 'divider' },
+       { kind: 'header', title: t('navigation.administration') },
+    );
+    baseNavigation.push(
+      { segment: 'technician', title: t('navigation.technicians'), icon: <GroupIcon /> },
+      //{ kind: 'divider' },
+      { segment: 'categories', title: t('navigation.categories'), icon: <ViewListIcon/> }
+      //{ kind: 'divider' },
+    );
     
-    // Lógica Condicional: Agregar 'Usuarios' solo si es Administrador
+    // Agregar 'Usuarios' y 'Panel de control' solo si es Administrador
     if (userRoleId == ROLE_ID_ADMIN) {
       baseNavigation.push(
         { segment: 'users', title: t('navigation.users'), icon: <GroupIcon /> }
@@ -141,16 +152,16 @@ export function Layout({ children }) {
         {/* Barra superior con notificaciones y logout */}
         <Box sx={{ 
           position: 'fixed', 
-          top: 2, 
-          right: 75, 
+          top: 4, 
+          right: 62, 
           zIndex: 1300,
           display: 'flex',
           alignItems: 'center',
           gap: 2,
           backgroundColor: 'background.paper',
-          padding: '5px 16px',
-          borderRadius: 2,
-          boxShadow: 2
+          padding: '2px 18px',
+          borderRadius: 3,
+          boxShadow: 0
         }}>
           {/* Icono de notificaciones */}
           <NotificationBadge 

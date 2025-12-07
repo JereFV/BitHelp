@@ -5,6 +5,7 @@ import "./i18n/i18n";
 import App from "./App.jsx";
 import { createBrowserRouter } from "react-router-dom";
 import { Home } from "./components/Home/Home";
+import  Dashboard  from "./components/Dashboards/Dashboard";
 import { RouterProvider } from "react-router";
 import { Assignments } from "./components/Tickets/Assignments";
 import { CategoriesDataGridWithModal } from "./components/Categories/Categories";
@@ -59,6 +60,10 @@ const rutas = createBrowserRouter([
             element: <CreateTicket />
           }
         ]
+      },
+      {
+        path: 'dashboard',
+        element: <Dashboard />
       },
       {
         path: 'categories',

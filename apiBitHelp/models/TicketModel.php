@@ -560,5 +560,109 @@ class TicketModel
             handleException($ex);
         }
     }
+
+    /**
+     * Indicador 1: Obtiene el conteo de tickets creados por mes.
+     * @return array Lista de objetos {anio, mes, total_tickets}.
+     */
+    public function getTicketsCreatedByMonth()
+    {
+        try {
+            $query = "
+                SELECT
+                    YEAR(fechaCreacion) AS anio,
+                    MONTH(fechaCreacion) AS mes,
+                    COUNT(idTiquete) AS total_tickets
+                FROM tiquete
+                GROUP BY anio, mes
+                ORDER BY anio ASC, mes ASC
+            ";
+            return $this->connection->executeSQL($query) ?? [];
+        } catch (Exception $ex) {
+            handleException($ex);
+            return [];
+        }
+    }
+
+    /**
+     * Indicador 2: Obtiene el promedio general de las valoraciones de tickets.
+     * Se asume que solo se valora un ticket después de estar Cerrado (estado 5).
+     * @return object|null Objeto con la propiedad promedio_general.
+     */
+    public function getGeneralRatingAverage()
+    {
+        try {
+            // Utilizamos la constante de estado Cerrado (ID_CLOSED_STATE = 5)
+            $closedState = self::ID_CLOSED_STATE;
+
+            $query = "
+                SELECT 
+                    AVG(t.valoracion) AS promedio_general 
+                FROM tiquete t
+                WHERE t.idEstado = $closedState
+            ";
+            $result = $this->connection->executeSQL($query);
+            return $result[0] ?? null;
+        } catch (Exception $ex) {
+            handleException($ex);
+            return null;
+        }
+    }
+
+    /**
+     * Indicadores 3 y 4: Obtiene los conteos de cumplimiento e incumplimiento de SLA 
+     * (Respuesta y Resolución).
+     * @return object|null Objeto con los conteos brutos.
+     */
+    public function getSlaComplianceIndicators()
+    {
+        try {
+            $query = "
+                SELECT
+                    COUNT(CASE WHEN cumplimientoSlaRespuesta = 1 THEN 1 END) AS respuesta_cumplida,
+                    COUNT(CASE WHEN cumplimientoSlaRespuesta = 0 THEN 1 END) AS respuesta_incumplida,
+                    COUNT(CASE WHEN cumplimientoSlaResolucion = 1 THEN 1 END) AS resolucion_cumplida,
+                    COUNT(CASE WHEN cumplimientoSlaResolucion = 0 THEN 1 END) AS resolucion_incumplida
+                FROM tiquete
+                -- Se filtran solo los tickets que ya tienen un resultado de cumplimiento (no NULL)
+                WHERE cumplimientoSlaRespuesta IS NOT NULL OR cumplimientoSlaResolucion IS NOT NULL
+            ";
+            $result = $this->connection->executeSQL($query);
+            return $result[0] ?? null;
+        } catch (Exception $ex) {
+            handleException($ex);
+            return null;
+        }
+    }
+
+    /**
+     * Indicador 6: Obtiene las categorías con la mayor cantidad de incumplimientos de SLA.
+     * @param int $limit Número de categorías a mostrar (ej. top 5).
+     * @return array Lista de objetos {categoria_nombre, total_incumplimientos}.
+     */
+    public function getCategoriesWithMostSlaBreaches($limit = 5)
+    {
+        try {
+            $query = "
+                SELECT
+                    c.nombre AS categoria_nombre,
+                    COUNT(t.idTiquete) AS total_incumplimientos
+                FROM tiquete t
+                INNER JOIN categoria c ON t.idCategoria = c.idCategoria
+                -- Donde el cumplimiento de Respuesta O el de Resolución fue 0 (Incumplido)
+                WHERE t.cumplimientoSlaRespuesta = 0 OR t.cumplimientoSlaResolucion = 0
+                GROUP BY c.nombre
+                ORDER BY total_incumplimientos DESC
+                LIMIT ?
+            ";
+            // Usamos prepared statements para el límite
+            $params = [(int)$limit];
+            return $this->connection->executeSQL_prepared($query, $params) ?? [];
+        } catch (Exception $ex) {
+            handleException($ex);
+            return [];
+        }
+    }
+
 }
 ?>
