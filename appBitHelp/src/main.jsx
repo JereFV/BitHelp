@@ -18,6 +18,10 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { NotificationProvider } from "./context/NotificationContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./components/Login/Login";
+import ChatBot from "./components/Layout/ChatBot";
+import { CssBaseline } from "@mui/material";
+import { botTheme } from "./themes/theme";
+import { AppProvider } from "@toolpad/core";
 
 const rutas = createBrowserRouter([
   {
@@ -77,13 +81,19 @@ const rutas = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <AuthProvider>
+  <AuthProvider>
+    <StrictMode>
       <NotificationProvider>
         <UserProvider>
           <RouterProvider router={rutas} />
         </UserProvider>
       </NotificationProvider>
-    </AuthProvider>
-  </StrictMode>
+    </StrictMode>
+
+    {/*ChatBot renderizado fuera del strict mode para evitar duplicación de opciones. (Producto de la antiguedad de la librería)*/}
+    <AppProvider theme={botTheme}>
+      <CssBaseline enableColorScheme />
+      <ChatBot />
+    </AppProvider>
+  </AuthProvider>
 );

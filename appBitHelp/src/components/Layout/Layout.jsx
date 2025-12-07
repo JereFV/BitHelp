@@ -190,6 +190,7 @@ export function Layout({ children }) {
         <PageContainer title='' breadcrumbs={[]} maxWidth={false}>
           {children}
         </PageContainer>
+        
         {/* Footer */}
         <Box sx={{ 
           borderTop: 1, 

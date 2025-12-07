@@ -1,4 +1,4 @@
-import { createTheme } from '@mui/material/styles'; 
+import { createTheme, extendTheme } from '@mui/material/styles'; 
 export const appTheme= createTheme  ({ 
   palette: { 
     mode: 'light', 
@@ -13,4 +13,34 @@ export const appTheme= createTheme  ({
         contrastText: "#F3AA60"  
       } 
   }, 
+});
+
+export const botTheme = extendTheme({
+  colorSchemes: {
+    light: {
+      palette: {
+        background: {
+          default: '#f9f9f9',
+        },
+      },
+    },
+    dark: {
+      palette: {
+        background: {
+          default: '#121212',
+          paper: '#1c1c1c',
+        },
+      },
+    },
+  },
+  colorSchemeSelector: 'class',
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900, 
+      lg: 1200,
+      xl: 1536,
+    },
+  },
 });
