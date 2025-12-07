@@ -261,13 +261,13 @@ const Dashboard = () => {
     const statusSlaResponse = getComplianceStatus(
         sla_compliance.respuesta.cumplido, 
         90, // Óptimo: >= 90%
-        70  // Riesgo: 80% - 89.9%
+        70  // Riesgo: 70% - 89.9%
     );
 
     const statusSlaResolution = getComplianceStatus(
         sla_compliance.resolucion.cumplido, 
-        90, // Óptimo: >= 85%
-        70  // Riesgo: 70% - 84.9%
+        90, // Óptimo: >= 90%
+        70  // Riesgo: 70% - 90%
     );
 
     return (
@@ -275,7 +275,7 @@ const Dashboard = () => {
             {/* Título y Cabecera */}
             <Typography variant="h4" gutterBottom component="div" sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
                 <AssessmentIcon fontSize="large" sx={{ mr: 1, color: 'primary.main' }} />
-                {/* 3. TRADUCCIÓN DEL TÍTULO PRINCIPAL */}
+                {/*TRADUCCIÓN DEL TÍTULO PRINCIPAL */}
                 {t('dashboard.title')}
             </Typography>
 
