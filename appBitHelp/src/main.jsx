@@ -19,10 +19,11 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { NotificationProvider } from "./context/NotificationContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./components/Login/Login";
-import ChatBot from "./components/Layout/ChatBot";
+import ChatBot from "./components/ChatBot/ChatBotContainer";
 import { CssBaseline } from "@mui/material";
 import { botTheme } from "./themes/theme";
 import { AppProvider } from "@toolpad/core";
+import './Utilities/handleChatBotWarnings';
 
 const rutas = createBrowserRouter([
   {
