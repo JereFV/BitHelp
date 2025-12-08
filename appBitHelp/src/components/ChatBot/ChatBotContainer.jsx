@@ -1,8 +1,12 @@
 import ChatBot from "./ChatBot";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useContext } from "react";
+import { AuthContext } from "../../context/AuthContext.jsx";
 
 export default function ChatbotContainer() {
+  //Obtiene la condición de autenticación del usuario dentro del sistema.
+  const {isAuthenticated } = useContext(AuthContext);
+
   //Datos del usuario en sesión.
   const user = JSON.parse(localStorage.getItem("userSession"));
 
@@ -23,7 +27,7 @@ export default function ChatbotContainer() {
   [
     {
       id: "home",
-      message: t('chatbot.homeMessage', {name: user.nombre}),
+      message: t('chatbot.homeMessage', {name: user?.nombre}),
       trigger: "menu"
     },
     {
@@ -35,7 +39,7 @@ export default function ChatbotContainer() {
     },
     {
       id: "supportHome",
-      message: t('chatbot.supportHome', {name: user.nombre}),
+      message: t('chatbot.supportHome'),
       trigger: "supportMenu"
     },
     {
@@ -147,8 +151,9 @@ export default function ChatbotContainer() {
       message: t('chatbot.yesMessage'),
       trigger: "menu"
     }
-  ]), [t]);
+  ]), [t, user]);
 
+  //Re-renderiza el componente al cambiar la selección del idioma o un cambio del usuario en sesión.
   useEffect(() => {
     //Detecta si el contenedor del chat está visible, mediante las clases que genera al desplegarse.
     const isChatVisible = !!document.querySelector(".bwJvUL") || !!document.querySelector(".cxeHtn");
@@ -161,7 +166,9 @@ export default function ChatbotContainer() {
     //Envía el estado a partir del valor obtenido como referencia.
     setOpen(openRef.current);
 
-  }, [i18n.language]);
+  }, [i18n.language, isAuthenticated]);
 
-  return <ChatBot key={botKey} steps={steps} open={open ? true : undefined} />;
+  return isAuthenticated ? (
+    <ChatBot key={botKey} steps={steps} open={open} />
+  ) : null;
 }

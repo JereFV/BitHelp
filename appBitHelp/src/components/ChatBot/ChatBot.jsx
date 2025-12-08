@@ -1,6 +1,5 @@
-import {useContext, useState, useEffect, useMemo } from "react";
+import {useState, useEffect, useMemo } from "react";
 import Bot from "react-simple-chatbot";
-import { AuthContext } from "../../context/AuthContext.jsx";
 import { ThemeProvider } from "styled-components";
 import {useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
@@ -12,9 +11,6 @@ ChatBot.propTypes = {
 }
 
 export default function ChatBot({ steps, open}) {
-  //Obtiene la condición de autenticación del usuario dentro del sistema.
-  const {isAuthenticated } = useContext(AuthContext);
-
   //Obtiene el tema seleccionado y el modo a partir de la clase definida en el html.
   const theme = useTheme();
   const [mode, setMode] = useState(document.documentElement.classList.contains("dark") ? "dark" : "light");
@@ -71,7 +67,7 @@ export default function ChatBot({ steps, open}) {
   }, []);
   
   //Renderiza únicamente si se ha iniciado sesión previamente.
-  return (isAuthenticated ? (
+  return (
     <>
       {/*Estilos personalizados a los diferentes elementos, con ajustes de responsividad.*/}
       <style>
@@ -104,9 +100,9 @@ export default function ChatBot({ steps, open}) {
           floating={"true"}
           footerStyle={{display: "none" }}
           customStyle={{maxwidth: "100%" }}
-          opened={open ? open : undefined}   
+          opened={open}   
         />
       </ThemeProvider>
     </>
-  ) : null);  
+  );  
 }
