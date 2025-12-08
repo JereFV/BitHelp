@@ -38,6 +38,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import TicketImageService from '../../services/TicketImageService';
 import { NotificationContext } from '../../context/NotificationContext';
 import { useTranslation } from 'react-i18next';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import SendIcon from "@mui/icons-material/Send";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -397,7 +399,7 @@ export function TicketDetail() {
                 marginBottom: "1.5rem",
               }}
             >
-              {t('tickets.ticketNumber')} {ticket.idTiquete} - {ticket.titulo}
+              {t("tickets.ticketNumber")} {ticket.idTiquete} - {ticket.titulo}
             </Typography>
 
             <Typography
@@ -412,13 +414,13 @@ export function TicketDetail() {
                   color="primary"
                   style={{ marginRight: "1%" }}
                 />
-                {t('tickets.generalInfo')}
+                {t("tickets.generalInfo")}
               </Stack>
             </Typography>
 
             <TextField
               id="standard-basic"
-              label={t('tickets.description')}
+              label={t("tickets.description")}
               value={ticket.descripcion ?? ""}
               fullWidth
               multiline
@@ -445,7 +447,7 @@ export function TicketDetail() {
             <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
               <TextField
                 id="outlined-read-only-input"
-                label={t('tickets.requesterInfo')}
+                label={t("tickets.requesterInfo")}
                 value={
                   ticket.usuarioSolicita
                     ? `${ticket.usuarioSolicita?.nombre} ${ticket.usuarioSolicita?.primerApellido} ${ticket.usuarioSolicita?.segundoApellido}`
@@ -466,7 +468,7 @@ export function TicketDetail() {
 
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateTimeField
-                  label={t('tickets.creationDate')}
+                  label={t("tickets.creationDate")}
                   value={
                     ticket.fechaCreacion ? dayjs(ticket.fechaCreacion) : null
                   }
@@ -489,21 +491,62 @@ export function TicketDetail() {
             </Stack>
 
             <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
+              {ticket.fechaCierre != null ? (
+                // ESTADO CERRADO (Si la condición es verdadera)
+                <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
+                  {/* Campo Status */}
+                  <TextField
+                    id="outlined-read-only-input"
+                    label={t("tickets.status")}
+                    fullWidth
+                    value={ticket.estadoTiquete?.nombre ?? ""}
+                    sx={{ flex: 0.77 }}
+                    slotProps={{
+                      input: {
+                        readOnly: true,
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <NotificationsIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
 
-            {ticket.fechaCierre != null ? (
-              // ESTADO CERRADO (Si la condición es verdadera)
-              <Stack
-                direction="row"
-                spacing={2}
-                sx={{ flex: 1 }}
-              >
-                {/* Campo Status */}
+                  {/* Campo Tiempo de Cierre (Cálculo de días) */}
+                  <TextField
+                    id="outlined-read-only-input-closed-time"
+                    label={t("tickets.resolutionTime")} // mostrar el tiempo de cierre
+                    fullWidth
+                    value={formatClosingTime(
+                      ticket.fechaCreacion,
+                      ticket.slaResolucion,
+                      t
+                    )} // Usamos una función para el cálculo
+                    sx={{ flex: 1 }}
+                    slotProps={{
+                      input: {
+                        readOnly: true,
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <AccessTimeIcon
+                              color="primary"
+                              sx={{ marginLeft: "-6px", marginRight: "-5px" }}
+                            />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                </Stack>
+              ) : (
+                // ESTADO ABIERTO (Si la condición es falsa - no hay fecha de cierre)
                 <TextField
                   id="outlined-read-only-input"
-                  label={t('tickets.status')}
+                  label={t("tickets.status")}
                   fullWidth
                   value={ticket.estadoTiquete?.nombre ?? ""}
-                  sx={{ flex: 0.77 }}
+                  sx={{ flex: 1 }}
                   slotProps={{
                     input: {
                       readOnly: true,
@@ -515,106 +558,63 @@ export function TicketDetail() {
                     },
                   }}
                 />
+              )}
 
-                {/* Campo Tiempo de Cierre (Cálculo de días) */}
+              {/* Los siguientes campos se renderizan SIEMPRE, ya que están fuera del ternario */}
+              <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
+                {/* Campo Prioridad */}
                 <TextField
-                  id="outlined-read-only-input-closed-time"
-                  label={t('tickets.resolutionTime')} // mostrar el tiempo de cierre
+                  id="outlined-read-only-input-priority"
+                  label={t("tickets.priority")}
                   fullWidth
-                  value={formatClosingTime(ticket.fechaCreacion, ticket.slaResolucion,t)} // Usamos una función para el cálculo
+                  value={ticket.prioridad?.nombre ?? ""}
                   sx={{ flex: 1 }}
                   slotProps={{
                     input: {
                       readOnly: true,
                       startAdornment: (
                         <InputAdornment position="start">
-                          <AccessTimeIcon color="primary" sx={{marginLeft:"-6px",  marginRight:"-5px",}}/> 
+                          <PriorityHighIcon color="primary" />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+
+                {/* Campo Método de Asignación */}
+                <TextField
+                  id="outlined-read-only-input-asignation-method"
+                  label={t("tickets.assignmentMethod")}
+                  fullWidth
+                  value={
+                    ticket.metodoAsignacion
+                      ? ticket.metodoAsignacion?.nombre
+                      : t("tickets.notAssigned")
+                  }
+                  sx={{ flex: 1 }}
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <StarsIcon color="primary" />
                         </InputAdornment>
                       ),
                     },
                   }}
                 />
               </Stack>
-            ) : (
-              // ESTADO ABIERTO (Si la condición es falsa - no hay fecha de cierre)
-              <TextField
-                id="outlined-read-only-input"
-                label={t('tickets.status')}
-                fullWidth
-                value={ticket.estadoTiquete?.nombre ?? ""}
-                sx={{ flex: 1 }}
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <NotificationsIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            )}
-
-            {/* Los siguientes campos se renderizan SIEMPRE, ya que están fuera del ternario */}
-            <Stack
-              direction="row"
-              spacing={2}
-              sx={{ flex: 1 }}
-            >
-              {/* Campo Prioridad */}
-              <TextField
-                id="outlined-read-only-input-priority" 
-                label={t('tickets.priority')}
-                fullWidth
-                value={ticket.prioridad?.nombre ?? ""}
-                sx={{ flex: 1 }}
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <PriorityHighIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-
-              {/* Campo Método de Asignación */}
-              <TextField
-                id="outlined-read-only-input-asignation-method"
-                label={t('tickets.assignmentMethod')}
-                fullWidth
-                value={
-                  ticket.metodoAsignacion
-                    ? ticket.metodoAsignacion?.nombre
-                    : t('tickets.notAssigned')
-                }
-                sx={{ flex: 1 }}
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <StarsIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
             </Stack>
-          </Stack>
 
             <Stack direction="row" spacing="10%" paddingBottom="1.5rem">
               <TextField
                 id="outlined-read-only-input-assigned-technician"
-                label={t('tickets.assignedTechnician')}
+                label={t("tickets.assignedTechnician")}
                 fullWidth
                 value={
                   ticket.tecnicoAsignado
                     ? `${ticket.tecnicoAsignado?.nombre} ${ticket.tecnicoAsignado?.primerApellido} ${ticket.tecnicoAsignado?.segundoApellido}`
-                    : t('tickets.unassigned')
+                    : t("tickets.unassigned")
                 }
                 slotProps={{
                   input: {
@@ -630,7 +630,7 @@ export function TicketDetail() {
 
               <TextField
                 id="outlined-read-only-input"
-                label={t('categories.category')}
+                label={t("categories.category")}
                 fullWidth
                 value={ticket.categoria?.nombreCategoria ?? ""}
                 slotProps={{
@@ -660,7 +660,7 @@ export function TicketDetail() {
                   color="primary"
                   style={{ marginRight: "1%" }}
                 />
-                {t('tickets.slaMetrics')}
+                {t("tickets.slaMetrics")}
               </Stack>
             </Typography>
 
@@ -678,7 +678,7 @@ export function TicketDetail() {
                   >
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <DateTimeField
-                        label={t('tickets.slaResponseLimit')}
+                        label={t("tickets.slaResponseLimit")}
                         value={
                           slaDetails.SLARespuestaLimite
                             ? dayjs(slaDetails.SLARespuestaLimite)
@@ -729,7 +729,8 @@ export function TicketDetail() {
                               fontWeight="bold"
                               fontSize="1rem"
                             >
-                              {t('tickets.status')}: {slaRespuestaDisplay.estado}
+                              {t("tickets.status")}:{" "}
+                              {slaRespuestaDisplay.estado}
                             </Typography>
                             <Typography
                               variant="caption"
@@ -744,8 +745,10 @@ export function TicketDetail() {
                                 display="block"
                                 fontSize="0.8rem"
                               >
-                                {t('tickets.responded')}:{" "}
-                                {dayjs(slaDetails.FechaRespuestaReal).format(dateTimeFormat)}
+                                {t("tickets.responded")}:{" "}
+                                {dayjs(slaDetails.FechaRespuestaReal).format(
+                                  dateTimeFormat
+                                )}
                               </Typography>
                             )}
                           </Stack>
@@ -763,7 +766,7 @@ export function TicketDetail() {
                   >
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <DateTimeField
-                        label={t('tickets.slaResolutionLimit')}
+                        label={t("tickets.slaResolutionLimit")}
                         value={
                           slaDetails.SLAResolucionLimite
                             ? dayjs(slaDetails.SLAResolucionLimite)
@@ -812,7 +815,8 @@ export function TicketDetail() {
                               fontWeight="bold"
                               fontSize="1rem"
                             >
-                              {t('tickets.status')}: {slaResolucionDisplay.estado}
+                              {t("tickets.status")}:{" "}
+                              {slaResolucionDisplay.estado}
                             </Typography>
                             <Typography
                               variant="caption"
@@ -827,8 +831,10 @@ export function TicketDetail() {
                                 display="block"
                                 fontSize="0.8rem"
                               >
-                                {t('tickets.resolvedOn')}:{" "}
-                                {dayjs(slaDetails.FechaResolucionReal).format(dateTimeFormat)}
+                                {t("tickets.resolvedOn")}:{" "}
+                                {dayjs(slaDetails.FechaResolucionReal).format(
+                                  dateTimeFormat
+                                )}
                               </Typography>
                             )}
                           </Stack>
@@ -839,7 +845,7 @@ export function TicketDetail() {
                 </Stack>
               </>
             ) : (
-              <Alert severity="info">{t('tickets.loadingSlaMetrics')}</Alert>
+              <Alert severity="info">{t("tickets.loadingSlaMetrics")}</Alert>
             )}
           </Box>
 
@@ -847,7 +853,7 @@ export function TicketDetail() {
 
           {displayNewMovSection ? (
             <form onSubmit={handleSubmit(onSubmit, onError)}>
-              <Box sx={{paddingBottom: "1.5rem"}}>
+              <Box sx={{ paddingBottom: "1.5rem" }}>
                 <Divider sx={{ mb: 3 }} />
 
                 <Typography
@@ -862,7 +868,7 @@ export function TicketDetail() {
                       color="primary"
                       style={{ marginRight: "1%" }}
                     />
-                    {t('tickets.newMovement')}
+                    {t("tickets.newMovement")}
                   </Stack>
                 </Typography>
 
@@ -879,12 +885,14 @@ export function TicketDetail() {
                       control={control}
                       render={({ field }) => (
                         <>
-                          <InputLabel id="id">{t('tickets.newState')}</InputLabel>
+                          <InputLabel id="id">
+                            {t("tickets.newState")}
+                          </InputLabel>
                           <Select
                             {...field}
                             labelId="idNewState"
                             value={field.value}
-                            label={t('tickets.newState')}
+                            label={t("tickets.newState")}
                             fullWidth
                             error={Boolean(errors.idNewState)}
                           >
@@ -914,7 +922,7 @@ export function TicketDetail() {
                     <TextField
                       {...field}
                       id="comment"
-                      label={t('tickets.comment')}
+                      label={t("tickets.comment")}
                       fullWidth
                       multiline
                       minRows={3}
@@ -938,7 +946,7 @@ export function TicketDetail() {
                   )}
                 />
 
-                <ImagesSelector images={images} setImages={setImages}/>
+                <ImagesSelector images={images} setImages={setImages} />
               </Box>
             </form>
           ) : null}
@@ -959,68 +967,75 @@ export function TicketDetail() {
                     color="primary"
                     style={{ marginRight: "1%" }}
                   />
-                  {t('tickets.ticketRating')}
+                  {t("tickets.ticketRating")}
                 </Stack>
               </Typography>
 
               {ticket.valoracion ? (
-              <Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    paddingBottom: "2rem",
-                  }}
-                >
-                  <Rating
-                    name="hover-feedback"
-                    value={parseInt(ticket.valoracion ?? 0)}
-                    emptyIcon={
-                      <StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />
-                    }
-                    readOnly
-                    size="large"
-                  />
+                <Box>
                   <Box
                     sx={{
-                      ml: 1,
-                      fontSize: "1rem",
-                      fontWeight: "bold",
-                      alignSelf: "center",
+                      display: "flex",
+                      justifyContent: "center",
+                      paddingBottom: "2rem",
                     }}
                   >
-                    {labelsTicketRating[ticket.valoracion]}
+                    <Rating
+                      name="hover-feedback"
+                      value={parseInt(ticket.valoracion ?? 0)}
+                      emptyIcon={
+                        <StarIcon
+                          style={{ opacity: 0.55 }}
+                          fontSize="inherit"
+                        />
+                      }
+                      readOnly
+                      size="large"
+                    />
+                    <Box
+                      sx={{
+                        ml: 1,
+                        fontSize: "1rem",
+                        fontWeight: "bold",
+                        alignSelf: "center",
+                      }}
+                    >
+                      {labelsTicketRating[ticket.valoracion]}
+                    </Box>
                   </Box>
-                </Box>
 
-                <TextField
-                  id="standard-basic"
-                  label={t('tickets.ratingComment')}
-                  value={ticket.comentarioValoracionServicio ?? ""}
-                  fullWidth
-                  multiline
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                      style: {
-                        fontSize: "0.9rem",
+                  <TextField
+                    id="standard-basic"
+                    label={t("tickets.ratingComment")}
+                    value={ticket.comentarioValoracionServicio ?? ""}
+                    fullWidth
+                    multiline
+                    maxRows={3}
+                    slotProps={{
+                      input: {
+                        readOnly: true,
+                        style: {
+                          fontSize: "0.9rem",
+                        },
+                        startAdornment: (
+                          <InputAdornment
+                            position="start"
+                            sx={{ alignSelf: "start", marginRight: "8px" }}
+                          >
+                            <CommentIcon color="primary" />
+                          </InputAdornment>
+                        ),
                       },
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <CommentIcon color="primary" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-              </Box>
+                    }}
+                  />
+                </Box>
               ) : (
-              <Alert severity="info">
-                {t('tickets.noRatingRegistered')}
-              </Alert>
-            )}
+                <Alert severity="info">{t("tickets.noRatingRegistered")}</Alert>
+              )}
             </Box>
           ) : null}
+
+          <RateTicket labels={labelsTicketRating} />
 
           <IconButton
             onClick={() => handleClose()}
@@ -1028,8 +1043,8 @@ export function TicketDetail() {
             color="primary"
             sx={{
               position: "absolute",
-              top: 5,
-              right: 10,
+              top: -5,
+              right: 0,
               zIndex: 10,
             }}
           >
@@ -1269,6 +1284,137 @@ function TicketHistory({ movements }) {
           </Button>
         </Box>
       </Modal>
+
+
     </>
+  );
+}
+
+function RateTicket ({labels}) {
+  
+  return (
+    <Modal open={false}>
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          bgcolor: "background.paper",
+          boxShadow: 24,
+          borderRadius: 2,
+          p: 2,
+          width: {
+            xs: "100%",
+            sm: "40%",
+          },
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            paddingBottom: "0.5rem",
+          }}
+        >
+          <ThumbUpIcon
+            fontSize="large"
+            color="primary"
+            style={{ marginRight: "1%", justifySelf: "center" }}
+          />
+          <Typography
+            id="modal-modal-title"
+            variant="h5"
+            component="h2"
+            sx={{
+              fontSize: "2rem",
+              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
+              fontWeight: "bold",
+              marginBottom: "1.5rem",
+            }}
+          >
+            Calificación del Servicio
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            paddingBottom: "2rem",
+          }}
+        >
+          <Rating
+            name="hover-feedback"
+            value={4}
+            emptyIcon={
+              <StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />
+            }
+            size="large"
+          />
+          <Box
+            sx={{
+              ml: 1,
+              fontSize: "1rem",
+              fontWeight: "bold",
+              alignSelf: "center",
+            }}
+          >
+            {labels[4]}
+          </Box>
+        </Box>
+
+        <TextField
+          id="standard-basic"
+          label={"Comentario"}
+          fullWidth
+          multiline
+          minRows={3}
+          maxRows={3}
+          sx={{ paddingBottom: "2rem" }}
+          slotProps={{
+            input: {
+              style: {
+                fontSize: "0.9rem",
+              },
+              startAdornment: (
+                <InputAdornment
+                  position="start"
+                  sx={{ alignSelf: "start", marginRight: "8px" }}
+                >
+                  <CommentIcon color="primary" />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+
+        {/* Contenedor de botones de acciones.*/}
+        <Box display={"flex"} justifyContent={"end"}>
+          <Button
+            type="submit"
+            variant="contained"
+            startIcon={<SendIcon />}
+            color="success"
+          >
+            Guardar Calificación
+          </Button>
+        </Box>
+
+        <IconButton
+          onClick={() => handleClose()}
+          size="large"
+          color="primary"
+          sx={{
+            position: "absolute",
+            top: 5,
+            right: 10,
+            zIndex: 10,
+          }}
+        >
+          <Close fontSize="large" />
+        </IconButton>
+      </Box>
+    </Modal>
   );
 }
