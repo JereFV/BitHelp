@@ -110,6 +110,7 @@
     "requesterInfo": "Información Usuario Solicitante",
     "categorization": "Categorización del Tiquete",
     "tag": "Etiqueta",
+    "completedTime": "Resolución Completa",
     "selectAppropriateTag": "Seleccione la etiqueta más adecuada según su problema.",
     "categoryObtainedFromTag": "Obtenida a partir de la etiqueta seleccionada.",
     "attachedImages": "Imágenes Adjuntas",
