@@ -48,7 +48,7 @@ class technician
      * Endpoint: GET /technician/getCandidates
      * Obtiene la lista de usuarios que pueden ser promovidos a técnico.
      */
-    public function getCandidates() // <== Nuevo método para la ruta /getCandidates
+    public function getCandidates() 
     {
         try {
             $response = new Response();
@@ -67,12 +67,11 @@ class technician
         }
     }
 
-    public function getDisponibilities() // <== Nuevo método para la ruta /getDisponibilities
+    public function getDisponibilities() 
   {
     try {
       $response = new Response();
       $technicianModel = new TechnicianModel();
-            // NOTA: Asume que el modelo tendrá una función llamada getAllDisponibilities()
       $disponibilities = $technicianModel->getAllDisponibilities(); 
       $response->toJson($disponibilities);      
     } catch (Exception $ex) {
@@ -83,12 +82,11 @@ class technician
   /**
   * Endpoint: GET /technician/getSpecialties
   */
-  public function getSpecialties() // <== Nuevo método para la ruta /getSpecialties
+  public function getSpecialties() 
   {
     try {
       $response = new Response();
       $technicianModel = new TechnicianModel();
-            // NOTA: Asume que el modelo tendrá una función llamada getAllSpecialtiesOptions()
       $specialties = $technicianModel->getAllSpecialtiesOptions(); 
       $response->toJson($specialties);      
     } catch (Exception $ex) {
@@ -104,7 +102,6 @@ class technician
             $id = (int)$idUsuario;
 
             if ($id <= 0) {
-                // Validación básica
                 $response->error(400, 'ID de usuario inválido.');
                 return;
             }
@@ -113,8 +110,6 @@ class technician
             $technicianDetails = $technicianModel->getTechnicianDetailsByUserId($id);
             
             if ($technicianDetails) {
-                // Éxito: Devolver los detalles. 
-                // Nota: Los enviamos dentro de 'result' para ser consistentes con tu patrón de respuesta.
                 $response->toJson(['result' => $technicianDetails], 200); 
             } else {
                 // 404 si no se encuentra el registro de técnico para ese usuario

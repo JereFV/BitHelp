@@ -74,8 +74,6 @@ class TechnicianService
         // Ruta asumida: VITE_BASE_URL + 'technician/byUser/{idUsuario}'
         return axios.get(`${BASE_URL}/byUser/${idUsuario}`); 
     }
-
-    // Si implementamos la funcionalidad de "despedir" al técnico:
     
     /**
      * Despromueve un técnico (cambia su rol a Cliente y borra el registro de la tabla tecnico).

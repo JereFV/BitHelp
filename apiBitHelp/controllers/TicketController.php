@@ -98,7 +98,7 @@ class ticket
             // Crear el ticket (puede incluir autotriage)
             $idTicket = $ticketModel->create($decodedRequest);
 
-            // ***** Obtener información actualizada del ticket *****
+            //Obtener información actualizada del ticket 
             $queryTicketInfo = "SELECT idEstado, idTecnicoAsignado, titulo FROM tiquete WHERE idTiquete = $idTicket";
             $ticketInfo = $ticketModel->connection->ExecuteSQL($queryTicketInfo)[0];
 
@@ -109,7 +109,7 @@ class ticket
             $user = $userModel->get($decodedRequest->idRequestUser);
             $nombreUsuario = $user->nombre . ' ' . $user->primerApellido;
 
-            // 1. Notificar al usuario creador
+            // Notificar al usuario creador
             $notificationModel->createNotification(
                 1,
                 $decodedRequest->idRequestUser,
@@ -118,7 +118,7 @@ class ticket
                 $idTicket
             );
 
-            // 2. Notificar a administradores
+            // Notifica a administradores
             $administrators = $notificationModel->getAllAdministrators();
             foreach ($administrators as $idAdmin) {
                 $notificationModel->createNotification(
@@ -130,7 +130,7 @@ class ticket
                 );
             }
 
-            // 3. Si fue asignado automáticamente, crear notificaciones de asignación
+            // Si fue asignado automáticamente, crear notificaciones de asignación
             if ($ticketInfo->idEstado == 2 && $ticketInfo->idTecnicoAsignado) {
                 // Obtener nombre del técnico
                 $techUser = $userModel->get($ticketInfo->idTecnicoAsignado);
@@ -205,7 +205,7 @@ class ticket
                 $techUser = $userModel->get($requestData['idTecnicoAsignado']);
                 $nombreTecnico = $techUser->nombre . ' ' . $techUser->primerApellido;
                 
-                // 1. Notificar al usuario solicitante
+                // Notificar al usuario solicitante
                 $notificationModel->createNotification(
                     1, // Tipo: Cambio de Estado
                     $requestData['idUsuarioAdmin'], // Remitente: admin que asignó
@@ -214,7 +214,7 @@ class ticket
                     $id
                 );
                 
-                // 2. Notificar al técnico asignado
+                // Notificar al técnico asignado
                 $notificationModel->createNotification(
                     1, // Tipo: Cambio de Estado
                     $requestData['idUsuarioAdmin'], // Remitente: admin que asignó

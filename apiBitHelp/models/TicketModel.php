@@ -218,7 +218,7 @@ class TicketModel
     {
         try 
         {
-            // Consulta SQL optimizada para obtener todos los datos necesarios
+            // Consulta para obtener todos los datos necesarios
             // para el bloque de cumplimiento de SLA en una sola llamada.
             $query = "
                 SELECT
@@ -313,9 +313,6 @@ class TicketModel
                 error_log("Objeto de Categoría NO encontrado o NO es objeto. Autotriage OMITIDO.");
             }
 
-            // ID 2 es 'Automático'
-            // COMRPOBACIÓN FINAL: Verificamos que $categoriaObjeto sea realmente un objeto 
-            // y tenga la propiedad idMetodoAsignacion antes de usarla.
             if (is_object($categoriaObject) && 
                 isset($categoriaObject->idMetodoAsignacion) && 
                 $categoriaObject->idMetodoAsignacion == 2) 
@@ -372,32 +369,25 @@ class TicketModel
     public function update($id, $data)
     {
         try 
-        {
-            // Nota de Seguridad: Este código NO utiliza sentencias preparadas 
-            // y es vulnerable si los datos no son validados correctamente.
-            
+        {           
             $setClauses = [];
             
             // Construir dinámicamente la cláusula SET, asegurando casteo de enteros
             // y comillas para strings.
 
             if (isset($data->idTecnicoAsignado)) {
-                // Se asume que es un entero
                 $setClauses[] = "idTecnicoAsignado = " . (int)$data->idTecnicoAsignado;
             }
             if (isset($data->idEstado)) {
-                // Se asume que es un entero
                 $setClauses[] = "idEstado = " . (int)$data->idEstado;
             }
             if (isset($data->slaResolucion)) {
-                // Se asume que es una string con formato de fecha/hora
                 $sla = $data->slaResolucion; 
                 $setClauses[] = "slaResolucion = '$sla'"; 
             }
             if (isset($data->idMetodoAsignacion)) {
                 $setClauses[] = "idMetodoAsignacion = " . (int)$data->idMetodoAsignacion;
             }
-            // Agrega aquí cualquier otro campo que necesites actualizar (ej. titulo, descripcion, etc.)
 
             if (empty($setClauses)) {
                 error_log("ADVERTENCIA: No se proporcionaron campos para actualizar el tiquete $id.");
