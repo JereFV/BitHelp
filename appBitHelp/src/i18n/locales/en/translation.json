@@ -146,7 +146,7 @@
     "comment": "Comment",
     "ticketRating": "Ticket Rating",
     "ratingComment": "Rating Comment",
-    "noRatingRegistered": "No rating registered for the selected ticket.",
+    "noRatingRegistered": "No rating registered for the ticket.",
     "loading": "Loading...",
     "loadingTickets": "Loading tickets...",
     "loadingInfo": "Loading information and technicians...",
@@ -502,5 +502,19 @@
     "ticketListMessage": "Go to the \"Tickets\" section in the main menu. There you will find the \"Ticket List\" option, which will display all the tickets you have reported so far, with the ability to filter them by status.",
     "systemNoMessage": "I'm sorry I couldn't help resolve your issue.\nYou can return to the previous options or contact a system administrator.",
     "yesMessage": "I'm so glad I could help solve your problem!\nDo you need anything else?"
+  },
+  "ticketRating": {
+    "valorationValidMessage": "You must select a service rating within a range of 1 to 5 stars.",
+    "commentRequiredMessage": "A comment is required.",
+    "commentMaxMessage": "The comment must be a maximum of 100 characters.",
+    "submitSucessMessage": "The service rating has been submitted successfully.",
+    "submitErrorMessage": "An error occurred while trying to submit the service rating.",
+    "title": "Service Rating",
+    "commentFieldLabel": "Comment",
+    "submitButtonLabel": "Submit Rating",
+    "dialogtitle": "Do you want to leave the rating screen?",
+    "dialogContent": "Your opinion is important to us, so we would like to know the quality of the service provided by our technical team.\n\nIf you leave this screen, you will not be able to rate the service provided for this ticket.",
+    "dialogCancelButton": "Cancel",
+    "dialogAcceptButton": "Accept"
   }
 }

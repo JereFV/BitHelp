@@ -63,6 +63,9 @@ class TicketService
     return axios.put(BASE_URL, ticket);
   }
 
+  saveRating(ticket) {
+    return axios.put(`${BASE_URL}/saveRating`, ticket);
+  }
 }
 
 export default new TicketService();

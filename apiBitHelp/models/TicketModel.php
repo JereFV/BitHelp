@@ -664,5 +664,25 @@ class TicketModel
         }
     }
 
+    //Almacena la calificación en el servicio brindado para determinado tiquete.
+    public function saveRating($ticket)
+    {
+        try
+        {
+            $query = "UPDATE tiquete SET valoracion = $ticket->valoration,
+                                         comentarioValoracionServicio = '$ticket->valorationComment'
+                                         WHERE idTiquete = $ticket->idTicket";
+
+            $this->connection->executeSQL_DML($query);
+
+            //Obtiene y retorna el tiquete con sus valores actualizados.
+            $ticket = $this->get($ticket->idTicket);
+
+            return $ticket;
+        }
+        catch (Exception $ex) {
+            handleException($ex);
+        }
+    }
 }
 ?>

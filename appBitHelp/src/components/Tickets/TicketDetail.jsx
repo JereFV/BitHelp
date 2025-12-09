@@ -26,7 +26,6 @@ import { getSLAStatus } from '../../Utilities/slaCalculations';
 import CommentIcon from '@mui/icons-material/Comment';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useNavigate } from 'react-router-dom';
-import PropTypes from 'prop-types';
 import AddIcon from '@mui/icons-material/Add';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Controller, useForm } from "react-hook-form";
@@ -38,8 +37,12 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import TicketImageService from '../../services/TicketImageService';
 import { NotificationContext } from '../../context/NotificationContext';
 import { useTranslation } from 'react-i18next';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-import SendIcon from "@mui/icons-material/Send";
+import TicketRating from './TicketRating';
+import PropTypes from 'prop-types';
+
+TicketHistory.PropTypes = {
+  movements: PropTypes.array
+}
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -52,10 +55,6 @@ const ID_RETURNED_STATE = "6";
 const ID_CLIENT_ROLE = "1";
 const ID_TECHNICIAN_ROLE = "2";
 const ID_ADMINISTRATOR_ROLE = "3";
-
-TicketHistory.propTypes = {
-  movements: PropTypes.array
-}
 
 const getColorMap = (theme, severity) => {
     switch (severity) {
@@ -233,6 +232,8 @@ export function TicketDetail() {
   const [displayNewMovSection, setDisplayNewMovSection] = useState(false);
   const [displayValorationSection, setDisplayValorationSection] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  //Controla el renderizado de la ventana de califación del servicio.
+  const [showRatingModal, setShowRatingModal] = useState(false);
 
   let slaRespuestaDisplay = null;
   let slaResolucionDisplay = null;
@@ -321,7 +322,11 @@ export function TicketDetail() {
             modalContentRef.current.scrollTop  = 0;
             refreshCount();
 
-            toast.success(t('messages.movementRegisteredSuccess'), { duration: 4000 });    
+            //Renderiza la ventana de valoración del servicio al haber cerrado el tiquete.
+            if(DataForm.idNewState == ID_CLOSED_STATE)
+              setShowRatingModal(true);
+
+            toast.success(t('messages.movementRegisteredSuccess'), { duration: 4000 });         
           })
           .catch((error) => {
             toast.error(t('messages.errorRegisteringMovement'));
@@ -371,8 +376,6 @@ export function TicketDetail() {
   }, [routeParams.id, refresh]);
 
   const dateTimeFormat = i18n.language === 'es' ? 'DD/MM/YYYY hh:mm:ss a' : 'MM/DD/YYYY hh:mm:ss a';
-
-  // ... continuación
 
   return (
     <div>
@@ -1035,15 +1038,13 @@ export function TicketDetail() {
             </Box>
           ) : null}
 
-          <RateTicket labels={labelsTicketRating} />
-
           <IconButton
             onClick={() => handleClose()}
             size="large"
             color="primary"
             sx={{
               position: "absolute",
-              top: -5,
+              top: -8,
               right: 0,
               zIndex: 10,
             }}
@@ -1052,6 +1053,16 @@ export function TicketDetail() {
           </IconButton>
         </Box>
       </Modal>
+
+      {showRatingModal && (
+        <TicketRating
+          labels={labelsTicketRating}
+          ticket={ticket}
+          setTicket={setTicket}
+          modalRef={modalContentRef}
+          onClose={() => setShowRatingModal(false)}
+        />
+      )}
     </div>
   );
 }
@@ -1284,137 +1295,6 @@ function TicketHistory({ movements }) {
           </Button>
         </Box>
       </Modal>
-
-
     </>
-  );
-}
-
-function RateTicket ({labels}) {
-  
-  return (
-    <Modal open={false}>
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          bgcolor: "background.paper",
-          boxShadow: 24,
-          borderRadius: 2,
-          p: 2,
-          width: {
-            xs: "100%",
-            sm: "40%",
-          },
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            paddingBottom: "0.5rem",
-          }}
-        >
-          <ThumbUpIcon
-            fontSize="large"
-            color="primary"
-            style={{ marginRight: "1%", justifySelf: "center" }}
-          />
-          <Typography
-            id="modal-modal-title"
-            variant="h5"
-            component="h2"
-            sx={{
-              fontSize: "2rem",
-              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
-              fontWeight: "bold",
-              marginBottom: "1.5rem",
-            }}
-          >
-            Calificación del Servicio
-          </Typography>
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            paddingBottom: "2rem",
-          }}
-        >
-          <Rating
-            name="hover-feedback"
-            value={4}
-            emptyIcon={
-              <StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />
-            }
-            size="large"
-          />
-          <Box
-            sx={{
-              ml: 1,
-              fontSize: "1rem",
-              fontWeight: "bold",
-              alignSelf: "center",
-            }}
-          >
-            {labels[4]}
-          </Box>
-        </Box>
-
-        <TextField
-          id="standard-basic"
-          label={"Comentario"}
-          fullWidth
-          multiline
-          minRows={3}
-          maxRows={3}
-          sx={{ paddingBottom: "2rem" }}
-          slotProps={{
-            input: {
-              style: {
-                fontSize: "0.9rem",
-              },
-              startAdornment: (
-                <InputAdornment
-                  position="start"
-                  sx={{ alignSelf: "start", marginRight: "8px" }}
-                >
-                  <CommentIcon color="primary" />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-
-        {/* Contenedor de botones de acciones.*/}
-        <Box display={"flex"} justifyContent={"end"}>
-          <Button
-            type="submit"
-            variant="contained"
-            startIcon={<SendIcon />}
-            color="success"
-          >
-            Guardar Calificación
-          </Button>
-        </Box>
-
-        <IconButton
-          onClick={() => handleClose()}
-          size="large"
-          color="primary"
-          sx={{
-            position: "absolute",
-            top: 5,
-            right: 10,
-            zIndex: 10,
-          }}
-        >
-          <Close fontSize="large" />
-        </IconButton>
-      </Box>
-    </Modal>
   );
 }

@@ -342,4 +342,24 @@ class ticket
             ]
         ];
     }
+
+    //Actualización del tiquete a partir del nuevo estado definido.
+    public function saveRating()
+    {
+        try {
+            $request = new Request();
+            $response = new Response();
+            $ticketModel = new TicketModel();
+
+            //Armado de la estructura de entrada, decodificando la estructura JSON enviada como un objeto.
+            $decodedRequest = $request->getJson();
+
+            //Almacena la califiación del servicio y devuelve el tiquete con sus valores actualizados hacia la interfaz.
+            $ticket = $ticketModel->saveRating($decodedRequest);
+
+            $response->toJson($ticket);
+        } catch (Exception $ex) {
+            handleException($ex);
+        }
+    }
 }

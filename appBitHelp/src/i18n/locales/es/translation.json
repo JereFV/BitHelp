@@ -146,7 +146,7 @@
     "comment": "Comentario",
     "ticketRating": "Valoración del Tiquete",
     "ratingComment": "Comentario Valoración",
-    "noRatingRegistered": "No existe valoración registrada para el tiquete seleccionado.",
+    "noRatingRegistered": "No existe valoración registrada para el tiquete.",
     "loading": "Cargando...",
     "loadingTickets": "Cargando tiquetes...",
     "loadingInfo": "Cargando información y técnicos...",
@@ -503,5 +503,19 @@
     "ticketListMessage": "Dirigete al apartado \"Tiquetes\" en el menú principal, allí encontrarás la opción de \"Lista de Tiquetes\", la cual mostrará una pantalla con todos los tiquetes que hayas reportado hasta el momento con posibilidad de filtrarlos por estado.",
     "systemNoMessage": "Lamento no haber ayudado a resolver tu problema.\nPuedes regresar a las opciones anteriores o de lo contrario contactar a un administrador del sistema.",
     "yesMessage": "¡Me alegra mucho haber ayudado a resolver tu problema!\n¿Necesitas algo adicional?"
+  },
+  "ticketRating": {
+    "valorationValidMessage": "Debe seleccionar la calificación del servicio en un rango de 1 a 5 estrellas.",
+    "commentRequiredMessage": "El comentario es requerido.",
+    "commentMaxMessage": "El comentario debe tener un máximo de 100 caracteres.",
+    "submitSucessMessage": "Se ha enviado exitosamente la calificación del servicio.",
+    "submitErrorMessage": "Ha ocurrido un error al intentar enviar la calificación del servicio.",
+    "title": "Calificación del Servicio", 
+    "commentFieldLabel": "Comentario",
+    "submitButtonLabel": "Enviar Calificación",
+    "dialogtitle": "¿Desea salir de la pantalla de calificación del servicio?",
+    "dialogContent": "Su opinión es importante para nosotros, por lo que nos gustaría conocer la calidad del servicio brindado por parte de nuestro equipo técnico.\n\nAl salir de esta pantalla, no podrá calificar el servicio brindado sobre el tiquete.",
+    "dialogCancelButton": "Cancelar",
+    "dialogAcceptButton": "Aceptar"
   }
 }
