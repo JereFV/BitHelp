@@ -110,6 +110,7 @@
     "requesterInfo": "Requester Information",
     "categorization": "Ticket Categorization",
     "tag": "Tag",
+    "completedTime": "Resolution Completed",
     "selectAppropriateTag": "Select the most appropriate tag according to your problem.",
     "categoryObtainedFromTag": "Obtained from the selected tag.",
     "attachedImages": "Attached Images",

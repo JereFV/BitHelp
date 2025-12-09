@@ -133,143 +133,157 @@ export function ListCardTickets({ data = [], onTicketAssigned, currentUser }) {
         },
       }}
     >
-      {data.map((item) => (
-        <Card
-          key={item.id}
-          sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-            borderRadius: 3,
-          }}
-        >
-          <CardHeader
+      {data.map((item) => {
+        const isCompleted = [
+          'Resuelto', 'Resolved', 
+          'Cerrado', 'Closed', 
+          'Devuelto', 'Returned'
+        ].includes(item.estado);
+
+        const timeRemainingDisplay = isCompleted
+          ? t('tickets.completedTime') 
+          : item.tiempoRestante 
+            ? `${item.tiempoRestante} ${t('tickets.hours')}` 
+            : '—';
+
+        return (
+          <Card
+            key={item.id}
             sx={{
-              p: 2,
-              borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-              '& .MuiCardHeader-content': { 
-                overflow: 'hidden' 
-              }, 
-            }}
-            title={item.titulo ?? ''} 
-            titleTypographyProps={{ 
-              variant: 'h6', 
-              fontWeight: 300,
-              noWrap: true, 
-            }}
-            action={
-              <Typography
-                sx={{
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: 'text.secondary',
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 1.5,
-                }}
-              >
-                #{item.numero ?? item.id}
-              </Typography>
-            }
-          />
-          
-          <CardContent sx={{ pt: 1, pb: 1.5 }}>
-            {/* Chips de Estado y Prioridad */}
-            <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-              <Chip
-                label={translateStatus(item.estado ?? 'N/A')} 
-                size="small"
-                sx={(theme) => {
-                  const colorName = getStateColor(item.estado);
-                  
-                  if (item.estado === 'Cerrado' || item.estado === 'Closed') {
-                    return (theme.palette.mode === 'light'
-                      // MODO CLARO: Fondo Negro, Fuente Blanca
-                      ? {
-                          fontWeight: 'bold',
-                          backgroundColor: '#1c1c1c', 
-                          color: '#ffffff',
-                        }
-                      // MODO OSCURO: Fondo Blanco, Fuente Negra
-                      : {
-                          fontWeight: 'bold',
-                          backgroundColor: '#ffffff',
-                          color: '#1c1c1c',
-                        }
-                    );
-                  }
-
-                  // Lógica para los otros chips (Pendiente, Asignado, etc.)
-                  return {
-                    fontWeight: 'bold',
-                    color: theme.palette[colorName].main,
-                    backgroundColor: alpha(theme.palette[colorName].main, 0.15),
-                  };
-                }}
-              />
-              <Chip
-                label={translatePriority(item.prioridad ?? 'N/A')}
-                color={getPriorityColor(item.prioridad)}
-                size="small"
-                variant="outlined"
-              />
-            </Box>
-
-            {/* Contenedor Flex para el Tiempo Restante y el Botón de Detalles */}
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                pr: 1, 
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                <strong>{t('tickets.timeRemaining')}:</strong>{' '}
-                {item.tiempoRestante ?? '—'} {item.tiempoRestante ? t('tickets.hours') : ''}
-              </Typography>
-              
-              {(currentUser && currentUser.idRol == ADMIN_ROL_ID) && (
-                <Tooltip title={t('tickets.manualAssignment')} placement="bottom-end">
-                  <IconButton
-                    aria-label={t('tickets.manualAssignment')}
-                    color='warning' 
-                    onClick={() => handleOpenModal(item.id)}
-                    size="small"
-                    sx={{marginLeft:"7%"}}
-                  >
-                    <ManageAccountsIcon fontSize="small"/>
-                  </IconButton>
-                </Tooltip>
-              )}
-              
-              <Tooltip title={t('common.view') + ' ' + t('tickets.ticketDetail')} placement="bottom-start">
-                <IconButton
-                  aria-label={t('tickets.ticketDetail')}
-                  to={`/ticket/${item.id}`}
-                  component={Link}
-                  color="primary"
-                  size="small" 
-                  sx={{marginLeft:"-2%"}}
-                >
-                  <Info fontSize="small" />                    
-                </IconButton>
-              </Tooltip> 
-            </Box>
-          </CardContent>
-
-          <CardActions
-            disableSpacing
-            sx={{
-              borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-              p: 0,
-              maxHeight: '30px',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+              borderRadius: 3,
             }}
           >
-          </CardActions>
-        </Card>
-      ))}
+            <CardHeader
+              sx={{
+                p: 2,
+                borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                '& .MuiCardHeader-content': { 
+                  overflow: 'hidden' 
+                }, 
+              }}
+              title={item.titulo ?? ''} 
+              titleTypographyProps={{ 
+                variant: 'h6', 
+                fontWeight: 300,
+                noWrap: true, 
+              }}
+              action={
+                <Typography
+                  sx={{
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    color: 'text.secondary',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1.5,
+                  }}
+                >
+                  #{item.numero ?? item.id}
+                </Typography>
+              }
+            />
+            
+            <CardContent sx={{ pt: 1, pb: 1.5 }}>
+              {/* Chips de Estado y Prioridad */}
+              <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                <Chip
+                  label={translateStatus(item.estado ?? 'N/A')} 
+                  size="small"
+                  sx={(theme) => {
+                    const colorName = getStateColor(item.estado);
+                    
+                    if (item.estado === 'Cerrado' || item.estado === 'Closed') {
+                      return (theme.palette.mode === 'light'
+                        // MODO CLARO: Fondo Negro, Fuente Blanca
+                        ? {
+                            fontWeight: 'bold',
+                            backgroundColor: '#1c1c1c', 
+                            color: '#ffffff',
+                          }
+                        // MODO OSCURO: Fondo Blanco, Fuente Negra
+                        : {
+                            fontWeight: 'bold',
+                            backgroundColor: '#ffffff',
+                            color: '#1c1c1c',
+                          }
+                      );
+                    }
+
+                    // Lógica para los otros chips (Pendiente, Asignado, etc.)
+                    return {
+                      fontWeight: 'bold',
+                      color: theme.palette[colorName].main,
+                      backgroundColor: alpha(theme.palette[colorName].main, 0.15),
+                    };
+                  }}
+                />
+                <Chip
+                  label={translatePriority(item.prioridad ?? 'N/A')}
+                  color={getPriorityColor(item.prioridad)}
+                  size="small"
+                  variant="outlined"
+                />
+              </Box>
+
+              {/* Contenedor Flex para el Tiempo Restante y el Botón de Detalles */}
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  pr: 1, 
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  <strong>{t('tickets.timeRemaining')}:</strong>{' '}
+                  {timeRemainingDisplay}
+                </Typography>
+                
+                {(currentUser && currentUser.idRol == ADMIN_ROL_ID) && (
+                  <Tooltip title={t('tickets.manualAssignment')} placement="bottom-end">
+                    <IconButton
+                      aria-label={t('tickets.manualAssignment')}
+                      color='warning' 
+                      onClick={() => handleOpenModal(item.id)}
+                      size="small"
+                      sx={{marginLeft:"7%"}}
+                    >
+                      <ManageAccountsIcon fontSize="small"/>
+                    </IconButton>
+                  </Tooltip>
+                )}
+                
+                <Tooltip title={t('common.view') + ' ' + t('tickets.ticketDetail')} placement="bottom-start">
+                  <IconButton
+                    aria-label={t('tickets.ticketDetail')}
+                    to={`/ticket/${item.id}`}
+                    component={Link}
+                    color="primary"
+                    size="small" 
+                    sx={{marginLeft:"-2%"}}
+                  >
+                    <Info fontSize="small" />
+                  </IconButton>
+                </Tooltip> 
+              </Box>
+            </CardContent>
+
+            <CardActions
+              disableSpacing
+              sx={{
+                borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                p: 0,
+                maxHeight: '30px',
+              }}
+            >
+            </CardActions>
+          </Card>
+        );
+      })}
 
       {/* 6. Renderizar el Modal de Asignación Manual */}
       {selectedTicketId && (
