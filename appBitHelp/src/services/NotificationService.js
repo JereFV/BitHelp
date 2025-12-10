@@ -3,9 +3,9 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_BASE_URL + 'NotificationController';
 
 class NotificationService {
-    // Obtener token del localStorage - CORREGIDO
+    // Obtener token del localStorage 
     getAuthHeader() {
-        const token = localStorage.getItem('authToken'); // Cambio aquí: 'authToken' en lugar de 'token'
+        const token = localStorage.getItem('authToken'); 
         return token ? { Authorization: `Bearer ${token}` } : {};
     }
 

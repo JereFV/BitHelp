@@ -68,7 +68,6 @@ class TicketHistoryModel
     {
         try 
         {
-            // 1. Determinar la conexión a usar
             $isTransaction = ($conn !== null);
             
             if (!$isTransaction) {
@@ -77,8 +76,6 @@ class TicketHistoryModel
                 $conn = $this->connection->link;
             }
 
-            // Esta consulta no necesita Prepared Statements si el $id se maneja correctamente,
-            // pero vamos a usar la conexión $conn para la ejecución.
             $query = "SELECT MAX(idHistorialTiquete) AS maxId FROM historial_tiquete WHERE idTiquete = ?";
             
             // Usar Prepared Statements con la conexión pasada/abierta
