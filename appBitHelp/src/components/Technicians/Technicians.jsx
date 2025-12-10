@@ -3,7 +3,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { 
     Button, Modal, Box, Typography, Chip, Divider, Paper, Stack,
     TextField, FormControl, InputLabel, Select, MenuItem, OutlinedInput,
-    FormControlLabel, Switch, IconButton,
+    FormControlLabel, Switch, IconButton, Rating,
     Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions 
 } from '@mui/material';
 import toast, { Toaster } from 'react-hot-toast';
@@ -17,6 +17,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import UserService from '../../services/userService';
 import { AuthContext } from '../../context/AuthContext.jsx';
 import { useTranslation } from 'react-i18next';
+import StarIcon from '@mui/icons-material/Star';
+import HotelClassIcon from '@mui/icons-material/HotelClass';
 
 const ROLE_ID_ADMIN = 3;
 
@@ -154,6 +156,7 @@ export const TechniciansDataGridWithModal = () => {
                 correo: item.correo,
                 telefono: item.telefono,
                 estado: String(item.estado),
+                calificacionPromedio: parseFloat(item.calificacionPromedio),
                 especialidades: item.especialidades && Array.isArray(item.especialidades) 
                     ? item.especialidades.map(e => typeof e === 'string' ? e : (e.nombre || 'N/A')) 
                     : [],
@@ -431,310 +434,481 @@ export const TechniciansDataGridWithModal = () => {
     ];
 
     return (
-        <div style={{ height: 600, width: '100%' }}>
-            <Toaster position="top-center" />
-            
-            {isAdmin && (
-                <Box sx={{ mb: 2 }}>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleOpenFormModal(false)}
-                    >
-                        {t('technicians.createNew')}
-                    </Button>
-                </Box>
-            )}
-            
-            {loading ? (
-                <Typography variant="h6">{t('technicians.loading')}</Typography>
-            ) : (
-                <DataGrid
-                    rows={rows}
-                    columns={columns}
-                    getRowId={(row) => row.id} 
-                    pageSizeOptions={[5, 10, 20]}
-                    initialState={{
-                        pagination: { paginationModel: { pageSize: 10 } }
-                    }}
-                    disableRowSelectionOnClick
-                    localeText={dataGridLocale.components.MuiDataGrid.defaultProps.localeText}
-                    sx={{
-                        borderRadius: 2,
-                        boxShadow: 2,
-                    }}
-                />
-            )}
+      <div style={{ height: 600, width: "100%" }}>
+        <Toaster position="top-center" />
 
-            {/* Modal de Detalles del Técnico */}
-            <Modal
-                open={openModal}
-                onClose={handleCloseModal}
-                aria-labelledby="technician-modal-title"
+        {isAdmin && (
+          <Box sx={{ mb: 2 }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenFormModal(false)}
             >
-                <Box sx={modalStyle}>
-                    <Typography id="technician-modal-title" variant="h5" component="h2" mb={1} color="text.primary" fontWeight={600}>
-                        {t('technicians.technicianDetails')}
-                    </Typography>
-                    
-                    <Divider sx={{ mb: 2 }} />
-                    
-                    {selectedRow && (
-                        <Box id="modal-modal-description">
-                            <Box display="flex" alignItems="center" mb={1}>
-                                <AccountCircle color="primary" sx={{ mr: 1 }} />
-                                <Typography variant="subtitle1" fontWeight="bold" mr={1}>
-                                    {selectedRow.nombreCompleto}
-                                </Typography>
-                                {getStatusChip(selectedRow.estado)}
-                            </Box>
+              {t("technicians.createNew")}
+            </Button>
+          </Box>
+        )}
 
-                            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-                                <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
-                                    {t('technicians.contact')}
-                                </Typography>
-                                <Box display="flex" alignItems="center" mb={1}>
-                                    <Mail color="action" sx={{ mr: 1, fontSize: 18 }} />
-                                    <Typography variant="body2">{selectedRow.correo}</Typography>
-                                </Box>
-                                <Box display="flex" alignItems="center">
-                                    <Phone color="action" sx={{ mr: 1, fontSize: 18 }} />
-                                    <Typography variant="body2">{selectedRow.telefono || 'N/A'}</Typography>
-                                </Box>
-                            </Paper>
-                            
-                            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-                                <Typography variant="subtitle2" mb={1} color="text.secondary" fontWeight="bold">
-                                    {t('technicians.workMetrics')}
-                                </Typography>
-                                <Box display="flex" alignItems="center" mb={1}>
-                                    <Work color="action" sx={{ mr: 1, fontSize: 18 }} />
-                                    <Typography variant="body2">{t('technicians.workload')}: {selectedRow.cargaTrabajo}</Typography>
-                                </Box>
-                                <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
-                                    {getAvailabilityChip(selectedRow.disponibilidad)}
-                                </Box>
-                            </Paper>
+        {loading ? (
+          <Typography variant="h6">{t("technicians.loading")}</Typography>
+        ) : (
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            getRowId={(row) => row.id}
+            pageSizeOptions={[5, 10, 20]}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 10 } },
+            }}
+            disableRowSelectionOnClick
+            localeText={
+              dataGridLocale.components.MuiDataGrid.defaultProps.localeText
+            }
+            sx={{
+              borderRadius: 2,
+              boxShadow: 2,
+            }}
+          />
+        )}
 
-                            <Paper variant="outlined" sx={{ p: 2 }}>
-                                <Box mb={1} display="flex" alignItems="center">
-                                    <Verified color="action" sx={{ mr: 1, fontSize: 18, verticalAlign: 'middle'}}/>
-                                    <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
-                                        {t('technicians.specialties').toUpperCase()}
-                                    </Typography>
-                                </Box>
-                                <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 1 }}>
-                                    {selectedRow.especialidades && selectedRow.especialidades.length > 0 ? (
-                                        selectedRow.especialidades.map((esp, index) => (
-                                            <Chip 
-                                                key={index} 
-                                                label={esp} 
-                                                size="small" 
-                                                color="primary" 
-                                                variant="outlined" 
-                                            />
-                                        ))
-                                    ) : (
-                                        <Typography fontSize={14} color="text.secondary" sx={{ml: 0.5}}>
-                                            {t('technicians.noSpecialtiesAssigned')}
-                                        </Typography>
-                                    )}
-                                </Stack>
-                            </Paper>
-                        </Box>
-                    )}
-                    <Button onClick={handleCloseModal} variant="contained" sx={{ mt: 3, float: 'right' }}>
-                        {t('common.close')}
-                    </Button>
+        {/* Modal de Detalles del Técnico */}
+        <Modal
+          open={openModal}
+          onClose={handleCloseModal}
+          aria-labelledby="technician-modal-title"
+        >
+          <Box sx={modalStyle}>
+            <Typography
+              id="technician-modal-title"
+              variant="h5"
+              component="h2"
+              mb={1}
+              color="text.primary"
+              fontWeight={600}
+            >
+              {t("technicians.technicianDetails")}
+            </Typography>
+
+            <Divider sx={{ mb: 2 }} />
+
+            {selectedRow && (
+              <Box id="modal-modal-description">
+                <Box display="flex" alignItems="center" mb={1}>
+                  <AccountCircle color="primary" sx={{ mr: 1 }} />
+                  <Typography variant="subtitle1" fontWeight="bold" mr={1}>
+                    {selectedRow.nombreCompleto}
+                  </Typography>
+                  {getStatusChip(selectedRow.estado)}
                 </Box>
-            </Modal>
 
-            {/* Modal de Formulario (Crear/Editar) - Solo para Admins */}
-            {isAdmin && (
-                <Modal
-                    open={openFormModal}
-                    onClose={handleCloseFormModal}
-                    aria-labelledby="technician-form-modal-title"
-                >
-                    <Box sx={modalStyle} component="form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-                        <Typography id="technician-form-modal-title" variant="h5" component="h2" mb={1} color="text.primary" fontWeight={600}>
-                            {isEditMode ? t('technicians.edit') : t('technicians.createNew')}
-                        </Typography>
-                        
-                        <Divider sx={{ mb: 2 }} />
+                <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                  <Typography
+                    variant="subtitle2"
+                    mb={1}
+                    color="text.secondary"
+                    fontWeight="bold"
+                  >
+                    {t("technicians.contact")}
+                  </Typography>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <Mail color="action" sx={{ mr: 1, fontSize: 18 }} />
+                    <Typography variant="body2">
+                      {selectedRow.correo}
+                    </Typography>
+                  </Box>
+                  <Box display="flex" alignItems="center">
+                    <Phone color="action" sx={{ mr: 1, fontSize: 18 }} />
+                    <Typography variant="body2">
+                      {selectedRow.telefono || "N/A"}
+                    </Typography>
+                  </Box>
+                </Paper>
 
-                        <Stack spacing={3}>
-                            <FormControl 
-                                fullWidth 
-                                required 
-                                error={!!formErrors.idUsuario}
-                                disabled={isEditMode}
-                            >
-                                <InputLabel id="user-select-label">{t('technicians.user')}</InputLabel>
-                                <Select
-                                    labelId="user-select-label"
-                                    id="idUsuario"
-                                    value={formData.idUsuario} 
-                                    label={t('technicians.user')}
-                                    onChange={(e) => handleInputChange('idUsuario', e.target.value)}
-                                    {...(isEditMode && currentTechnicianUser ? {
-                                        renderValue: () => `${currentTechnicianUser.usuario} - ${currentTechnicianUser.nombre} ${currentTechnicianUser.primerApellido}`
-                                    } : {})}
-                                >
-                                    <MenuItem value="">
-                                        <em>{t('technicians.selectUser')}</em>
-                                    </MenuItem>
-                                    
-                                    {isEditMode && currentTechnicianUser && (
-                                        <MenuItem key={currentTechnicianUser.idUsuario} value={currentTechnicianUser.idUsuario}>
-                                            {`${currentTechnicianUser.usuario} - ${currentTechnicianUser.nombre} ${currentTechnicianUser.primerApellido}`}
-                                        </MenuItem>
-                                    )}
-                                    
-                                    {!isEditMode && availableUsers.map((user) => (
-                                        <MenuItem key={user.idUsuario} value={user.idUsuario}>
-                                            {user.usuario} - {`${user.nombre} ${user.primerApellido}`}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                                {formErrors.idUsuario && <Typography color="error" variant="caption" sx={{ml: 2, mt: 0.5}}>{formErrors.idUsuario}</Typography>}
-                                {isEditMode && <Typography variant="caption" color="text.secondary" sx={{ml: 2, mt: 0.5}}>{t('technicians.userCannotChange')}</Typography>}
-                            </FormControl>
+                <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                  <Typography
+                    variant="subtitle2"
+                    mb={1}
+                    color="text.secondary"
+                    fontWeight="bold"
+                  >
+                    {t("technicians.workMetrics")}
+                  </Typography>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <Work color="action" sx={{ mr: 1, fontSize: 18 }} />
+                    <Typography variant="body2">
+                      {t("technicians.workload")}: {selectedRow.cargaTrabajo}
+                    </Typography>
+                  </Box>
 
-                            <FormControl fullWidth>
-                                <InputLabel id="availability-select-label">{t('technicians.availability')}</InputLabel>
-                                <Select
-                                    labelId="availability-select-label"
-                                    id="idDisponibilidad"
-                                    value={formData.idDisponibilidad}
-                                    label={t('technicians.availability')}
-                                    onChange={(e) => handleInputChange('idDisponibilidad', e.target.value)}
-                                >
-                                    {availabilityList.map((item) => (
-                                        <MenuItem key={item.idDisponibilidad} value={item.idDisponibilidad}>
-                                            {item.nombre}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <HotelClassIcon
+                      color="action"
+                      sx={{ mr: 1, fontSize: 18 }}
+                    />
 
-                            <TextField
-                                fullWidth
-                                label={t('technicians.workloadHours')}
-                                type="number"
-                                value={formData.cargaTrabajo}
-                                onChange={(e) => handleInputChange('cargaTrabajo', e.target.value)}
-                                InputProps={{ inputProps: { min: 0 } }}
-                                disabled={true}
-                                error={!!formErrors.cargaTrabajo}
-                                helperText={formErrors.cargaTrabajo || (isEditMode ? t('technicians.workloadAutoUpdate') : t('technicians.workloadInitial'))}
-                            />
+                    <Box display="flex" gap={1}>
+                      <Typography variant="body2">
+                        {t("technicians.averageRating")}:
+                      </Typography>
 
-                            <FormControl 
-                                fullWidth 
-                                required 
-                                error={!!formErrors.especialidades}
-                            >
-                                <InputLabel id="specialty-multiple-label">{t('technicians.specialties')}</InputLabel>
-                                <Select
-                                    labelId="specialty-multiple-label"
-                                    multiple
-                                    value={formData.especialidades} 
-                                    onChange={(e) => handleInputChange('especialidades', e.target.value)}
-                                    input={<OutlinedInput id="select-multiple-chip" label={t('technicians.specialties')} />}
-                                    renderValue={(selected) => (
-                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                            {selected.map((value) => {
-                                                const specialty = specialtiesList.find(s => s.idEspecialidad === value);
-                                                return (
-                                                    <Chip key={value} label={specialty ? specialty.nombre : `ID: ${value}`} size="small" />
-                                                );
-                                            })}
-                                        </Box>
-                                    )}
-                                >
-                                    {specialtiesList.map((specialty) => (
-                                        <MenuItem 
-                                            key={specialty.idEspecialidad} 
-                                            value={specialty.idEspecialidad}
-                                        >
-                                            {specialty.nombre}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                                {formErrors.especialidades && <Typography color="error" variant="caption" sx={{ml: 2, mt: 0.5}}>{formErrors.especialidades}</Typography>}
-                            </FormControl>
+                      <Rating
+                        name="hover-feedback"
+                        value={parseFloat(selectedRow.calificacionPromedio)}
+                        emptyIcon={
+                          <StarIcon
+                            style={{ opacity: 0.55 }}
+                            fontSize="inherit"
+                          />
+                        }
+                        readOnly
+                        size="small"
+                        precision={"0.5"}
+                      />
 
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={formData.estado === 1}
-                                        onChange={(e) => handleInputChange('estado', e.target.checked)}
-                                        name="estado"
-                                        color="primary"
-                                    />
-                                }
-                                label={formData.estado === 1 ? t('common.active') : t('common.inactive')}
-                            />
-                        </Stack>
-
-                        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                            <Button 
-                                onClick={handleCloseFormModal} 
-                                variant="outlined" 
-                                color="error"
-                            >
-                                {t('common.cancel')}
-                            </Button>
-                            <Button 
-                                type="submit" 
-                                variant="contained" 
-                                color="primary"
-                            >
-                                {isEditMode ? t('common.update') : t('technicians.createNew')}
-                            </Button>
-                        </Box>
+                      <Typography variant="body2">{`${selectedRow.calificacionPromedio} / 5`}</Typography>
                     </Box>
-                </Modal>
-            )}
+                  </Box>
 
-            {/* Diálogo de Confirmación de Eliminación - Solo para Admins */}
-            {isAdmin && (
-                <Dialog
-                    open={isDeleteDialogOpen}
-                    onClose={handleCancelDelete}
-                    aria-labelledby="alert-dialog-title"
-                    aria-describedby="alert-dialog-description"
+                  <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
+                    {getAvailabilityChip(selectedRow.disponibilidad)}
+                  </Box>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Box mb={1} display="flex" alignItems="center">
+                    <Verified
+                      color="action"
+                      sx={{ mr: 1, fontSize: 18, verticalAlign: "middle" }}
+                    />
+                    <Typography
+                      variant="subtitle2"
+                      color="text.secondary"
+                      fontWeight="bold"
+                    >
+                      {t("technicians.specialties").toUpperCase()}
+                    </Typography>
+                  </Box>
+                  <Stack
+                    direction="row"
+                    flexWrap="wrap"
+                    spacing={1}
+                    sx={{ mt: 1 }}
+                  >
+                    {selectedRow.especialidades &&
+                    selectedRow.especialidades.length > 0 ? (
+                      selectedRow.especialidades.map((esp, index) => (
+                        <Chip
+                          key={index}
+                          label={esp}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ))
+                    ) : (
+                      <Typography
+                        fontSize={14}
+                        color="text.secondary"
+                        sx={{ ml: 0.5 }}
+                      >
+                        {t("technicians.noSpecialtiesAssigned")}
+                      </Typography>
+                    )}
+                  </Stack>
+                </Paper>
+              </Box>
+            )}
+            <Button
+              onClick={handleCloseModal}
+              variant="contained"
+              sx={{ mt: 3, float: "right" }}
+            >
+              {t("common.close")}
+            </Button>
+          </Box>
+        </Modal>
+
+        {/* Modal de Formulario (Crear/Editar) - Solo para Admins */}
+        {isAdmin && (
+          <Modal
+            open={openFormModal}
+            onClose={handleCloseFormModal}
+            aria-labelledby="technician-form-modal-title"
+          >
+            <Box
+              sx={modalStyle}
+              component="form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+            >
+              <Typography
+                id="technician-form-modal-title"
+                variant="h5"
+                component="h2"
+                mb={1}
+                color="text.primary"
+                fontWeight={600}
+              >
+                {isEditMode
+                  ? t("technicians.edit")
+                  : t("technicians.createNew")}
+              </Typography>
+
+              <Divider sx={{ mb: 2 }} />
+
+              <Stack spacing={3}>
+                <FormControl
+                  fullWidth
+                  required
+                  error={!!formErrors.idUsuario}
+                  disabled={isEditMode}
                 >
-                    <DialogTitle id="alert-dialog-title" sx={{ color: 'error.main' }}>
-                        {t('technicians.confirmDelete')}
-                    </DialogTitle>
-                    <DialogContent>
-                        <DialogContentText id="alert-dialog-description">
-                            <Typography variant="body1" sx={{mb: 1}}>
-                                {t('technicians.deleteConfirmMessage')}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {t('technicians.deleteWarningMessage')}
-                            </Typography>
-                        </DialogContentText>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleCancelDelete} variant="outlined" color="primary">
-                            {t('common.cancel')}
-                        </Button>
-                        <Button 
-                            onClick={executeDelete} 
-                            variant="contained" 
-                            color="error" 
-                            autoFocus 
-                        >
-                            {t('common.accept')}
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-            )}
+                  <InputLabel id="user-select-label">
+                    {t("technicians.user")}
+                  </InputLabel>
+                  <Select
+                    labelId="user-select-label"
+                    id="idUsuario"
+                    value={formData.idUsuario}
+                    label={t("technicians.user")}
+                    onChange={(e) =>
+                      handleInputChange("idUsuario", e.target.value)
+                    }
+                    {...(isEditMode && currentTechnicianUser
+                      ? {
+                          renderValue: () =>
+                            `${currentTechnicianUser.usuario} - ${currentTechnicianUser.nombre} ${currentTechnicianUser.primerApellido}`,
+                        }
+                      : {})}
+                  >
+                    <MenuItem value="">
+                      <em>{t("technicians.selectUser")}</em>
+                    </MenuItem>
 
-        </div>
+                    {isEditMode && currentTechnicianUser && (
+                      <MenuItem
+                        key={currentTechnicianUser.idUsuario}
+                        value={currentTechnicianUser.idUsuario}
+                      >
+                        {`${currentTechnicianUser.usuario} - ${currentTechnicianUser.nombre} ${currentTechnicianUser.primerApellido}`}
+                      </MenuItem>
+                    )}
+
+                    {!isEditMode &&
+                      availableUsers.map((user) => (
+                        <MenuItem key={user.idUsuario} value={user.idUsuario}>
+                          {user.usuario} -{" "}
+                          {`${user.nombre} ${user.primerApellido}`}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                  {formErrors.idUsuario && (
+                    <Typography
+                      color="error"
+                      variant="caption"
+                      sx={{ ml: 2, mt: 0.5 }}
+                    >
+                      {formErrors.idUsuario}
+                    </Typography>
+                  )}
+                  {isEditMode && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ ml: 2, mt: 0.5 }}
+                    >
+                      {t("technicians.userCannotChange")}
+                    </Typography>
+                  )}
+                </FormControl>
+
+                <FormControl fullWidth>
+                  <InputLabel id="availability-select-label">
+                    {t("technicians.availability")}
+                  </InputLabel>
+                  <Select
+                    labelId="availability-select-label"
+                    id="idDisponibilidad"
+                    value={formData.idDisponibilidad}
+                    label={t("technicians.availability")}
+                    onChange={(e) =>
+                      handleInputChange("idDisponibilidad", e.target.value)
+                    }
+                  >
+                    {availabilityList.map((item) => (
+                      <MenuItem
+                        key={item.idDisponibilidad}
+                        value={item.idDisponibilidad}
+                      >
+                        {item.nombre}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <TextField
+                  fullWidth
+                  label={t("technicians.workloadHours")}
+                  type="number"
+                  value={formData.cargaTrabajo}
+                  onChange={(e) =>
+                    handleInputChange("cargaTrabajo", e.target.value)
+                  }
+                  InputProps={{ inputProps: { min: 0 } }}
+                  disabled={true}
+                  error={!!formErrors.cargaTrabajo}
+                  helperText={
+                    formErrors.cargaTrabajo ||
+                    (isEditMode
+                      ? t("technicians.workloadAutoUpdate")
+                      : t("technicians.workloadInitial"))
+                  }
+                />
+
+                <FormControl
+                  fullWidth
+                  required
+                  error={!!formErrors.especialidades}
+                >
+                  <InputLabel id="specialty-multiple-label">
+                    {t("technicians.specialties")}
+                  </InputLabel>
+                  <Select
+                    labelId="specialty-multiple-label"
+                    multiple
+                    value={formData.especialidades}
+                    onChange={(e) =>
+                      handleInputChange("especialidades", e.target.value)
+                    }
+                    input={
+                      <OutlinedInput
+                        id="select-multiple-chip"
+                        label={t("technicians.specialties")}
+                      />
+                    }
+                    renderValue={(selected) => (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {selected.map((value) => {
+                          const specialty = specialtiesList.find(
+                            (s) => s.idEspecialidad === value
+                          );
+                          return (
+                            <Chip
+                              key={value}
+                              label={
+                                specialty ? specialty.nombre : `ID: ${value}`
+                              }
+                              size="small"
+                            />
+                          );
+                        })}
+                      </Box>
+                    )}
+                  >
+                    {specialtiesList.map((specialty) => (
+                      <MenuItem
+                        key={specialty.idEspecialidad}
+                        value={specialty.idEspecialidad}
+                      >
+                        {specialty.nombre}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formErrors.especialidades && (
+                    <Typography
+                      color="error"
+                      variant="caption"
+                      sx={{ ml: 2, mt: 0.5 }}
+                    >
+                      {formErrors.especialidades}
+                    </Typography>
+                  )}
+                </FormControl>
+
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.estado === 1}
+                      onChange={(e) =>
+                        handleInputChange("estado", e.target.checked)
+                      }
+                      name="estado"
+                      color="primary"
+                    />
+                  }
+                  label={
+                    formData.estado === 1
+                      ? t("common.active")
+                      : t("common.inactive")
+                  }
+                />
+              </Stack>
+
+              <Box
+                sx={{
+                  mt: 4,
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 2,
+                }}
+              >
+                <Button
+                  onClick={handleCloseFormModal}
+                  variant="outlined"
+                  color="error"
+                >
+                  {t("common.cancel")}
+                </Button>
+                <Button type="submit" variant="contained" color="primary">
+                  {isEditMode ? t("common.update") : t("technicians.createNew")}
+                </Button>
+              </Box>
+            </Box>
+          </Modal>
+        )}
+
+        {/* Diálogo de Confirmación de Eliminación - Solo para Admins */}
+        {isAdmin && (
+          <Dialog
+            open={isDeleteDialogOpen}
+            onClose={handleCancelDelete}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title" sx={{ color: "error.main" }}>
+              {t("technicians.confirmDelete")}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description">
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {t("technicians.deleteConfirmMessage")}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t("technicians.deleteWarningMessage")}
+                </Typography>
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button
+                onClick={handleCancelDelete}
+                variant="outlined"
+                color="primary"
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                onClick={executeDelete}
+                variant="contained"
+                color="error"
+                autoFocus
+              >
+                {t("common.accept")}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
+      </div>
     );
 };

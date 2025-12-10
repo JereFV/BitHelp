@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
-import startOfWeek from 'date-fns/startOfWeek';
+import { startOfWeek} from "date-fns";
 import getDay from 'date-fns/getDay';
 import es from 'date-fns/locale/es';
 import enUS from 'date-fns/locale/en-US';
@@ -100,8 +100,8 @@ export function Assignments() {
           status: ticket.estado,
           remainingTime: ticket.tiempoRestante,
           start: new Date(ticket.fechaAsignacion),
-          end: new Date(ticket.slaResolucion),
-          title: `#${ticket.idTiquete} ${ticket.titulo}`,
+          end: new Date(ticket.fechaResolucionLimite),
+          title: `#${ticket.id} ${ticket.titulo}`,
         }));
         //Finalmente, vuelve a renderizar el calendario a partir del arreglo auxiliar de eventos.
         setTickets(eventsCalendar);
@@ -131,7 +131,7 @@ export function Assignments() {
     >
       <Calendar
         localizer={localizer}
-        defaultDate={new Date()}
+        //defaultDate={new Date()}
         defaultView="agenda"        
         events={tickets}
         style={{ height: "85vh" }}
@@ -141,7 +141,7 @@ export function Assignments() {
         views={["agenda"]}
         components={{
           event: CustomEvent,
-          toolbar: CustomToolbar,
+          toolbar: CustomToolbar
         }}      
         timeslots={1}
         length={7}  

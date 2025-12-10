@@ -266,7 +266,8 @@
     "options": "Options",
     "available": "Available",
     "busy": "Busy",
-    "offline": "Offline"
+    "offline": "Offline",
+    "averageRating": "Average Rating"
   },
   "users": {
     "username": "Username",

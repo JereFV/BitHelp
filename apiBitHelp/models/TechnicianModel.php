@@ -27,13 +27,18 @@ class TechnicianModel
                         u.primerApellido,
                         u.segundoApellido,
                         u.correo,
-                        u.telefono
+                        u.telefono,
+                        AVG(tiq.valoracion) AS calificacionPromedio
                     FROM
                         tecnico t
                     INNER JOIN
                         usuario u ON t.idUsuario = u.idUsuario
                     INNER JOIN
-                        disponibilidad_tecnico dt ON t.idDisponibilidad = dt.idDisponibilidad;";
+                        disponibilidad_tecnico dt ON t.idDisponibilidad = dt.idDisponibilidad
+                    INNER JOIN
+                        tiquete tiq ON t.idTecnico = tiq.idTecnicoAsignado
+                    GROUP BY t.idTecnico;";
+
             // Ejecución de la consulta.
             $technicians = $this->connection->ExecuteSQL($query);
             //  DEBUG 11: Muestra cuántos técnicos se encontraron antes de la lógica de especialidades

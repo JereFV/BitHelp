@@ -40,7 +40,7 @@ import { useTranslation } from 'react-i18next';
 import TicketRating from './TicketRating';
 import PropTypes from 'prop-types';
 
-TicketHistory.PropTypes = {
+TicketHistory.propTypes = {
   movements: PropTypes.array
 }
 

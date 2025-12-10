@@ -267,7 +267,8 @@
     "options": "Opciones",
     "available": "Disponible",
     "busy": "Ocupado",
-    "offline": "No Disponible"
+    "offline": "No Disponible",
+    "averageRating": "Calificación Promedio"
   },
   "users": {
     "username": "Usuario",

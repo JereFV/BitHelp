@@ -74,7 +74,8 @@ class TicketModel
                     WHERE h.idTiquete = t.idTiquete AND h.idEstado = 2 
                     ORDER BY h.fecha ASC LIMIT 1) as fechaAsignacion,
                     c.nombre as categoria,
-                    t.slaResolucion
+                    t.slaResolucion,
+                    DATE_ADD(t.fechaCreacion, INTERVAL TIME_TO_SEC(s.tiempoMaxResolucion) SECOND) AS fechaResolucionLimite
                 FROM tiquete t
                 LEFT JOIN estado_tiquete e ON t.idEstado = e.idEstadoTiquete
                 LEFT JOIN prioridad_tiquete p ON t.idPrioridad = p.idPrioridadTiquete
